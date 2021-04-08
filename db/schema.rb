@@ -10,18 +10,19 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2021_04_08_032811) do
+ActiveRecord::Schema.define(version: 2021_04_08_044033) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
-  create_table "market_items", force: :cascade do |t|
+  create_table "market_outcomes", force: :cascade do |t|
     t.bigint "market_id", null: false
     t.string "title", null: false
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
-    t.index ["market_id", "title"], name: "index_market_items_on_market_id_and_title", unique: true
-    t.index ["market_id"], name: "index_market_items_on_market_id"
+    t.integer "eth_market_id"
+    t.index ["market_id", "title"], name: "index_market_outcomes_on_market_id_and_title", unique: true
+    t.index ["market_id"], name: "index_market_outcomes_on_market_id"
   end
 
   create_table "markets", force: :cascade do |t|
@@ -36,5 +37,5 @@ ActiveRecord::Schema.define(version: 2021_04_08_032811) do
     t.integer "eth_market_id"
   end
 
-  add_foreign_key "market_items", "markets"
+  add_foreign_key "market_outcomes", "markets"
 end
