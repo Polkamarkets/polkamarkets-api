@@ -1,4 +1,6 @@
 class EthereumService
+  include BigNumberHelper
+
   attr_accessor :client, :contract
 
   def initialize
@@ -25,8 +27,8 @@ class EthereumService
       id: market_id,
       name: market_data[0],
       state: market_data[1],
-      resolved_at: market_data[2],
-      liquidity: market_data[3],
+      resolved_at: Time.at(market_data[2]).to_datetime,
+      liquidity: from_big_number_to_float(market_data[3]),
       outcomes: outcomes
     }
   end
@@ -40,7 +42,7 @@ class EthereumService
       {
         id: outcome_id,
         name: outcome_data[0],
-        price: outcome_data[1],
+        price: from_big_number_to_float(outcome_data[1]),
       }
     end
   end
