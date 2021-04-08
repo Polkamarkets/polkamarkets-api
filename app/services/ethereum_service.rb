@@ -4,10 +4,9 @@ class EthereumService
   attr_accessor :client, :contract
 
   def initialize
-    @client = Ethereum::HttpClient.new(Rails.application.secrets.ethereum_url);
-    # TODO read from file in repo
-    abi = JSON.parse(File.read('../bepro-js/build/contracts/PredictionMarket.json'))['abi'];
-    @contract = Ethereum::Contract.create(name: "PredictionMarket", address: Rails.application.secrets.ethereum_contract_address, abi: abi, client: client);
+    @client = Ethereum::HttpClient.new(Rails.application.secrets.ethereum_url)
+    abi = JSON.parse(File.read('app/contracts/PredictionMarket.json'))['abi']
+    @contract = Ethereum::Contract.create(name: "PredictionMarket", address: Rails.application.secrets.ethereum_contract_address, abi: abi, client: client)
   end
 
   def get_all_market_ids
