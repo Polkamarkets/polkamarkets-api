@@ -29,6 +29,7 @@ class EthereumService
       state: market_data[1],
       resolved_at: Time.at(market_data[2]).to_datetime,
       liquidity: from_big_number_to_float(market_data[3]),
+      shares: from_big_number_to_float(market_data[4]),
       outcomes: outcomes
     }
   end
@@ -47,6 +48,16 @@ class EthereumService
     end
   end
 
-  def get_user_market_shares(address)
+  def get_user_market_shares(market_id, address)
+    user_data = contract.call.get_user_market_shares(market_id, address)
+
+    # TODO: improve this
+    {
+      liquidity_shares: from_big_number_to_float(user_data[0]),
+      outcome_shares: {
+        0 => from_big_number_to_float(user_data[1]),
+        1 => from_big_number_to_float(user_data[2])
+      }
+    }
   end
 end
