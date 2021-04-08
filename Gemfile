@@ -49,3 +49,6 @@ gem 'pry-rails' # Powerful IRB alternative
 
 # ethereum gems
 gem 'ethereum.rb'
+
+# serializers
+gem 'active_model_serializers'

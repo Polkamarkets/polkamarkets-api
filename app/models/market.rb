@@ -9,9 +9,11 @@ class Market < ApplicationRecord
   scope :open, -> { published.where('expires_at > ?', DateTime.now) }
   scope :resolved, -> { published.where('expires_at < ?', DateTime.now) }
 
-  def get_ethereum_data
+  def eth_data(reload = false)
     return nil if eth_market_id.blank?
 
-    EthereumService.new.get_market(eth_market_id)
+    return @eth_data if @eth_data.present? && !reload
+
+    @eth_data = EthereumService.new.get_market(eth_market_id)
   end
 end

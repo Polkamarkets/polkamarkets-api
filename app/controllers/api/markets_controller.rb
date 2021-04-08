@@ -4,13 +4,14 @@ module Api
     def index
       markets = Market.all
 
-      render json: markets.to_json(include: :items), status: :ok
+      render json: markets, status: :ok
     end
 
     def show
-      market = Market.find(params[:id])
+      # finding items by eth market id
+      market = Market.find_by(eth_market_id: params[:id])
 
-      render json: market.to_json(include: :items), status: :ok
+      render json: market, status: :ok
     end
   end
 end
