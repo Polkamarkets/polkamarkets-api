@@ -14,6 +14,8 @@ class Market < ApplicationRecord
 
     return @eth_data if @eth_data.present? && !reload
 
-    @eth_data = EthereumService.new.get_market(eth_market_id)
+    Rails.cache.fetch("markets:#{eth_market_id}", expires_in: 24.hours, force: reload) do
+      @eth_data = EthereumService.new.get_market(eth_market_id)
+    end
   end
 end

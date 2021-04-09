@@ -3,10 +3,12 @@ class MarketSerializer < ActiveModel::Serializer
     :id,
     :title,
     :description,
+    :expires_at,
     :category,
     :subcategory,
     :image_url,
     :liquidity,
+    :volume,
     :shares
   )
 
@@ -24,7 +26,7 @@ class MarketSerializer < ActiveModel::Serializer
 
   def volume
     # TODO
-    0
+    123
   end
 
   def liquidity
