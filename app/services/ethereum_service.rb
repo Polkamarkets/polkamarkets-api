@@ -26,7 +26,7 @@ class EthereumService
       id: market_id,
       name: market_data[0],
       state: market_data[1],
-      resolved_at: Time.at(market_data[2]).to_datetime,
+      expires_at: Time.at(market_data[2]).to_datetime,
       liquidity: from_big_number_to_float(market_data[3]),
       shares: from_big_number_to_float(market_data[4]),
       outcomes: outcomes
