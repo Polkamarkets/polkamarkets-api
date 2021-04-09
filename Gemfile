@@ -52,3 +52,6 @@ gem 'ethereum.rb'
 
 # serializers
 gem 'active_model_serializers'
+
+# ops / web
+gem 'rack-cors'
