@@ -5,7 +5,11 @@ Rails.application.routes.draw do
   end
 
   scope :module => 'api' do
-    resources :markets, only: [:index, :show]
+    resources :markets, only: [:index, :show] do
+      member do
+        post :reload
+      end
+    end
   end
 
   root to: 'api/ping#ping'
