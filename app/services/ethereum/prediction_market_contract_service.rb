@@ -2,6 +2,13 @@ module Ethereum
   class PredictionMarketContractService < SmartContractService
     include BigNumberHelper
 
+    ACTIONS_MAPPING = {
+      0 => 'buy',
+      1 => 'sell',
+      2 => 'add_liquidity',
+      3 => 'remove_liquidity',
+    }.freeze
+
     def get_all_market_ids
       contract.call.get_markets
     end
@@ -51,6 +58,47 @@ module Ethereum
           1 => from_big_number_to_float(user_data[2])
         }
       }
+    end
+
+    def get_price_events(market_id = nil)
+      events = get_events('MarketOutcomePrice')
+
+      events.map do |event|
+        {
+          market_id: event[:topics][1].hex,
+          outcome_id: event[:topics][2].hex,
+          price: from_big_number_to_float(event[:args][0]),
+          timestamp: Time.at(event[:args][1]),
+        }
+      end
+    end
+
+    def get_liquidity_events(market_id = nil)
+      events = get_events('MarketLiquidity')
+
+      events.map do |event|
+        {
+          market_id: event[:topics][1].hex,
+          value: from_big_number_to_float(event[:args][0]),
+          timestamp: Time.at(event[:args][1]),
+        }
+      end
+    end
+
+    def get_action_events(market_id = nil)
+      events = get_events('ParticipantAction')
+
+      events.map do |event|
+        {
+          address: "0x" + event[:topics][1].last(40),
+          action: ACTIONS_MAPPING[event[:topics][2].hex],
+          market_id: event[:topics][2].hex,
+          outcome_id: event[:args][0],
+          shares: from_big_number_to_float(event[:args][1]),
+          value: from_big_number_to_float(event[:args][2]),
+          timestamp: Time.at(event[:args][3]),
+        }
+      end
     end
   end
 end
