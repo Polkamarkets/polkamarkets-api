@@ -68,8 +68,10 @@ module Ethereum
           market_id: event[:topics][1].hex,
           outcome_id: event[:topics][2].hex,
           price: from_big_number_to_float(event[:args][0]),
-          timestamp: Time.at(event[:args][1]),
+          timestamp: event[:args][1],
         }
+      end.select do |event|
+        market_id.blank? || event[:market_id] == market_id
       end
     end
 
@@ -80,8 +82,10 @@ module Ethereum
         {
           market_id: event[:topics][1].hex,
           value: from_big_number_to_float(event[:args][0]),
-          timestamp: Time.at(event[:args][1]),
+          timestamp: event[:args][1],
         }
+      end.select do |event|
+        market_id.blank? || event.market_id == market_id
       end
     end
 
@@ -96,8 +100,10 @@ module Ethereum
           outcome_id: event[:args][0],
           shares: from_big_number_to_float(event[:args][1]),
           value: from_big_number_to_float(event[:args][2]),
-          timestamp: Time.at(event[:args][3]),
+          timestamp: event[:args][3],
         }
+      end.select do |event|
+        market_id.blank? || event.market_id == market_id
       end
     end
   end
