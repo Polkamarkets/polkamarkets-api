@@ -92,7 +92,7 @@ module Ethereum
         {
           address: "0x" + event[:topics][1].last(40),
           action: ACTIONS_MAPPING[event[:topics][2].hex],
-          market_id: event[:topics][2].hex,
+          market_id: event[:topics][3].hex,
           outcome_id: event[:args][0],
           shares: from_big_number_to_float(event[:args][1]),
           value: from_big_number_to_float(event[:args][2]),

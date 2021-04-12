@@ -24,7 +24,7 @@ module Ethereum
 
       sig = contract.parent.events.find { |e| e.name.to_s == event_name.to_s }.signature
       topics = [encoder.ensure_prefix(sig)]
-
+      # TODO: filter by topics
       events = contract.parent.client.eth_get_logs(topics: topics, address: contract.address, fromBlock: '0x0', toBlock: 'latest')
       events['result'].map do |log|
         decoded = {
