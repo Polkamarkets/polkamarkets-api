@@ -9,22 +9,25 @@ class Market < ApplicationRecord
   scope :open, -> { published.where('expires_at > ?', DateTime.now) }
   scope :resolved, -> { published.where('expires_at < ?', DateTime.now) }
 
-  def eth_data(reload = false)
+  def eth_data(refresh = false)
     return nil if eth_market_id.blank?
 
-    return @eth_data if @eth_data.present? && !reload
+    return @eth_data if @eth_data.present? && !refresh
 
-    Rails.cache.fetch("markets:#{eth_market_id}", expires_in: 24.hours, force: reload) do
+    Rails.cache.fetch("markets:#{eth_market_id}", expires_in: 24.hours, force: refresh) do
       @eth_data = Ethereum::PredictionMarketContractService.new.get_market(eth_market_id)
     end
   end
 
-  def outcome_prices(timeframe, candles = 12)
+  def outcome_prices(timeframe, candles: 12, refresh: false)
     return nil if eth_market_id.blank?
 
-    market_prices = Ethereum::PredictionMarketContractService.new.get_price_events(eth_market_id)
+    market_prices =
+      Rails.cache.fetch("markets:#{eth_market_id}:prices", expires_in: 24.hours, force: refresh) do
+        Ethereum::PredictionMarketContractService.new.get_price_events(eth_market_id)
+      end
 
-    grouped_market_prices = market_prices.group_by { |price| price[:outcome_id] }.map do |outcome_id, prices|
+    market_prices.group_by { |price| price[:outcome_id] }.map do |outcome_id, prices|
       chart_data_service = ChartDataService.new(prices, :price)
       # returning in hash form
       [outcome_id, chart_data_service.chart_data_for(timeframe, candles)]

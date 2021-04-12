@@ -4,6 +4,7 @@ class MarketOutcomeSerializer < ActiveModel::Serializer
     :market_id,
     :title,
     :price,
+    :price_charts
   )
 
   has_many :outcomes, class_name: "MarketOutcome", serialize: "MarketOutcomeSerializer"
@@ -11,12 +12,6 @@ class MarketOutcomeSerializer < ActiveModel::Serializer
   def id
     # returning eth market id in chain, not db market
     object.eth_market_id
-  end
-
-  def price
-    return nil if object.eth_data.blank?
-
-    object.eth_data[:price]
   end
 
   def market_id

@@ -26,26 +26,8 @@ class ChartDataService
   end
 
   def timestamps_for(timeframe, candles = 12)
-    # returns timestamp for each candle (last one corresponding to now)
-    # TODO: double check timezones issue
-    initial_datetime =
-      case timeframe
-      when '1h'
-        DateTime.now.beginning_of_hour
-      when '4h'
-        datetime = DateTime.now.beginning_of_hour
-        # making sure hour is a multiple of four
-        until datetime.hour % 4 == 0 do
-          datetime = datetime - 1.hour
-        end
-        datetime
-      when '1d'
-        DateTime.now.beginning_of_day
-      when '1m'
-        DateTime.now.beginning_of_month
-      else
-        raise "ChartDataService :: Timeframe #{timeframe} not supported"
-      end
+    # returns previous datetime for each candle (last one corresponding to now)
+    initial_datetime = self.class.previous_datetime_for(timeframe)
 
     # adding now as last candle
     timestamps = [DateTime.now.to_i]
@@ -73,5 +55,30 @@ class ChartDataService
     end
 
     values.reverse
+  end
+
+  def self.previous_datetime_for(timeframe)
+    # TODO: double check timezones issue
+    case timeframe
+    when '1h'
+      DateTime.now.beginning_of_hour
+    when '4h'
+      datetime = DateTime.now.beginning_of_hour
+      # making sure hour is a multiple of four
+      until datetime.hour % 4 == 0 do
+        datetime = datetime - 1.hour
+      end
+      datetime
+    when '1d'
+      DateTime.now.beginning_of_day
+    when '1m'
+      DateTime.now.beginning_of_month
+    else
+      raise "ChartDataService :: Timeframe #{timeframe} not supported"
+    end
+  end
+
+  def self.next_datetime_for(timeframe)
+    previous_datetime_for(timeframe) + TIMEFRAMES[timeframe]
   end
 end
