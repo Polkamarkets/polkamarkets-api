@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2021_04_08_044033) do
+ActiveRecord::Schema.define(version: 2021_04_13_062053) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -35,6 +35,13 @@ ActiveRecord::Schema.define(version: 2021_04_08_044033) do
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
     t.integer "eth_market_id"
+  end
+
+  create_table "portfolios", force: :cascade do |t|
+    t.string "eth_address", null: false
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["eth_address"], name: "index_portfolios_on_eth_address", unique: true
   end
 
   add_foreign_key "market_outcomes", "markets"
