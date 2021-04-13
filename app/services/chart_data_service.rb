@@ -3,9 +3,9 @@ class ChartDataService
 
   TIMEFRAMES = {
     "1h" => 1.hours,
-    "4h" => 4.hours,
-    "1d" => 1.day,
-    "1m" => 1.month
+    "24h" => 24.hours,
+    "30d" => 30.days,
+    "all" => 30.days # TODO: for now we'll use the same logic as 30d
   }
 
   def initialize(items_arr, item_key)
@@ -15,7 +15,7 @@ class ChartDataService
   end
 
   def chart_data_for(timeframe, candles = 12)
-    timestamps = timestamps_for(timeframe, candles)
+    timestamps = self.class.timestamps_for(timeframe, candles)
 
     values_at_timestamps(timestamps)
   end
@@ -25,16 +25,20 @@ class ChartDataService
     items_arr.find { |item| item[:timestamp] < timestamp }
   end
 
-  def timestamps_for(timeframe, candles = 12)
+  def self.timestamps_for(timeframe, candles = 12)
     # returns previous datetime for each candle (last one corresponding to now)
-    initial_datetime = self.class.previous_datetime_for(timeframe)
+    initial_datetime = previous_datetime_for(timeframe)
 
     # adding now as last candle
     timestamps = [DateTime.now.to_i]
 
+    # calculating number of candles
+    step = step_for(timeframe)
+    points = TIMEFRAMES[timeframe] / step
+
     # subracting one candle (last candle -> now)
-    (candles - 1).times do |index|
-      timestamp = (initial_datetime - TIMEFRAMES[timeframe] * index).to_i
+    points.times do |index|
+      timestamp = (initial_datetime - step * index).to_i
 
       timestamps.push(timestamp)
     end
@@ -57,28 +61,43 @@ class ChartDataService
     values.reverse
   end
 
+  def self.step_for(timeframe)
+    case timeframe
+    when '1h' # 12 candles
+      5.minutes
+    when '24h' # 24 candles
+      1.hour
+    when '30d' # 30 candles
+      1.day
+    when 'all'
+      1.day
+    else
+      raise "ChartDataService :: Timeframe #{timeframe} not supported"
+    end
+  end
+
   def self.previous_datetime_for(timeframe)
     # TODO: double check timezones issue
     case timeframe
     when '1h'
-      DateTime.now.beginning_of_hour
-    when '4h'
-      datetime = DateTime.now.beginning_of_hour
-      # making sure hour is a multiple of four
-      until datetime.hour % 4 == 0 do
-        datetime = datetime - 1.hour
+      datetime = DateTime.now.beginning_of_minute
+      # making sure minute is a multiple of 5
+      until datetime.minute % 5 == 0 do
+        datetime = datetime - 1.minute
       end
       datetime
-    when '1d'
+    when '24h'
+      datetime = DateTime.now.beginning_of_hour
+    when '30d'
       DateTime.now.beginning_of_day
-    when '1m'
-      DateTime.now.beginning_of_month
+    when 'all'
+      DateTime.now.beginning_of_day
     else
       raise "ChartDataService :: Timeframe #{timeframe} not supported"
     end
   end
 
   def self.next_datetime_for(timeframe)
-    previous_datetime_for(timeframe) + TIMEFRAMES[timeframe]
+    previous_datetime_for(timeframe) + step_for(timeframe)
   end
 end
