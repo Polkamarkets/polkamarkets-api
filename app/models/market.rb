@@ -33,4 +33,26 @@ class Market < ApplicationRecord
       [outcome_id, chart_data_service.chart_data_for(timeframe, candles)]
     end.to_h
   end
+
+  def action_events(address: nil, refresh: false)
+    return nil if eth_market_id.blank?
+
+    # TODO: review caching both globally and locally
+
+    market_actions =
+      Rails.cache.fetch("markets:#{eth_market_id}:actions", expires_in: 24.hours, force: refresh) do
+        Ethereum::PredictionMarketContractService.new.get_action_events(market_id: eth_market_id)
+      end
+
+    market_actions.select do |action|
+      address.blank? || action[:address].downcase == address.downcase
+    end
+  end
+
+  def refresh_cache!
+    # triggering a refresh for all cached ethereum data
+    eth_data(true)
+    outcome_prices('1h', refresh: true)
+    action_events(refresh: true)
+  end
 end
