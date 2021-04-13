@@ -13,7 +13,7 @@ module Api
 
     def address
       # TODO: send through encrypted header
-      @_address ||= params[:address]
+      @_address ||= params[:address]&.downcase
     end
   end
 end
