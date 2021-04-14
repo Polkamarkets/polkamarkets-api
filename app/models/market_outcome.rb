@@ -36,7 +36,16 @@ class MarketOutcome < ApplicationRecord
         end
 
       # changing value of last item for current price
-      price_chart.last[:value] = price if price_chart.present?
+      if price_chart.present?
+        price_chart.last[:value] = price if price_chart.present?
+        price_chart.last[:timestamp] = DateTime.now.to_i if price_chart.present?
+      else
+        price_chart = [{
+          value: price,
+          timestamp: Time.now.to_i,
+          date: Time.now,
+        }]
+      end
 
       {
         timeframe: timeframe,
