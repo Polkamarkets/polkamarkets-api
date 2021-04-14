@@ -52,6 +52,8 @@ module Ethereum
 
       # TODO: improve this
       {
+        market_id: market_id,
+        address: address,
         liquidity_shares: from_big_number_to_float(user_data[0]),
         outcome_shares: {
           0 => from_big_number_to_float(user_data[1]),
