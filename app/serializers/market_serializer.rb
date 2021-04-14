@@ -19,11 +19,6 @@ class MarketSerializer < ActiveModel::Serializer
     object.eth_market_id
   end
 
-  def image_url
-    # TODO
-    'https://localbitcoinnow.com/wp-content/uploads/2019/12/The-bit-logo-e1575819611411.png'
-  end
-
   def volume
     # TODO
     123
