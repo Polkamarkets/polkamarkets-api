@@ -4,6 +4,7 @@ class ChartDataService
   TIMEFRAMES = {
     "1h" => 1.hours,
     "24h" => 24.hours,
+    "7d" => 7.days,
     "30d" => 30.days,
     "all" => 30.days # TODO: for now we'll use the same logic as 30d
   }
@@ -67,6 +68,8 @@ class ChartDataService
       5.minutes
     when '24h' # 24 candles
       1.hour
+    when '7d' # 28 candles
+      6.hours
     when '30d' # 30 candles
       1.day
     when 'all'
@@ -88,6 +91,13 @@ class ChartDataService
       datetime
     when '24h'
       datetime = DateTime.now.beginning_of_hour
+    when '7d'
+      datetime = DateTime.now.beginning_of_hour
+      # making sure hour is a multiple of 6
+      until datetime.hour % 6 == 0 do
+        datetime = datetime - 1.hour
+      end
+      datetime
     when '30d'
       DateTime.now.beginning_of_day
     when 'all'
