@@ -37,19 +37,22 @@ class MarketOutcome < ApplicationRecord
 
       # changing value of last item for current price
       if price_chart.present?
-        price_chart.last[:value] = price if price_chart.present?
+        price_chart.last[:value] = price
         price_chart.last[:timestamp] = DateTime.now.to_i if price_chart.present?
+        change_percent = (price - price_chart.first[:value]) / price_chart.first[:value]
       else
         price_chart = [{
           value: price,
           timestamp: Time.now.to_i,
           date: Time.now,
         }]
+        change_percent = 0.0
       end
 
       {
         timeframe: timeframe,
-        prices: price_chart
+        prices: price_chart,
+        change_percent: change_percent
       }
     end
   end
