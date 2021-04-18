@@ -166,6 +166,12 @@ class Portfolio < ApplicationRecord
     end.to_h
 
     timestamps = ChartDataService.timestamps_for(timeframe)
+
+    first_action_timestamp = action_events.map { |a| a[:timestamp] }.min
+    # filtering timestamps prior to portfolio start date (only leaving first)
+    timestamps_to_exclude = timestamps.select { |timestamp| timestamp < first_action_timestamp }[1..-1]
+    timestamps.reject! { |timestamp| timestamps_to_exclude.include?(timestamp) }
+
     timestamps.reverse.map do |timestamp|
       # calculating holdings value at every chart's timestamp
       value = 0
