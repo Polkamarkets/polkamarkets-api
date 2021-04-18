@@ -34,6 +34,18 @@ class Market < ApplicationRecord
     end.to_h
   end
 
+  def liquidity_prices(timeframe, candles: 12, refresh: false)
+    return nil if eth_market_id.blank?
+
+    liquidity_prices =
+      Rails.cache.fetch("markets:#{eth_market_id}:liquidity", expires_in: 24.hours, force: refresh) do
+        Ethereum::PredictionMarketContractService.new.get_liquidity_events(eth_market_id)
+      end
+
+    chart_data_service = ChartDataService.new(liquidity_prices, :value)
+    chart_data_service.chart_data_for(timeframe, candles)
+  end
+
   def action_events(address: nil, refresh: false)
     return nil if eth_market_id.blank?
 

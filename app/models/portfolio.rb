@@ -40,6 +40,167 @@ class Portfolio < ApplicationRecord
       end
   end
 
+  def holdings_value
+    value = 0
+
+    holdings.each do |holding|
+      market_id = holding[:market_id]
+
+      # calculating liquidity value
+      if holding[:liquidity_shares] > 0
+        # TODO: use liquidity share price (currently assuming at 1)
+        value += holding[:liquidity_shares]
+      end
+
+      # calculating holding value
+      outcome_ids = [0, 1]
+      outcome_ids.each do |outcome_id|
+        if holding[:outcome_shares][outcome_id] > 0
+          outcome = MarketOutcome.includes(:market).find_by!(eth_market_id: outcome_id, markets: { eth_market_id: market_id })
+          value += holding[:outcome_shares][outcome_id] * outcome.price
+        end
+      end
+    end
+
+    value
+  end
+
+  def holdings_timeline
+    return @holdings_timeline if @holdings_timeline.present?
+
+    # seeding holdings array by timestamp
+    holdings = {}
+    @holdings_timeline = []
+
+    action_events.each do |action|
+      # still no action performed in this market, initializing object
+      if holdings[action[:market_id]].blank?
+        holdings[action[:market_id]] = {
+          liquidity_shares: 0,
+          outcome_shares: {
+            0 => 0,
+            1 => 0
+          }
+        }
+      end
+
+      case action[:action]
+      when 'buy'
+        holdings[action[:market_id]][:outcome_shares][action[:outcome_id]] += action[:shares]
+      when 'sell'
+        holdings[action[:market_id]][:outcome_shares][action[:outcome_id]] -= action[:shares]
+      when 'add_liquidity'
+        holdings[action[:market_id]][:liquidity_shares] += action[:shares]
+      when 'remove_liquidity'
+        holdings[action[:market_id]][:liquidity_shares] -= action[:shares]
+      end
+
+      @holdings_timeline.push({
+        timestamp: action[:timestamp],
+        holdings: holdings.clone,
+      })
+    end
+
+    @holdings_timeline
+  end
+
+  def chart_timeframe
+    return @chart_timeframe if @chart_timeframe.present?
+
+    first_action_timestamp = action_events.map { |a| a[:timestamp] }.min
+
+    timeframe = ChartDataService::TIMEFRAMES.find do |timeframe, duration|
+      (DateTime.now - duration).to_i < first_action_timestamp
+    end
+
+    @chart_timeframe = timeframe.first
+  end
+
+  def chart_timeline
+    expires_at = ChartDataService.next_datetime_for(chart_timeframe)
+    # caching chart until next candlestick
+    expires_in = expires_at.to_i - DateTime.now.to_i
+
+    portfolio_chart =
+      Rails.cache.fetch(
+        "portfolios:#{eth_address}:chart:#{chart_timeframe}",
+        expires_in: expires_in.seconds
+      ) do
+        # defaulting to [] if no portfolio data
+        chart_timeline_for(chart_timeframe) || []
+      end
+
+    # changing value of last item for current price
+    if portfolio_chart.present?
+      portfolio_chart.last[:value] = holdings_value if portfolio_chart.present?
+      portfolio_chart.last[:timestamp] = DateTime.now.to_i if portfolio_chart.present?
+    else
+      portfolio_chart = [
+        price_chart = [{
+          value: holdings_value,
+          timestamp: Time.now.to_i,
+          date: Time.now,
+        }]
+      ]
+    end
+
+    portfolio_chart
+  end
+
+  def chart_timeline_for(timeframe)
+    # fetching price chart from market ids
+    holding_market_ids = action_events.select { |a| ['buy', 'sell'].include?(a[:action]) }.map { |a| a[:market_id] }.uniq
+    liquidity_market_ids = action_events
+      .select { |a| ['add_liquidity', 'remove_liquidity']
+      .include?(a[:action]) }
+      .map { |a| a[:market_id] }
+      .uniq
+    market_charts = holding_market_ids.map do |market_id|
+      market = Market.find_by!(eth_market_id: market_id)
+      [market_id, market.outcome_prices(timeframe)]
+    end.to_h
+
+    liquidity_charts = holding_market_ids.map do |market_id|
+      market = Market.find_by!(eth_market_id: market_id)
+      [market_id, market.liquidity_prices(timeframe)]
+    end.to_h
+
+    timestamps = ChartDataService.timestamps_for(timeframe)
+    timestamps.reverse.map do |timestamp|
+      # calculating holdings value at every chart's timestamp
+      value = 0
+      holdings_at_timestamp = holdings_at(timestamp)
+      if holdings_at_timestamp.present?
+        holdings_at_timestamp[:holdings].each do |market_id, holdings|
+          # calculating liquidity value
+          if holdings[:liquidity_shares] > 0
+            # TODO: use liquidity share price (currently assuming at 1)
+            value += holdings[:liquidity_shares]
+          end
+
+          # calculating holdings value
+          outcome_ids = [0, 1]
+          outcome_ids.each do |outcome_id|
+            if holdings[:outcome_shares][outcome_id] > 0
+              price = market_charts[market_id][outcome_id].find { |point| point[:timestamp] == timestamp }[:value]
+              value += holdings[:outcome_shares][outcome_id] * price
+            end
+          end
+        end
+      end
+
+      {
+        value: value,
+        timestamp: timestamp,
+        date: Time.at(timestamp)
+      }
+    end
+  end
+
+  def holdings_at(timestamp)
+    holdings_timeline.select { |holding| holding[:timestamp] < timestamp }.max_by { |holding| holding[:timestamp] }
+  end
+
   def refresh_cache!
     # triggering a refresh for all cached ethereum data
     holdings(refresh: true)
