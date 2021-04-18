@@ -116,7 +116,7 @@ class Portfolio < ApplicationRecord
     @chart_timeframe = timeframe.first
   end
 
-  def chart_timeline
+  def holdings_chart
     expires_at = ChartDataService.next_datetime_for(chart_timeframe)
     # caching chart until next candlestick
     expires_in = expires_at.to_i - DateTime.now.to_i
@@ -127,7 +127,7 @@ class Portfolio < ApplicationRecord
         expires_in: expires_in.seconds
       ) do
         # defaulting to [] if no portfolio data
-        chart_timeline_for(chart_timeframe) || []
+        holdings_chart_for(chart_timeframe) || []
       end
 
     # changing value of last item for current price
@@ -147,7 +147,7 @@ class Portfolio < ApplicationRecord
     portfolio_chart
   end
 
-  def chart_timeline_for(timeframe)
+  def holdings_chart_for(timeframe)
     # fetching price chart from market ids
     holding_market_ids = action_events.select { |a| ['buy', 'sell'].include?(a[:action]) }.map { |a| a[:market_id] }.uniq
     liquidity_market_ids = action_events
