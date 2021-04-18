@@ -7,6 +7,14 @@ module Api
       render json: portfolio, status: :ok
     end
 
+    def reload
+      # forcing cache refresh of market
+      portfolio = Portfolio.find_by!(eth_address: address)
+      portfolio.refresh_cache!
+
+      render json: { status: 'ok' }, status: :ok
+    end
+
     private
 
     def address
