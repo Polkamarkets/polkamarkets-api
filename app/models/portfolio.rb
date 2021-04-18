@@ -40,6 +40,26 @@ class Portfolio < ApplicationRecord
       end
   end
 
+  def resolved_earnings
+    # profit/loss from resolved events
+    # TODO
+    123
+  end
+
+  def open_positions
+    holdings.count
+  end
+
+  def liquidity_provided
+    # TODO: use liquidity shares price
+    holdings.sum { |holding| holding[:liquidity_shares] }
+  end
+
+  def liquidity_fees_earned
+    # TODO
+    0
+  end
+
   def holdings_value
     value = 0
 
@@ -107,6 +127,9 @@ class Portfolio < ApplicationRecord
   def chart_timeframe
     return @chart_timeframe if @chart_timeframe.present?
 
+    # no actions in portfolio, returning 7d as default
+    return '7d' if action_events.blank?
+
     first_action_timestamp = action_events.map { |a| a[:timestamp] }.min
 
     timeframe = ChartDataService::TIMEFRAMES.find do |timeframe, duration|
@@ -148,6 +171,8 @@ class Portfolio < ApplicationRecord
   end
 
   def holdings_chart_for(timeframe)
+    return [] if action_events.blank?
+
     # fetching price chart from market ids
     holding_market_ids = action_events.select { |a| ['buy', 'sell'].include?(a[:action]) }.map { |a| a[:market_id] }.uniq
     liquidity_market_ids = action_events
