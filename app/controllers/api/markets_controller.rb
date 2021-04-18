@@ -17,7 +17,7 @@ module Api
     def reload
       # forcing cache refresh of market
       market = Market.find_by!(eth_market_id: params[:id])
-      market.eth_data(true)
+      market.refresh_cache!
 
       render json: { status: 'ok' }, status: :ok
     end

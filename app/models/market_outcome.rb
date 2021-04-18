@@ -6,12 +6,57 @@ class MarketOutcome < ApplicationRecord
 
   belongs_to :market
 
-  def eth_data(reload = false)
+  def eth_data(refresh = false)
     return nil if eth_market_id.blank? || market.eth_market_id.blank?
 
-    return @eth_data if @eth_data.present? && !reload
+    return @eth_data if @eth_data.present? && !refresh
 
-    market_eth_data = market.eth_data
+    market_eth_data = market.eth_data(refresh)
     @eth_data = market_eth_data[:outcomes].find { |outcome| outcome[:id].to_s == eth_market_id.to_s }
+  end
+
+  def price_charts
+    return nil if eth_market_id.blank? || market.eth_market_id.blank?
+
+    timeframes = ChartDataService::TIMEFRAMES.keys
+
+    timeframes.map do |timeframe|
+      expires_at = ChartDataService.next_datetime_for(timeframe)
+      # caching chart until next candlestick
+      expires_in = expires_at.to_i - DateTime.now.to_i
+
+      price_chart =
+        Rails.cache.fetch(
+          "markets:#{market.eth_market_id}:outcomes:#{eth_market_id}:chart:#{timeframe}",
+          expires_in: expires_in.seconds
+        ) do
+          outcome_prices = market.outcome_prices(timeframe)
+          # defaulting to [] if market is not in chain
+          outcome_prices[eth_market_id] || []
+        end
+
+      # changing value of last item for current price
+      if price_chart.present?
+        price_chart.last[:value] = price if price_chart.present?
+        price_chart.last[:timestamp] = DateTime.now.to_i if price_chart.present?
+      else
+        price_chart = [{
+          value: price,
+          timestamp: Time.now.to_i,
+          date: Time.now,
+        }]
+      end
+
+      {
+        timeframe: timeframe,
+        prices: price_chart
+      }
+    end
+  end
+
+  def price
+    return nil if eth_data.blank?
+
+    eth_data[:price]
   end
 end

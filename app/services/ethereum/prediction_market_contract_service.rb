@@ -52,6 +52,8 @@ module Ethereum
 
       # TODO: improve this
       {
+        market_id: market_id,
+        address: address,
         liquidity_shares: from_big_number_to_float(user_data[0]),
         outcome_shares: {
           0 => from_big_number_to_float(user_data[1]),
@@ -85,11 +87,11 @@ module Ethereum
           timestamp: event[:args][1],
         }
       end.select do |event|
-        market_id.blank? || event.market_id == market_id
+        market_id.blank? || event[:market_id] == market_id
       end
     end
 
-    def get_action_events(market_id = nil)
+    def get_action_events(market_id: nil, address: nil)
       events = get_events('ParticipantAction')
 
       events.map do |event|
@@ -103,7 +105,8 @@ module Ethereum
           timestamp: event[:args][3],
         }
       end.select do |event|
-        market_id.blank? || event.market_id == market_id
+        (market_id.blank? || event[:market_id] == market_id) &&
+          (address.blank? || event[:address].downcase == address.downcase)
       end
     end
   end

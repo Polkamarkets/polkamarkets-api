@@ -10,6 +10,12 @@ Rails.application.routes.draw do
         post :reload
       end
     end
+
+    resources :portfolios, only: [:show] do
+      member do
+        post :reload
+      end
+    end
   end
 
   root to: 'api/ping#ping'
