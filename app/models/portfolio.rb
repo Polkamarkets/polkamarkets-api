@@ -40,7 +40,7 @@ class Portfolio < ApplicationRecord
       end
   end
 
-  def resolved_earnings
+  def closed_markets_profit
     # profit/loss from resolved events
     # TODO
     123

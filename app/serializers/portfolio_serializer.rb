@@ -4,7 +4,7 @@ class PortfolioSerializer < ActiveModel::Serializer
     :holdings_value,
     :holdings_chart,
     :open_positions,
-    :resolved_earnings,
+    :closed_markets_profit,
     :liquidity_provided,
     :liquidity_fees_earned
   )
