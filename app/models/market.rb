@@ -61,6 +61,12 @@ class Market < ApplicationRecord
     end
   end
 
+  def volume
+    action_events
+      .select { |a| ['buy', 'sell'].include?(a[:action]) }
+      .sum { |a| a[:value] }
+  end
+
   def refresh_cache!
     # triggering a refresh for all cached ethereum data
     eth_data(true)

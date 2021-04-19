@@ -19,11 +19,6 @@ class MarketSerializer < ActiveModel::Serializer
     object.eth_market_id
   end
 
-  def volume
-    # TODO
-    123
-  end
-
   def liquidity
     return nil if object.eth_data.blank?
 
