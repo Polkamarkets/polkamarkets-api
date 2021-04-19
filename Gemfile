@@ -45,7 +45,10 @@ end
 # Windows does not include zoneinfo files, so bundle the tzinfo-data gem
 gem 'tzinfo-data', platforms: [:mingw, :mswin, :x64_mingw, :jruby]
 
+# debugging / error tracking
 gem 'pry-rails' # Powerful IRB alternative
+gem 'sentry-ruby'
+gem 'sentry-rails'
 
 # ethereum gems
 gem 'ethereum.rb'
