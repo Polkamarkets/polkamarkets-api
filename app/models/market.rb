@@ -19,6 +19,41 @@ class Market < ApplicationRecord
     end
   end
 
+  def closed?
+    return false if eth_data.blank?
+
+    eth_data[:expires_at] < DateTime.now
+  end
+
+  def expires_at
+    return nil if eth_data.blank?
+
+    eth_data[:expires_at]
+  end
+
+  def state
+    return nil if eth_data.blank?
+
+    state = eth_data[:state]
+
+    # market already closed, manually sending closed
+    return 'closed' if closed?
+
+    state
+  end
+
+  def liquidity
+    return nil if eth_data.blank?
+
+    eth_data[:liquidity]
+  end
+
+  def shares
+    return nil if eth_data.blank?
+
+    eth_data[:shares]
+  end
+
   def outcome_prices(timeframe, candles: 12, refresh: false)
     return nil if eth_market_id.blank?
 

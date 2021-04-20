@@ -234,7 +234,7 @@ class Portfolio < ApplicationRecord
 
   def refresh_cache!
     # triggering a refresh for all cached ethereum data
-    holdings(refresh: true)
     action_events(refresh: true)
+    holdings(refresh: true)
   end
 end

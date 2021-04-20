@@ -9,6 +9,12 @@ module Ethereum
       3 => 'remove_liquidity',
     }.freeze
 
+    STATES_MAPPING = {
+      0 => 'open',
+      1 => 'closed',
+      2 => 'resolved',
+    }
+
     def get_all_market_ids
       contract.call.get_markets
     end
@@ -25,7 +31,7 @@ module Ethereum
       {
         id: market_id,
         name: market_data[0],
-        state: market_data[1],
+        state: STATES_MAPPING[market_data[1]],
         expires_at: Time.at(market_data[2]).to_datetime,
         liquidity: from_big_number_to_float(market_data[3]),
         shares: from_big_number_to_float(market_data[4]),

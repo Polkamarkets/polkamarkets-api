@@ -4,6 +4,7 @@ class MarketSerializer < ActiveModel::Serializer
     :title,
     :description,
     :expires_at,
+    :state,
     :category,
     :subcategory,
     :image_url,
@@ -17,17 +18,5 @@ class MarketSerializer < ActiveModel::Serializer
   def id
     # returning eth market id in chain, not db market
     object.eth_market_id
-  end
-
-  def liquidity
-    return nil if object.eth_data.blank?
-
-    object.eth_data[:liquidity]
-  end
-
-  def shares
-    return nil if object.eth_data.blank?
-
-    object.eth_data[:shares]
   end
 end
