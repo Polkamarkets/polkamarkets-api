@@ -9,6 +9,28 @@ class Market < ApplicationRecord
   scope :open, -> { published.where('expires_at > ?', DateTime.now) }
   scope :resolved, -> { published.where('expires_at < ?', DateTime.now) }
 
+  def self.create_from_eth_market_id!(eth_market_id)
+    eth_data = Ethereum::PredictionMarketContractService.new.get_market(eth_market_id)
+
+    # invalid market
+    return false if eth_data[:outcomes].blank?
+
+    market = Market.new(
+      title: eth_data[:title],
+      category: "Foo", # no data from category in blockchain
+      subcategory: "Bar", # no data from category in blockchain
+      eth_market_id: eth_market_id,
+      expires_at: eth_data[:expires_at],
+      image_url: 'https://s2.coinmarketcap.com/static/img/coins/200x200/8579.png', # no data from image in blockchain
+    )
+    eth_data[:outcomes].each do |outcome|
+      market.outcomes << MarketOutcome.new(title: outcome[:title], eth_market_id: outcome[:id])
+    end
+
+    market.save!
+    market
+  end
+
   def eth_data(refresh = false)
     return nil if eth_market_id.blank?
 
@@ -17,6 +39,10 @@ class Market < ApplicationRecord
     Rails.cache.fetch("markets:#{eth_market_id}", expires_in: 24.hours, force: refresh) do
       @eth_data = Ethereum::PredictionMarketContractService.new.get_market(eth_market_id)
     end
+  end
+
+  def open?
+    !closed?
   end
 
   def closed?
@@ -37,9 +63,15 @@ class Market < ApplicationRecord
     state = eth_data[:state]
 
     # market already closed, manually sending closed
-    return 'closed' if closed?
+    return 'closed' if eth_data[:state] == 'open' && closed?
 
     state
+  end
+
+  def resolved_outcome_id
+    return nil if eth_data.blank?
+
+    eth_data[:resolved_outcome_id]
   end
 
   def liquidity
@@ -77,7 +109,7 @@ class Market < ApplicationRecord
         Ethereum::PredictionMarketContractService.new.get_liquidity_events(eth_market_id)
       end
 
-    chart_data_service = ChartDataService.new(liquidity_prices, :value)
+    chart_data_service = ChartDataService.new(liquidity_prices, :price)
     chart_data_service.chart_data_for(timeframe, candles)
   end
 

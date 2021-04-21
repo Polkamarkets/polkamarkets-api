@@ -10,7 +10,8 @@ class MarketSerializer < ActiveModel::Serializer
     :image_url,
     :liquidity,
     :volume,
-    :shares
+    :shares,
+    :resolved_outcome_id,
   )
 
   has_many :outcomes, class_name: "MarketOutcome", serialize: "MarketOutcomeSerializer"
