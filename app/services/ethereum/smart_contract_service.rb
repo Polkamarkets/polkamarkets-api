@@ -6,8 +6,8 @@ module Ethereum
 
     def initialize(url: nil, contract_address: nil)
       # chain parameters can be sent via params and env vars
-      url ||= Rails.application.secrets.ethereum_url
-      contract_address ||= Rails.application.secrets.ethereum_contract_address
+      url ||= Config.ethereum.url
+      contract_address ||= Config.ethereum.contract_address
 
       @client = Ethereum::HttpClient.new(url)
       abi = JSON.parse(File.read('app/contracts/PredictionMarket.json'))['abi']
