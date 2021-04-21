@@ -30,11 +30,12 @@ module Ethereum
 
       {
         id: market_id,
-        name: market_data[0],
+        title: market_data[0],
         state: STATES_MAPPING[market_data[1]],
         expires_at: Time.at(market_data[2]).to_datetime,
         liquidity: from_big_number_to_float(market_data[3]),
         shares: from_big_number_to_float(market_data[4]),
+        resolved_outcome_id: market_data[6],
         outcomes: outcomes
       }
     end
@@ -47,7 +48,7 @@ module Ethereum
 
         {
           id: outcome_id,
-          name: outcome_data[0],
+          title: outcome_data[0],
           price: from_big_number_to_float(outcome_data[1]),
         }
       end
@@ -90,7 +91,8 @@ module Ethereum
         {
           market_id: event[:topics][1].hex,
           value: from_big_number_to_float(event[:args][0]),
-          timestamp: event[:args][1],
+          price: from_big_number_to_float(event[:args][1]),
+          timestamp: event[:args][2],
         }
       end.select do |event|
         market_id.blank? || event[:market_id] == market_id
@@ -114,6 +116,19 @@ module Ethereum
         (market_id.blank? || event[:market_id] == market_id) &&
           (address.blank? || event[:address].downcase == address.downcase)
       end
+    end
+
+    def create_market(name, outcome_1_name, outcome_2_name, duration: 600, oracle_address: Config.ethereum.oracle_address, value: 1e17.to_i)
+      function_name = 'createMarket'
+      function_args = [
+        name,
+        duration,
+        oracle_address,
+        outcome_1_name,
+        outcome_2_name
+      ]
+
+      call_payable_function(function_name, function_args, value)
     end
   end
 end
