@@ -63,21 +63,22 @@ class Portfolio < ApplicationRecord
   def holdings_value
     value = 0
 
-    holdings.each do |holding|
-      market_id = holding[:market_id]
+    # fetching holdings markets
+    market_ids = holdings.map { |holding| holding[:market_id] }.uniq
+    markets = Market.where(eth_market_id: market_ids).includes(:outcomes)
+
+    markets.each do |market|
+      holding = holdings.find { |holding| holding[:market_id] == market.eth_market_id }
 
       # calculating liquidity value
       if holding[:liquidity_shares] > 0
-        # TODO: use liquidity share price (currently assuming at 1)
-        value += holding[:liquidity_shares]
+        value += holding[:liquidity_shares] * market.liquidity_price
       end
 
       # calculating holding value
-      outcome_ids = [0, 1]
-      outcome_ids.each do |outcome_id|
-        if holding[:outcome_shares][outcome_id] > 0
-          outcome = MarketOutcome.includes(:market).find_by!(eth_market_id: outcome_id, markets: { eth_market_id: market_id })
-          value += holding[:outcome_shares][outcome_id] * outcome.price
+      market.outcomes.each do |outcome|
+        if holding[:outcome_shares][outcome.eth_market_id] > 0
+          value += holding[:outcome_shares][outcome.eth_market_id] * outcome.price
         end
       end
     end
@@ -206,7 +207,6 @@ class Portfolio < ApplicationRecord
         holdings_at_timestamp[:holdings].each do |market_id, holdings|
           # calculating liquidity value
           if holdings[:liquidity_shares] > 0
-            # TODO: use liquidity share price (currently assuming at 1)
             price_item = liquidity_charts[market_id].select { |point| point[:timestamp] <= timestamp }&.last
             value += holdings[:liquidity_shares] * (price_item&.fetch(:value) || 0)
           end

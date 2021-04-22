@@ -86,11 +86,23 @@ class Market < ApplicationRecord
     eth_data[:shares]
   end
 
+  def liquidity_price
+    prices[:liquidity_price]
+  end
+
+  def prices(refresh: false)
+    return nil if eth_market_id.blank?
+
+    Rails.cache.fetch("markets:#{eth_market_id}:prices", expires_in: 24.hours, force: refresh) do
+      Ethereum::PredictionMarketContractService.new.get_market_prices(eth_market_id)
+    end
+  end
+
   def outcome_prices(timeframe, candles: 12, refresh: false)
     return nil if eth_market_id.blank?
 
     market_prices =
-      Rails.cache.fetch("markets:#{eth_market_id}:prices", expires_in: 24.hours, force: refresh) do
+      Rails.cache.fetch("markets:#{eth_market_id}:events:price", expires_in: 24.hours, force: refresh) do
         Ethereum::PredictionMarketContractService.new.get_price_events(eth_market_id)
       end
 
@@ -105,7 +117,7 @@ class Market < ApplicationRecord
     return nil if eth_market_id.blank?
 
     liquidity_prices =
-      Rails.cache.fetch("markets:#{eth_market_id}:liquidity", expires_in: 24.hours, force: refresh) do
+      Rails.cache.fetch("markets:#{eth_market_id}:events:liquidity", expires_in: 24.hours, force: refresh) do
         Ethereum::PredictionMarketContractService.new.get_liquidity_events(eth_market_id)
       end
 
@@ -142,5 +154,6 @@ class Market < ApplicationRecord
     eth_data(true)
     outcome_prices('1h', refresh: true)
     action_events(refresh: true)
+    prices(refresh: true)
   end
 end

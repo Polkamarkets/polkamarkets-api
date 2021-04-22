@@ -9,6 +9,7 @@ class MarketSerializer < ActiveModel::Serializer
     :subcategory,
     :image_url,
     :liquidity,
+    :liquidity_price,
     :volume,
     :shares,
     :resolved_outcome_id,

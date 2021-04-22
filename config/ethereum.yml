@@ -5,7 +5,7 @@ production:
 development:
    # local testnet
   url: 'http://localhost:8545'
-  contract_address: '0x988B6CFBf3332FF98FFBdED665b1F53a61f92612'
+  contract_address: '0xFF5181e2210AB92a5c9db93729Bc47332555B9E9'
   oracle_address: '0x90F8bf6A479f320ead074411a4B0e7944Ea8c9C1' # DO NOT USE THIS IN PRODUCTION
   oracle_private_key: '4f3edf983ac636a65a842ce7c78d9aa706d3b113bce9c46f30d7d21715b23b1d' # DO NOT USE THIS IN PRODUCTION
 
