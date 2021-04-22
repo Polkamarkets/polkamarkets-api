@@ -6,8 +6,8 @@ module Ethereum
 
     def initialize(url: nil, contract_address: nil)
       # chain parameters can be sent via params and env vars
-      url ||= Rails.application.secrets.ethereum_url
-      contract_address ||= Rails.application.secrets.ethereum_contract_address
+      url ||= Config.ethereum.url
+      contract_address ||= Config.ethereum.contract_address
 
       @client = Ethereum::HttpClient.new(url)
       abi = JSON.parse(File.read('app/contracts/PredictionMarket.json'))['abi']
@@ -36,6 +36,30 @@ module Ethereum
       end
     end
 
+    def call_payable_function(function_name, function_args, value)
+      function = contract.parent.functions.find { |f| f.name == function_name }
+      abi = contract.abi.find { |abi| abi['name'] == function_name }
+
+      inputs = abi['inputs'].map { |input| OpenStruct.new(input) }
+
+      input = encoder.encode_arguments(inputs, function_args)
+      data = encoder.ensure_prefix(function.signature + input)
+
+      tx_args = {
+        from: Config.ethereum.oracle_address,
+        to: Config.ethereum.contract_address,
+        data: data,
+        value: value,
+        nonce: client.get_nonce(key.address),
+        gas_limit: client.gas_limit,
+        gas_price: client.gas_price
+      }
+      tx = Eth::Tx.new(tx_args)
+      tx.sign(key)
+
+      client.eth_send_raw_transaction(tx.hex)
+    end
+
     private
 
     def decoder
@@ -44,6 +68,10 @@ module Ethereum
 
     def encoder
       @_encoder ||= Ethereum::Encoder.new
+    end
+
+    def key
+      @_key ||= Eth::Key.new priv: Config.ethereum.oracle_private_key
     end
   end
 end

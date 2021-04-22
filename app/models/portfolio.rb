@@ -117,7 +117,7 @@ class Portfolio < ApplicationRecord
 
       @holdings_timeline.push({
         timestamp: action[:timestamp],
-        holdings: holdings.clone,
+        holdings: holdings.deep_dup,
       })
     end
 
@@ -213,8 +213,8 @@ class Portfolio < ApplicationRecord
           outcome_ids = [0, 1]
           outcome_ids.each do |outcome_id|
             if holdings[:outcome_shares][outcome_id] > 0
-              price = market_charts[market_id][outcome_id].find { |point| point[:timestamp] == timestamp }[:value]
-              value += holdings[:outcome_shares][outcome_id] * price
+              price_item = market_charts[market_id][outcome_id].select { |point| point[:timestamp] <= timestamp }.last
+              value += holdings[:outcome_shares][outcome_id] * (price_item&.fetch(:value) || 0)
             end
           end
         end
@@ -233,8 +233,10 @@ class Portfolio < ApplicationRecord
   end
 
   def refresh_cache!
+    $redis_store.keys("portfolios:#{eth_address}*").each { |key| $redis_store.del key }
+
     # triggering a refresh for all cached ethereum data
-    holdings(refresh: true)
     action_events(refresh: true)
+    holdings(refresh: true)
   end
 end

@@ -52,6 +52,7 @@ gem 'sentry-rails'
 
 # ethereum gems
 gem 'ethereum.rb'
+gem 'eth'
 
 # serializers
 gem 'active_model_serializers'

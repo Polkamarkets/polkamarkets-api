@@ -1,0 +1,70 @@
+[
+  {
+    "title": "Will Bitcoin price close above 100k$ on Jan 1st 2022",
+    "description": "This is a description.",
+    "expires_at": "2022-01-01",
+    "oracle_url": "https://coinmarketcap.com/currencies/bitcoin/",
+    "category": "crypto",
+    "subcategory": "bitcoin",
+    "image_url": "https://icons.iconarchive.com/icons/cjdowner/cryptocurrency-flat/1024/Bitcoin-BTC-icon.png",
+    "outcomes": [
+      {
+        "title": "Yes"
+      },
+      {
+        "title": "No"
+      }
+    ]
+  },
+  {
+    "title": "Will Ethereum price close above 10k$ on Jan 1st 2022",
+    "description": "This is a description.",
+    "expires_at": "2022-01-01",
+    "oracle_url": "https://coinmarketcap.com/currencies/ethereum/",
+    "category": "crypto",
+    "subcategory": "ethereum",
+    "image_url": "https://icons.iconarchive.com/icons/cjdowner/cryptocurrency-flat/1024/Ethereum-ETH-icon.png",
+    "outcomes": [
+      {
+        "title": "Yes"
+      },
+      {
+        "title": "No"
+      }
+    ]
+  },
+  {
+    "title": "Will Real Madrid win the Champions League?",
+    "description": "This is a description.",
+    "expires_at": "2021-05-29",
+    "oracle_url": "https://www.uefa.com/uefachampionsleague/",
+    "category": "sports",
+    "subcategory": "football",
+    "image_url": "https://cdn.freebiesupply.com/logos/large/2x/real-madrid-c-f-logo-svg-vector.svg",
+    "outcomes": [
+      {
+        "title": "Yes"
+      },
+      {
+        "title": "No"
+      }
+    ]
+  },
+  {
+    "title": "Will temperature in Stockholm hit 18ºC on July 5th 2021?",
+    "description": "This is a description.",
+    "expires_at": "2021-07-05",
+    "oracle_url": "https://weather.com/",
+    "category": "weather",
+    "subcategory": "temperature",
+    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a0/Sweden_flag_orb_icon.svg/1200px-Sweden_flag_orb_icon.svg.png",
+    "outcomes": [
+      {
+        "title": "Yes"
+      },
+      {
+        "title": "No"
+      }
+    ]
+  }
+]

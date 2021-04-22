@@ -1,0 +1,8 @@
+development:
+  dsn: http://fake.url
+
+test:
+  dsn: http://fake.url
+
+production:
+  dsn: <%= ENV['SENTRY_DSN'] %>
