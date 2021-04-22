@@ -53,8 +53,12 @@ class ChartDataService
 
     for timestamp in timestamps do
       item = value_at(timestamp)
-      # no more data backwards
-      break if item.blank?
+      # no more data backwards - pulling first item and stopping backfill
+      if item.blank?
+        item = items_arr.last
+        values.push({ value: item[item_key], timestamp: item[:timestamp], date: Time.at(item[:timestamp]) })
+        break
+      end
 
       values.push({ value: item[item_key], timestamp: timestamp, date: Time.at(timestamp) })
     end
