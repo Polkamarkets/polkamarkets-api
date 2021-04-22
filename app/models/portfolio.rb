@@ -213,8 +213,8 @@ class Portfolio < ApplicationRecord
           outcome_ids = [0, 1]
           outcome_ids.each do |outcome_id|
             if holdings[:outcome_shares][outcome_id] > 0
-              price = market_charts[market_id][outcome_id].find { |point| point[:timestamp] == timestamp }[:value]
-              value += holdings[:outcome_shares][outcome_id] * price
+              price_item = market_charts[market_id][outcome_id].select { |point| point[:timestamp] <= timestamp }.last
+              value += holdings[:outcome_shares][outcome_id] * (price_item&.fetch(:value) || 0)
             end
           end
         end
