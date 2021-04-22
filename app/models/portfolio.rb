@@ -117,7 +117,7 @@ class Portfolio < ApplicationRecord
 
       @holdings_timeline.push({
         timestamp: action[:timestamp],
-        holdings: holdings.clone,
+        holdings: holdings.deep_dup,
       })
     end
 
@@ -233,6 +233,8 @@ class Portfolio < ApplicationRecord
   end
 
   def refresh_cache!
+    $redis_store.keys("portfolios:#{eth_address}*").each { |key| $redis_store.del key }
+
     # triggering a refresh for all cached ethereum data
     action_events(refresh: true)
     holdings(refresh: true)

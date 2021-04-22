@@ -135,6 +135,9 @@ class Market < ApplicationRecord
   end
 
   def refresh_cache!
+    # clearing all cache entries
+    $redis_store.keys("markets:#{eth_market_id}*").each { |key| $redis_store.del key }
+
     # triggering a refresh for all cached ethereum data
     eth_data(true)
     outcome_prices('1h', refresh: true)
