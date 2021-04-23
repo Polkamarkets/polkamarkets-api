@@ -3,7 +3,7 @@ Rails.application.routes.draw do
   namespace :admin do
     root :to => "markets#index"
 
-    resources :markets, only: [:index, :show] do
+    resources :markets do
       # TODO
     end
   end

@@ -10,6 +10,7 @@
           <th scope="col">Closes At</th>
           <th scope="col">Category</th>
           <th scope="col">State</th>
+          <th scope="col">Published?</th>
           <th scope="col" class="d-flex justify-content-end pr-3">Actions</th>
         </tr>
       </thead>
@@ -31,10 +32,21 @@
             <td><%= market.expires_at.to_date.to_s %></td>
             <td><%= market.category %></td>
             <td><span class="badge badge-<%= state_badge %>" data-toggle="tooltip" data-placement="top" title="<%= market.state %>"><%= market.state %></span></td>
+            <td>
+              <% if market.eth_market_id  %>
+                <%= link_to 'Yes', polkamarkets_web_market_url(market.eth_market_id), target: '_blank' %>
+              <% else %>
+                No
+              <% end %>
+            </td>
             <td class="d-flex justify-content-end">
-              <%= link_to 'View', '#', class: 'btn btn-primary btn-small mr-1' %>
+              <%= link_to 'View', admin_market_path(market.id), class: 'btn btn-primary btn-small mr-1' %>
               <%= link_to 'Edit', '#', class: 'btn btn-primary btn-small mr-1' %>
-              <%= link_to 'Destroy', '#', method: :delete, class: "btn btn-danger land-destroy-button", data: { confirm: "Data will also be deleted from Shopify. Are you sure?" } %>
+              <% if market.eth_market_id  %>
+                <%= link_to 'Destroy', '#', class: "btn btn-danger disabled", data: { toggle: "tooltip", placement: "top" }, title: "Published markets on the chain cannot be destroyed" %>
+              <% else %>
+                <%= link_to 'Destroy', '#', method: :delete, class: "btn btn-danger", data: { confirm: "Are you sure? This action cannot be undone." } %>
+              <% end %>
             </td>
           </tr>
         <% end %>
