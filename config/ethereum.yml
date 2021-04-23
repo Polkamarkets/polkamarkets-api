@@ -12,4 +12,5 @@ development:
   # kovan testnet
   # url: <%= ENV['ETHEREUM_URL'] %>
   # contract_address: "<%= ENV['ETHEREUM_CONTRACT_ADDRESS'].to_s %>"
+  # oracle_address: "<%= ENV['ETHEREUM_ORACLE_ADDRESS'].to_s %>" # DO NOT USE THIS IN PRODUCTION
   # oracle_private_key: "<%= ENV['ETHEREUM_ORACLE_PRIVATE_KEY'].to_s %>" # DO NOT USE THIS IN PRODUCTION
