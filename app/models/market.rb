@@ -1,9 +1,11 @@
 class Market < ApplicationRecord
   validates_presence_of :title, :category
 
-  has_many :outcomes, class_name: "MarketOutcome", dependent: :destroy
+  has_many :outcomes, -> { order('eth_market_id ASC, created_at ASC') }, class_name: "MarketOutcome", dependent: :destroy, inverse_of: :market
 
   validates :outcomes, length: { minimum: 2, maximum: 2 } # currently supporting only binary markets
+
+  accepts_nested_attributes_for :outcomes
 
   scope :published, -> { where('published_at < ?', DateTime.now).where.not(eth_market_id: nil) }
   scope :open, -> { published.where('expires_at > ?', DateTime.now) }

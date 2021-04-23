@@ -1,10 +1,10 @@
 class MarketOutcome < ApplicationRecord
-  validates_presence_of :title
+  validates_presence_of :title, :market
 
   validates_uniqueness_of :title, scope: :market
   validates_uniqueness_of :eth_market_id, scope: :market
 
-  belongs_to :market
+  belongs_to :market, inverse_of: :outcomes
 
   def eth_data(refresh = false)
     return nil if eth_market_id.blank? || market.eth_market_id.blank?

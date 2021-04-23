@@ -195,6 +195,9 @@ GEM
     sentry-ruby-core (4.3.2)
       concurrent-ruby
       faraday
+    simple_form (5.1.0)
+      actionpack (>= 5.2)
+      activemodel (>= 5.2)
     spring (2.1.1)
     spring-watcher-listen (2.0.1)
       listen (>= 2.7, < 4.0)
@@ -248,6 +251,7 @@ DEPENDENCIES
   sass-rails (>= 6)
   sentry-rails
   sentry-ruby
+  simple_form
   spring
   spring-watcher-listen (~> 2.0.0)
   turbolinks (~> 5)
