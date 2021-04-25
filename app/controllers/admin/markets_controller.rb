@@ -53,12 +53,19 @@ module Admin
         raise "Market #{@market.id} and Ethereum Market #{eth_market_id} do not match data!"
       end
 
+      # TODO: wrap all in transaction
       @market.update!(eth_market_id: eth_market_id)
+      eth_market_data[:outcomes].each_with_index do |outcome, index|
+        @market.outcomes[index].update!(eth_market_id: outcome[:id])
+      end
 
       redirect_to admin_markets_path, flash: { info: 'Market successfully published!' }
     end
 
     def resolve
+      @market.refresh_cache!
+
+      redirect_to admin_markets_path, flash: { info: 'Market successfully resolved!' }
     end
 
     private

@@ -44,4 +44,26 @@ document.addEventListener("turbolinks:load", async (_event) => {
       }
     })
   })
+
+  $('.btn-bepro-resolve').each(async (_index, btn) => {
+    $(btn).on('click', async (event) => {
+      const target = event.target
+      const contract = getContract()
+
+      try {
+        const res = await contract.resolveMarketOutcome({
+          marketId: target.dataset.ethMarketId,
+          outcomeId: target.dataset.ethOutcomeId,
+        })
+
+        $.post(
+          `/admin/markets/${target.dataset.marketId}/resolve`
+        )
+      } catch (e) {
+        // do nothing, only take action when successful
+        console.log('Error resolving market')
+        console.log(e)
+      }
+    })
+  })
 })
