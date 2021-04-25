@@ -1,0 +1,19 @@
+default: &default
+  <<: *default
+
+  # listeners credentials
+  spreadsheet_id: <%= ENV['WHITELIST_SPREADSHEET_ID'] || '1avUUbM0WJeZTzen1oDBcAv80MqaRbmrENeOAeorxknQ' %>
+  spreadsheet_tab: <%= ENV['WHITELIST_SPREADSHEET_ID'] || 'Beta Testing Spots' %>
+  spreadsheet_range: <%= ENV['WHITELIST_SPREADSHEET_RANGE'] || 'A2:F' %>
+
+development:
+  <<: *default
+
+test:
+  <<: *default
+
+staging:
+  <<: *default
+
+production:
+  <<: *default

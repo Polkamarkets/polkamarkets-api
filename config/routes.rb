@@ -27,6 +27,8 @@ Rails.application.routes.draw do
         post :reload
       end
     end
+
+    resources :whitelist, only: [:show]
   end
 
   root to: 'api/ping#ping'
