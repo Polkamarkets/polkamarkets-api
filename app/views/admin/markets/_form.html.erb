@@ -19,7 +19,14 @@
       <%= f.input :subcategory %>
     </div>
   </div>
-  <%= f.input :image_url %>
+  <div class="row">
+    <div class="col-6">
+      <%= f.input :oracle_source, required: true %>
+    </div>
+    <div class="col-6">
+      <%= f.input :image_url %>
+    </div>
+  </div>
 
   <div class="row">
     <%= f.simple_fields_for :outcomes do |ff| %>

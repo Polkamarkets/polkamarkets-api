@@ -80,6 +80,7 @@ module Admin
         :description,
         :expires_at,
         :published_at,
+        :oracle_source,
         :category,
         :subcategory,
         :expires_at,
