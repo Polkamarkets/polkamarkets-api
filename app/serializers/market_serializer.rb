@@ -4,6 +4,7 @@ class MarketSerializer < ActiveModel::Serializer
     :title,
     :description,
     :expires_at,
+    :oracle_source,
     :state,
     :category,
     :subcategory,

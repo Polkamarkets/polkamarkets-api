@@ -1,7 +1,7 @@
 class Market < ApplicationRecord
   include Immutable
 
-  validates_presence_of :title, :category, :expires_at
+  validates_presence_of :title, :category, :expires_at, :oracle_source
 
   has_many :outcomes, -> { order('eth_market_id ASC, created_at ASC') }, class_name: "MarketOutcome", dependent: :destroy, inverse_of: :market
 
@@ -25,6 +25,7 @@ class Market < ApplicationRecord
       title: eth_data[:title],
       category: "Foo", # no data from category in blockchain
       subcategory: "Bar", # no data from category in blockchain
+      oracle_source: "https://google.com", # TODO review: no data from oracle source in blockchain
       eth_market_id: eth_market_id,
       expires_at: eth_data[:expires_at],
       published_at: DateTime.now,
