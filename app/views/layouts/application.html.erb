@@ -1,15 +1,24 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>PolkamarketsApi</title>
+    <title>Polkamarkets Admin</title>
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
     <%= stylesheet_link_tag 'application', media: 'all', 'data-turbolinks-track': 'reload' %>
+    <%= stylesheet_pack_tag 'application', 'data-turbolinks-track': 'reload' %>
     <%= javascript_pack_tag 'application', 'data-turbolinks-track': 'reload' %>
   </head>
 
-  <body>
-    <%= yield %>
+  <body class="d-flex flex-column min-vh-100">
+    <%= render 'shared/header' %>
+    <main role="main" class="mt-3">
+      <div class="container">
+        <%= render 'shared/flash' %>
+        <%= yield %>
+      </div>
+    </main>
+    <%= render 'shared/footer' %>
   </body>
 </html>

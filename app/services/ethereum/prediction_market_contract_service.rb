@@ -54,6 +54,18 @@ module Ethereum
       end
     end
 
+    def get_market_prices(market_id)
+      market_prices = contract.call.get_market_prices(market_id)
+
+      {
+        liquidity_price: from_big_number_to_float(market_prices[0]),
+        outcome_shares: {
+          0 => from_big_number_to_float(market_prices[1]),
+          1 => from_big_number_to_float(market_prices[2])
+        }
+      }
+    end
+
     def get_user_market_shares(market_id, address)
       user_data = contract.call.get_user_market_shares(market_id, address)
 

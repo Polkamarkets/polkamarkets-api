@@ -1,0 +1,34 @@
+<%= simple_form_for [:admin, @market], namespace: 'admin' do |f| %>
+  <%= f.error_notification %>
+
+  <%= f.input :title, required: true %>
+
+  <div class="row">
+    <div class="col-6">
+      <%= f.input :expires_at , required: true, as: :datetime, html5: true %>
+    </div>
+    <div class="col-6">
+      <%= f.input :published_at, as: :datetime, html5: true %>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-6">
+      <%= f.input :category, required: true %>
+    </div>
+    <div class="col-6">
+      <%= f.input :subcategory %>
+    </div>
+  </div>
+  <%= f.input :image_url %>
+
+  <div class="row">
+    <%= f.simple_fields_for :outcomes do |ff| %>
+      <div class="col-6">
+        <%= ff.input :id, as: :hidden %>
+        <%= ff.input :title, required: true, label: "Outcome Title" %>
+      </div>
+    <% end %>
+  </div>
+
+  <%= f.button :submit, class: "btn-primary" %>
+<% end %>

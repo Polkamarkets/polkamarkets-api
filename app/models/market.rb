@@ -1,13 +1,19 @@
 class Market < ApplicationRecord
-  validates_presence_of :title, :category
+  include Immutable
 
-  has_many :outcomes, class_name: "MarketOutcome", dependent: :destroy
+  validates_presence_of :title, :category, :expires_at
+
+  has_many :outcomes, -> { order('eth_market_id ASC, created_at ASC') }, class_name: "MarketOutcome", dependent: :destroy, inverse_of: :market
 
   validates :outcomes, length: { minimum: 2, maximum: 2 } # currently supporting only binary markets
+
+  accepts_nested_attributes_for :outcomes
 
   scope :published, -> { where('published_at < ?', DateTime.now).where.not(eth_market_id: nil) }
   scope :open, -> { published.where('expires_at > ?', DateTime.now) }
   scope :resolved, -> { published.where('expires_at < ?', DateTime.now) }
+
+  IMMUTABLE_FIELDS = [:title]
 
   def self.create_from_eth_market_id!(eth_market_id)
     eth_data = Ethereum::PredictionMarketContractService.new.get_market(eth_market_id)
@@ -21,6 +27,7 @@ class Market < ApplicationRecord
       subcategory: "Bar", # no data from category in blockchain
       eth_market_id: eth_market_id,
       expires_at: eth_data[:expires_at],
+      published_at: DateTime.now,
       image_url: 'https://s2.coinmarketcap.com/static/img/coins/200x200/8579.png', # no data from image in blockchain
     )
     eth_data[:outcomes].each do |outcome|
@@ -51,8 +58,12 @@ class Market < ApplicationRecord
     eth_data[:expires_at] < DateTime.now
   end
 
+  def resolved?
+    closed? && eth_data[:state] == 'resolved'
+  end
+
   def expires_at
-    return nil if eth_data.blank?
+    return self["expires_at"] if eth_data.blank?
 
     eth_data[:expires_at]
   end
@@ -74,6 +85,12 @@ class Market < ApplicationRecord
     eth_data[:resolved_outcome_id]
   end
 
+  def resolved_outcome
+    return unless resolved?
+
+    outcomes.find_by!(eth_market_id: resolved_outcome_id)
+  end
+
   def liquidity
     return nil if eth_data.blank?
 
@@ -86,11 +103,23 @@ class Market < ApplicationRecord
     eth_data[:shares]
   end
 
+  def liquidity_price
+    prices[:liquidity_price]
+  end
+
+  def prices(refresh: false)
+    return {} if eth_market_id.blank?
+
+    Rails.cache.fetch("markets:#{eth_market_id}:prices", expires_in: 24.hours, force: refresh) do
+      Ethereum::PredictionMarketContractService.new.get_market_prices(eth_market_id)
+    end
+  end
+
   def outcome_prices(timeframe, candles: 12, refresh: false)
-    return nil if eth_market_id.blank?
+    return {} if eth_market_id.blank?
 
     market_prices =
-      Rails.cache.fetch("markets:#{eth_market_id}:prices", expires_in: 24.hours, force: refresh) do
+      Rails.cache.fetch("markets:#{eth_market_id}:events:price", expires_in: 24.hours, force: refresh) do
         Ethereum::PredictionMarketContractService.new.get_price_events(eth_market_id)
       end
 
@@ -102,10 +131,10 @@ class Market < ApplicationRecord
   end
 
   def liquidity_prices(timeframe, candles: 12, refresh: false)
-    return nil if eth_market_id.blank?
+    return [] if eth_market_id.blank?
 
     liquidity_prices =
-      Rails.cache.fetch("markets:#{eth_market_id}:liquidity", expires_in: 24.hours, force: refresh) do
+      Rails.cache.fetch("markets:#{eth_market_id}:events:liquidity", expires_in: 24.hours, force: refresh) do
         Ethereum::PredictionMarketContractService.new.get_liquidity_events(eth_market_id)
       end
 
@@ -114,7 +143,7 @@ class Market < ApplicationRecord
   end
 
   def action_events(address: nil, refresh: false)
-    return nil if eth_market_id.blank?
+    return [] if eth_market_id.blank?
 
     # TODO: review caching both globally and locally
 
@@ -142,5 +171,6 @@ class Market < ApplicationRecord
     eth_data(true)
     outcome_prices('1h', refresh: true)
     action_events(refresh: true)
+    prices(refresh: true)
   end
 end

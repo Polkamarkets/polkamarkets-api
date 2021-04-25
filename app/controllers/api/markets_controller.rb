@@ -2,7 +2,7 @@
 module Api
   class MarketsController < BaseController
     def index
-      markets = Market.all
+      markets = Market.published
 
       render json: markets, status: :ok
     end
