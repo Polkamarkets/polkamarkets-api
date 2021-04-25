@@ -50,6 +50,9 @@ document.addEventListener("turbolinks:load", async (_event) => {
       const target = event.target
       const contract = getContract()
 
+      // adding text to modal for confirmation purposes
+      $(`#bepro-resolve-confirmation-${target.dataset.marketId}`).text(`Waiting resolution tx for ${btn.innerText}...`)
+
       try {
         const res = await contract.resolveMarketOutcome({
           marketId: target.dataset.ethMarketId,
