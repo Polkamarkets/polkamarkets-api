@@ -59,7 +59,7 @@ class Market < ApplicationRecord
   end
 
   def resolved?
-    closed? && eth_data[:status] == 'resolved'
+    closed? && eth_data[:state] == 'resolved'
   end
 
   def expires_at
