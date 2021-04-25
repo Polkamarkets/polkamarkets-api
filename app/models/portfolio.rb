@@ -238,7 +238,7 @@ class Portfolio < ApplicationRecord
     $redis_store.keys("portfolios:#{eth_address}*").each { |key| $redis_store.del key }
 
     # triggering a refresh for all cached ethereum data
-    action_events(refresh: true)
-    holdings(refresh: true)
+    Cache::PortfolioActionEventsWorker.perform_async(id)
+    Cache::PortfolioHoldingsWorker.perform_async(id)
   end
 end
