@@ -50,6 +50,9 @@ gem 'tzinfo-data', platforms: [:mingw, :mswin, :x64_mingw, :jruby]
 # utils
 gem 'simple_form'
 
+# workers
+gem 'sidekiq'
+
 # debugging / error tracking
 gem 'pry-rails' # Powerful IRB alternative
 gem 'sentry-ruby'
