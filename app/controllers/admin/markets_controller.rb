@@ -1,9 +1,9 @@
 module Admin
   class MarketsController < BaseController
-    before_action :get_market, only: [:show, :edit, :update]
+    before_action :get_market, only: [:show, :edit, :update, :publish, :resolve]
 
     def index
-      @markets = Market.all
+      @markets = Market.order(created_at: :desc)
     end
 
     def show
@@ -23,7 +23,7 @@ module Admin
       @market = Market.create(market_params)
 
       if @market.persisted?
-        redirect_to admin_market_path(id: @market.id), flash: { info: 'Market created successfully!' }
+        redirect_to admin_markets_path, flash: { info: 'Market successfully created!' }
       else
         render :new
       end
@@ -31,7 +31,7 @@ module Admin
 
     def update
       if @market.update(market_params)
-        redirect_to admin_market_path(id: @market.id)
+        redirect_to admin_markets_path, flash: { info: 'Market successfully updated!' }
       else
         render :edit
       end
@@ -39,6 +39,26 @@ module Admin
 
     def destroy
       # TODO
+    end
+
+    def publish
+      raise "Ethereum Market not received!" if params[:eth_market_id].blank?
+      raise "Market #{@market.id} already has a Ethereum Market assigned!" if @market.eth_market_id.present?
+
+      eth_market_id = params[:eth_market_id].to_i
+      eth_market_data = Ethereum::PredictionMarketContractService.new.get_market(eth_market_id)
+
+      if eth_market_data[:title] != @market.title ||
+        eth_market_data[:outcomes].each_with_index.any? { |outcome, index| outcome[:title] != @market.outcomes[index].title }
+        raise "Market #{@market.id} and Ethereum Market #{eth_market_id} do not match data!"
+      end
+
+      @market.update!(eth_market_id: eth_market_id)
+
+      redirect_to admin_markets_path, flash: { info: 'Market successfully published!' }
+    end
+
+    def resolve
     end
 
     private
@@ -51,6 +71,8 @@ module Admin
       params.require(:market).permit(
         :title,
         :description,
+        :expires_at,
+        :published_at,
         :category,
         :subcategory,
         :expires_at,

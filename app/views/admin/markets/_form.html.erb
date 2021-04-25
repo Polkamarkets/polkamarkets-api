@@ -2,8 +2,23 @@
   <%= f.error_notification %>
 
   <%= f.input :title, required: true %>
-  <%= f.input :category, required: true %>
-  <%= f.input :subcategory %>
+
+  <div class="row">
+    <div class="col-6">
+      <%= f.input :expires_at , required: true, as: :datetime, html5: true %>
+    </div>
+    <div class="col-6">
+      <%= f.input :published_at, as: :datetime, html5: true %>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-6">
+      <%= f.input :category, required: true %>
+    </div>
+    <div class="col-6">
+      <%= f.input :subcategory %>
+    </div>
+  </div>
   <%= f.input :image_url %>
 
   <div class="row">

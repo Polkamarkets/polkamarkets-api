@@ -10,7 +10,7 @@
         <th scope="col">Category</th>
         <th scope="col">State</th>
         <th scope="col">Published?</th>
-        <th scope="col" class="d-flex justify-content-end pr-3">Actions</th>
+        <th scope="col" class="text-right">Actions</th>
       </tr>
     </thead>
     <tbody>
@@ -26,8 +26,8 @@
           end
         %>
         <tr>
-          <th><%= image_tag market.image_url, width: 50 %></th>
-          <th><%= market.title %></th>
+          <td><%= image_tag market.image_url, width: 50 %></td>
+          <td><%= market.title %></td>
           <td><%= market.expires_at&.to_date&.to_s %></td>
           <td><%= market.category %></td>
           <td><span class="badge badge-<%= state_badge %>" data-toggle="tooltip" data-placement="top" title="<%= market.state %>"><%= market.state %></span></td>
@@ -39,13 +39,27 @@
             <% end %>
           </td>
           <td class="d-flex justify-content-end">
-            <%= link_to 'View', admin_market_path(market.id), class: 'btn btn-primary btn-small mr-1' %>
-            <%= link_to 'Edit', '#', class: 'btn btn-primary btn-small mr-1' %>
-            <% if market.eth_market_id  %>
-              <%= link_to 'Destroy', '#', class: "btn btn-danger disabled", data: { toggle: "tooltip", placement: "top" }, title: "Published markets on the chain cannot be destroyed" %>
-            <% else %>
-              <%= link_to 'Destroy', '#', method: :delete, class: "btn btn-danger", data: { confirm: "Are you sure? This action cannot be undone." } %>
+            <% if market.eth_market_id && market.closed?  %>
+              <%= link_to 'Resolve', '#', class: "btn btn-warning mr-1", data: { confirm: "Are you sure? This action cannot be undone." }, onclick: "console.log('chupa')" %>
+            <% elsif market.eth_market_id.blank? %>
+              <%= link_to(
+                  'Publish',
+                  '#',
+                  class: "btn btn-success mr-1 btn-bepro-create",
+                  data: {
+                    market_id: market.id, # used for db -> eth linking
+                    name: market.title,
+                    duration: market.expires_at.to_i,
+                    oracle_address: Config.ethereum.oracle_address, # TODO: change this
+                    outcome1_name: market.outcomes.first.title,
+                    outcome2_name: market.outcomes.second.title,
+                    eth_amount: 0.1 # TODO: change this
+                  }
+                )
+              %>
+              <%= link_to 'Destroy', '#', method: :delete, class: "btn btn-danger mr-1", data: { confirm: "Are you sure? This action cannot be undone." } %>
             <% end %>
+            <%= link_to 'Edit', edit_admin_market_path(market.id), class: 'btn btn-primary btn-small' %>
           </td>
         </tr>
       <% end %>

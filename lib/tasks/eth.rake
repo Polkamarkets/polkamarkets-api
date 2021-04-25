@@ -33,7 +33,7 @@ namespace :eth do
         market_data['title'],
         market_data['outcomes'][0]['title'],
         market_data['outcomes'][1]['title'],
-        duration: ((DateTime.parse(market_data['expires_at']) - DateTime.now) * 1.days).to_i,
+        duration: DateTime.parse(market_data['expires_at']).to_i,
         value: 1e17.to_i
       )
 

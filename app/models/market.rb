@@ -1,5 +1,7 @@
 class Market < ApplicationRecord
-  validates_presence_of :title, :category
+  include Immutable
+
+  validates_presence_of :title, :category, :expires_at
 
   has_many :outcomes, -> { order('eth_market_id ASC, created_at ASC') }, class_name: "MarketOutcome", dependent: :destroy, inverse_of: :market
 
@@ -10,6 +12,8 @@ class Market < ApplicationRecord
   scope :published, -> { where('published_at < ?', DateTime.now).where.not(eth_market_id: nil) }
   scope :open, -> { published.where('expires_at > ?', DateTime.now) }
   scope :resolved, -> { published.where('expires_at < ?', DateTime.now) }
+
+  IMMUTABLE_FIELDS = [:title]
 
   def self.create_from_eth_market_id!(eth_market_id)
     eth_data = Ethereum::PredictionMarketContractService.new.get_market(eth_market_id)
@@ -54,7 +58,7 @@ class Market < ApplicationRecord
   end
 
   def expires_at
-    return nil if eth_data.blank?
+    return self["expires_at"] if eth_data.blank?
 
     eth_data[:expires_at]
   end
@@ -93,7 +97,7 @@ class Market < ApplicationRecord
   end
 
   def prices(refresh: false)
-    return nil if eth_market_id.blank?
+    return {} if eth_market_id.blank?
 
     Rails.cache.fetch("markets:#{eth_market_id}:prices", expires_in: 24.hours, force: refresh) do
       Ethereum::PredictionMarketContractService.new.get_market_prices(eth_market_id)
@@ -101,7 +105,7 @@ class Market < ApplicationRecord
   end
 
   def outcome_prices(timeframe, candles: 12, refresh: false)
-    return nil if eth_market_id.blank?
+    return {} if eth_market_id.blank?
 
     market_prices =
       Rails.cache.fetch("markets:#{eth_market_id}:events:price", expires_in: 24.hours, force: refresh) do
@@ -116,7 +120,7 @@ class Market < ApplicationRecord
   end
 
   def liquidity_prices(timeframe, candles: 12, refresh: false)
-    return nil if eth_market_id.blank?
+    return [] if eth_market_id.blank?
 
     liquidity_prices =
       Rails.cache.fetch("markets:#{eth_market_id}:events:liquidity", expires_in: 24.hours, force: refresh) do
@@ -128,7 +132,7 @@ class Market < ApplicationRecord
   end
 
   def action_events(address: nil, refresh: false)
-    return nil if eth_market_id.blank?
+    return [] if eth_market_id.blank?
 
     # TODO: review caching both globally and locally
 

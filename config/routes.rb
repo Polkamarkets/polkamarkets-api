@@ -4,7 +4,10 @@ Rails.application.routes.draw do
     root :to => "markets#index"
 
     resources :markets do
-      # TODO
+      member do
+        post :publish
+        post :resolve
+      end
     end
   end
 
