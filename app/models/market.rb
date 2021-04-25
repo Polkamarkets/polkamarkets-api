@@ -85,6 +85,12 @@ class Market < ApplicationRecord
     eth_data[:resolved_outcome_id]
   end
 
+  def resolved_outcome
+    return unless resolved?
+
+    outcomes.find_by!(eth_market_id: resolved_outcome_id)
+  end
+
   def liquidity
     return nil if eth_data.blank?
 

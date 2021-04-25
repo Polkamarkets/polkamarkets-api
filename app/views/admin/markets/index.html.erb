@@ -30,7 +30,13 @@
           <td><%= market.title %></td>
           <td><%= market.expires_at&.to_date&.to_s %></td>
           <td><%= market.category %></td>
-          <td><span class="badge badge-<%= state_badge %>" data-toggle="tooltip" data-placement="top" title="<%= market.state %>"><%= market.state %></span></td>
+          <td>
+            <% if market.resolved? %>
+              <span class="badge badge-<%= state_badge %>" data-toggle="tooltip" data-placement="top" title="Outcome: <%= market.resolved_outcome.title %>"><%= market.state %></span>
+            <% else %>
+              <span class="badge badge-<%= state_badge %>"><%= market.state %></span>
+            <% end %>
+          </td>
           <td>
             <% if market.eth_market_id  %>
               <%= link_to 'Yes', polkamarkets_web_market_url(market.eth_market_id), target: '_blank' %>
