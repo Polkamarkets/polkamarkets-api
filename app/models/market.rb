@@ -27,6 +27,7 @@ class Market < ApplicationRecord
       subcategory: "Bar", # no data from category in blockchain
       eth_market_id: eth_market_id,
       expires_at: eth_data[:expires_at],
+      published_at: DateTime.now,
       image_url: 'https://s2.coinmarketcap.com/static/img/coins/200x200/8579.png', # no data from image in blockchain
     )
     eth_data[:outcomes].each do |outcome|
@@ -55,6 +56,10 @@ class Market < ApplicationRecord
     return false if eth_data.blank?
 
     eth_data[:expires_at] < DateTime.now
+  end
+
+  def resolved?
+    closed? && eth_data[:status] == 'resolved'
   end
 
   def expires_at

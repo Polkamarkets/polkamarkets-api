@@ -39,7 +39,7 @@
             <% end %>
           </td>
           <td class="d-flex justify-content-end">
-            <% if market.eth_market_id && market.closed?  %>
+            <% if market.eth_market_id && market.closed? && !market.resolved? %>
               <%= link_to 'Resolve', '#', class: "btn btn-warning mr-1", data: { toggle: "modal", target: "#modal-resolve-#{market.id}" } %>
               <!-- Modal -->
               <div class="modal fade" id="modal-resolve-<%= market.id %>" tabindex="-1" aria-hidden="true">
