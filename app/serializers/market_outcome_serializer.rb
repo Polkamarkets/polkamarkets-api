@@ -3,6 +3,7 @@ class MarketOutcomeSerializer < ActiveModel::Serializer
     :id,
     :market_id,
     :title,
+    :shares,
     :price,
     :price_charts
   )

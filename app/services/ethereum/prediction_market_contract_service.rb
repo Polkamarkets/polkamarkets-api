@@ -50,6 +50,7 @@ module Ethereum
           id: outcome_id,
           title: outcome_data[0],
           price: from_big_number_to_float(outcome_data[1]),
+          shares: from_big_number_to_float(outcome_data[2]),
         }
       end
     end

@@ -66,4 +66,10 @@ class MarketOutcome < ApplicationRecord
 
     eth_data[:price]
   end
+
+  def shares
+    return nil if eth_data.blank?
+
+    eth_data[:shares]
+  end
 end
