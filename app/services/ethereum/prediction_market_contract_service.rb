@@ -34,7 +34,7 @@ module Ethereum
         state: STATES_MAPPING[market_data[1]],
         expires_at: Time.at(market_data[2]).to_datetime,
         liquidity: from_big_number_to_float(market_data[3]),
-        shares: from_big_number_to_float(market_data[4]),
+        shares: from_big_number_to_float(market_data[5]),
         resolved_outcome_id: market_data[6],
         outcomes: outcomes
       }
