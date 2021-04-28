@@ -100,6 +100,8 @@ GEM
     ffi-compiler (1.0.1)
       ffi (>= 1.0.0)
       rake
+    friendly_id (5.4.2)
+      activerecord (>= 4.0.0)
     gems (1.2.0)
     globalid (0.4.2)
       activesupport (>= 4.2.0)
@@ -297,6 +299,7 @@ DEPENDENCIES
   byebug
   eth
   ethereum.rb
+  friendly_id
   google-api-client
   googleauth
   jbuilder (~> 2.7)
