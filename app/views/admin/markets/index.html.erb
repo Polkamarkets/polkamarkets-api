@@ -39,7 +39,7 @@
           </td>
           <td>
             <% if market.eth_market_id  %>
-              <%= link_to 'Yes', polkamarkets_web_market_url(market.eth_market_id), target: '_blank' %>
+              <%= link_to 'Yes', polkamarkets_web_market_url(market.slug), target: '_blank' %>
             <% else %>
               No
             <% end %>

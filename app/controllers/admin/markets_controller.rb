@@ -71,7 +71,7 @@ module Admin
     private
 
     def get_market
-      @market = Market.find(params[:id])
+      @market = Market.friendly.find(params[:id])
     end
 
     def market_params
