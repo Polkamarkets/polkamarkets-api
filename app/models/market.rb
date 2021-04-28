@@ -1,5 +1,7 @@
 class Market < ApplicationRecord
   include Immutable
+  extend FriendlyId
+  friendly_id :title, use: :slugged
 
   validates_presence_of :title, :category, :expires_at, :oracle_source
 

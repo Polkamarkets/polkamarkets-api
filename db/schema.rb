@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2021_04_25_171642) do
+ActiveRecord::Schema.define(version: 2021_04_28_025431) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -37,6 +37,8 @@ ActiveRecord::Schema.define(version: 2021_04_25_171642) do
     t.integer "eth_market_id"
     t.string "image_url"
     t.string "oracle_source"
+    t.string "slug"
+    t.index ["slug"], name: "index_markets_on_slug", unique: true
   end
 
   create_table "portfolios", force: :cascade do |t|
