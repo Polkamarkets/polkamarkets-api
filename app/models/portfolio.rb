@@ -40,10 +40,31 @@ class Portfolio < ApplicationRecord
       end
   end
 
+  # profit/loss from resolved events
   def closed_markets_profit
-    # profit/loss from resolved events
-    # TODO
-    123
+    value = 0
+
+    # fetching holdings markets
+    market_ids = holdings.map { |holding| holding[:market_id] }.uniq
+
+    markets = Market.where(eth_market_id: market_ids).includes(:outcomes)
+    # filtering holdings by resolved by markets
+    markets = markets.to_a.select { |market| market.resolved? }
+
+    markets.each do |market|
+      # TODO: add liquidity shares value
+      holding = holdings.find { |holding| holding[:market_id] == market.eth_market_id }
+
+      # calculating holding value
+      market.outcomes.each do |outcome|
+        if holding[:outcome_shares][outcome.eth_market_id] > 0
+          multiplicator = outcome.eth_market_id == market.resolved_outcome_id ? 1 : -1
+          value += multiplicator * holding[:outcome_shares][outcome.eth_market_id]
+        end
+      end
+    end
+
+    value
   end
 
   def open_positions
@@ -65,6 +86,8 @@ class Portfolio < ApplicationRecord
     # fetching holdings markets
     market_ids = holdings.map { |holding| holding[:market_id] }.uniq
     markets = Market.where(eth_market_id: market_ids).includes(:outcomes)
+    # ignoring resolved by markets
+    markets = markets.to_a.reject { |market| market.resolved? }
 
     markets.each do |market|
       holding = holdings.find { |holding| holding[:market_id] == market.eth_market_id }
