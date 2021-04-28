@@ -1,6 +1,7 @@
 class MarketSerializer < ActiveModel::Serializer
   attributes(
     :id,
+    :slug,
     :title,
     :description,
     :expires_at,
