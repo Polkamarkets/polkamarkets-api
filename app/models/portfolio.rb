@@ -40,10 +40,31 @@ class Portfolio < ApplicationRecord
       end
   end
 
+  # profit/loss from resolved events
   def closed_markets_profit
-    # profit/loss from resolved events
-    # TODO
-    123
+    value = 0
+
+    # fetching holdings markets
+    market_ids = holdings.map { |holding| holding[:market_id] }.uniq
+
+    markets = Market.where(eth_market_id: market_ids).includes(:outcomes)
+    # filtering holdings by resolved by markets
+    markets = markets.to_a.select { |market| market.resolved? }
+
+    markets.each do |market|
+      # TODO: add liquidity shares value
+      holding = holdings.find { |holding| holding[:market_id] == market.eth_market_id }
+
+      # calculating holding value
+      market.outcomes.each do |outcome|
+        if holding[:outcome_shares][outcome.eth_market_id] > 0
+          multiplicator = outcome.eth_market_id == market.resolved_outcome_id ? 1 : -1
+          value += multiplicator * holding[:outcome_shares][outcome.eth_market_id]
+        end
+      end
+    end
+
+    value
   end
 
   def open_positions
@@ -51,7 +72,6 @@ class Portfolio < ApplicationRecord
   end
 
   def liquidity_provided
-    # TODO: use liquidity shares price
     holdings.sum { |holding| holding[:liquidity_shares] }
   end
 
@@ -66,6 +86,8 @@ class Portfolio < ApplicationRecord
     # fetching holdings markets
     market_ids = holdings.map { |holding| holding[:market_id] }.uniq
     markets = Market.where(eth_market_id: market_ids).includes(:outcomes)
+    # ignoring resolved by markets
+    markets = markets.to_a.reject { |market| market.resolved? }
 
     markets.each do |market|
       holding = holdings.find { |holding| holding[:market_id] == market.eth_market_id }
@@ -84,6 +106,18 @@ class Portfolio < ApplicationRecord
     end
 
     value
+  end
+
+  def holdings_performance
+    holdings_chart_24h = holdings_chart_for('24h')
+    holdings_chart_24h_value = holdings_chart_24h.first&.fetch(:value) || 0
+
+    return { change: 0, change_percent: 0 } unless holdings_chart_24h_value > 0
+
+    {
+      change: holdings_value - holdings_chart_24h_value,
+      change_percent: (holdings_value - holdings_chart_24h_value) / holdings_chart_24h_value,
+    }
   end
 
   def holdings_timeline
@@ -197,7 +231,7 @@ class Portfolio < ApplicationRecord
     first_action_timestamp = action_events.map { |a| a[:timestamp] }.min
     # filtering timestamps prior to portfolio start date (only leaving first)
     timestamps_to_exclude = timestamps.select { |timestamp| timestamp < first_action_timestamp }[1..-1]
-    timestamps.reject! { |timestamp| timestamps_to_exclude.include?(timestamp) }
+    timestamps.reject! { |timestamp| timestamps_to_exclude&.include?(timestamp) }
 
     timestamps.reverse.map do |timestamp|
       # calculating holdings value at every chart's timestamp

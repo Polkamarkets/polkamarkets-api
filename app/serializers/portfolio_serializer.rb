@@ -2,6 +2,7 @@ class PortfolioSerializer < ActiveModel::Serializer
   attributes(
     :address,
     :holdings_value,
+    :holdings_performance,
     :holdings_chart,
     :open_positions,
     :closed_markets_profit,
