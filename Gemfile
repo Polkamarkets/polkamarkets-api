@@ -71,3 +71,6 @@ gem 'rack-cors'
 # google spreadsheets
 gem 'googleauth'
 gem 'google-api-client'
+
+# s3
+gem 'aws-sdk-s3'
