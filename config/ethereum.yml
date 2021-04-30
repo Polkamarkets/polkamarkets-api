@@ -3,6 +3,11 @@ production:
   contract_address: "<%= ENV['ETHEREUM_CONTRACT_ADDRESS'].to_s %>"
   oracle_address: "<%= ENV['ETHEREUM_ORACLE_ADDRESS'].to_s %>"
 
+staging:
+  url: <%= ENV['ETHEREUM_URL'] %>
+  contract_address: "<%= ENV['ETHEREUM_CONTRACT_ADDRESS'].to_s %>"
+  oracle_address: "<%= ENV['ETHEREUM_ORACLE_ADDRESS'].to_s %>"
+
 development:
   # local testnet
   # url: 'http://localhost:8545'

@@ -180,6 +180,7 @@ class Market < ApplicationRecord
   end
 
   def image_url
+    # TODO: remove this column, temporary for transition
     return self['image_url'] if image.blank?
 
     Rails.application.routes.url_helpers.rails_blob_url(image)
