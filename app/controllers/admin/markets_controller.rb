@@ -85,6 +85,7 @@ module Admin
         :subcategory,
         :expires_at,
         :image_url,
+        :image,
         outcomes_attributes: [:id, :title]
       )
     end
