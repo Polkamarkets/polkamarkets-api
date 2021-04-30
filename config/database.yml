@@ -78,6 +78,12 @@ test:
 #   production:
 #     url: <%= ENV['DATABASE_URL'] %>
 #
+staging:
+  <<: *default
+  database: polkamarkets_api_production
+  username: polkamarkets_api
+  password: <%= ENV['POLKAMARKETS_API_DATABASE_PASSWORD'] %>
+
 production:
   <<: *default
   database: polkamarkets_api_production
