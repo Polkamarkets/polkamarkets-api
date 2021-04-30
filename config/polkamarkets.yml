@@ -1,5 +1,8 @@
 production:
   web_url: <%= ENV['POLKAMARKETS_WEB_URL'] %>
 
+staging:
+  web_url: <%= ENV['POLKAMARKETS_WEB_URL'] %>
+
 development:
   web_url: 'http://localhost:3000'

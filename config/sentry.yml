@@ -4,5 +4,8 @@ development:
 test:
   dsn: http://fake.url
 
+staging:
+  dsn: <%= ENV['SENTRY_DSN'] %>
+
 production:
   dsn: <%= ENV['SENTRY_DSN'] %>

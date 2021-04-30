@@ -7,6 +7,8 @@ class Market < ApplicationRecord
 
   has_many :outcomes, -> { order('eth_market_id ASC, created_at ASC') }, class_name: "MarketOutcome", dependent: :destroy, inverse_of: :market
 
+  has_one_attached :image
+
   validates :outcomes, length: { minimum: 2, maximum: 2 } # currently supporting only binary markets
 
   accepts_nested_attributes_for :outcomes
@@ -175,5 +177,12 @@ class Market < ApplicationRecord
     Cache::MarketOutcomePricesWorker.perform_async(id)
     Cache::MarketActionEventsWorker.perform_async(id)
     Cache::MarketPricesWorker.perform_async(id)
+  end
+
+  def image_url
+    # TODO: remove this column, temporary for transition
+    return self['image_url'] if image.blank?
+
+    Rails.application.routes.url_helpers.rails_blob_url(image)
   end
 end
