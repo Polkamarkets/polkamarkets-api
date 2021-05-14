@@ -15,6 +15,7 @@ class MarketSerializer < ActiveModel::Serializer
     :volume,
     :shares,
     :resolved_outcome_id,
+    :trading_view_symbol,
   )
 
   has_many :outcomes, class_name: "MarketOutcome", serialize: "MarketOutcomeSerializer"

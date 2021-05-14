@@ -29,6 +29,12 @@
   </div>
 
   <div class="row">
+    <div class="col">
+      <%= f.input :trading_view_symbol %>
+    </div>
+  </div>
+
+  <div class="row">
     <%= f.simple_fields_for :outcomes do |ff| %>
       <div class="col-6">
         <%= ff.input :id, as: :hidden %>

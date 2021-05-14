@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2021_04_30_041255) do
+ActiveRecord::Schema.define(version: 2021_05_14_184723) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -59,6 +59,7 @@ ActiveRecord::Schema.define(version: 2021_04_30_041255) do
     t.string "image_url"
     t.string "oracle_source"
     t.string "slug"
+    t.string "trading_view_symbol"
     t.index ["slug"], name: "index_markets_on_slug", unique: true
   end
 

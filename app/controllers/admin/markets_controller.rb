@@ -86,6 +86,7 @@ module Admin
         :expires_at,
         :image_url,
         :image,
+        :trading_view_symbol,
         outcomes_attributes: [:id, :title]
       )
     end
