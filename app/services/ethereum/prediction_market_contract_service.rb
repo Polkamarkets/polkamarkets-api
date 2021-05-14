@@ -7,6 +7,8 @@ module Ethereum
       1 => 'sell',
       2 => 'add_liquidity',
       3 => 'remove_liquidity',
+      4 => 'claim_winnings',
+      5 => 'claim_liquidity',
     }.freeze
 
     STATES_MAPPING = {
@@ -142,6 +144,22 @@ module Ethereum
       ]
 
       call_payable_function(function_name, function_args, value)
+    end
+
+    def stats(market_id: nil)
+      actions = get_action_events(market_id: market_id)
+
+      {
+        users: actions.map { |v| v[:address] }.uniq.count,
+        buy_count: actions.select { |v| v[:action] == 'buy' }.count,
+        buy_total: actions.select { |v| v[:action] == 'buy' }.sum { |v| v[:value] },
+        sell_count: actions.select { |v| v[:action] == 'sell' }.count,
+        sell_total: actions.select { |v| v[:action] == 'sell' }.sum { |v| v[:value] },
+        add_liquidity_count: actions.select { |v| v[:action] == 'add_liquidity' }.count,
+        add_liquidity_total: actions.select { |v| v[:action] == 'add_liquidity' }.sum { |v| v[:value] },
+        claim_winnings_count: actions.select { |v| v[:action] == 'claim_winnings' }.count,
+        claim_winnings_total: actions.select { |v| v[:action] == 'claim_winnings' }.sum { |v| v[:value] }
+      }
     end
   end
 end

@@ -9,14 +9,14 @@ module Api
 
     def show
       # finding items by eth market id
-      market = Market.friendly.find(params[:id])
+      market = Market.find_by_slug_or_eth_market_id(params[:id])
 
       render json: market, status: :ok
     end
 
     def reload
       # forcing cache refresh of market
-      market = Market.friendly.find(params[:id])
+      market = Market.find_by_slug_or_eth_market_id(params[:id])
       market.refresh_cache!
 
       render json: { status: 'ok' }, status: :ok
