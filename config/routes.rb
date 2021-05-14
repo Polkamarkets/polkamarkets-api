@@ -22,6 +22,8 @@ Rails.application.routes.draw do
         post :resolve
       end
     end
+
+    get 'stats' => "stats#index"
   end
 
   scope :module => 'api' do

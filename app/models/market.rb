@@ -19,6 +19,11 @@ class Market < ApplicationRecord
 
   IMMUTABLE_FIELDS = [:title]
 
+  def self.find_by_slug_or_eth_market_id(id_or_slug)
+    Market.find_by(slug: id_or_slug) ||
+      Market.find_by!(eth_market_id: id_or_slug)
+  end
+
   def self.create_from_eth_market_id!(eth_market_id)
     eth_data = Ethereum::PredictionMarketContractService.new.get_market(eth_market_id)
 
