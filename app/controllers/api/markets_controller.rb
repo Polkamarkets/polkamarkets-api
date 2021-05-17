@@ -2,7 +2,7 @@
 module Api
   class MarketsController < BaseController
     def index
-      markets = Market.published.order(created_at: :desc)
+      markets = Market.published.order(created_at: :desc).includes(:outcomes).with_attached_image
 
       render json: markets, status: :ok
     end
