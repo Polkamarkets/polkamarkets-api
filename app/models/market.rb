@@ -174,14 +174,15 @@ class Market < ApplicationRecord
   end
 
   def refresh_cache!
-    # clearing all cache entries
-    $redis_store.keys("markets:#{eth_market_id}*").each { |key| $redis_store.del key }
+    # disabling cache delete for now
+    # $redis_store.keys("markets:#{eth_market_id}*").each { |key| $redis_store.del key }
 
     # triggering a refresh for all cached ethereum data
     Cache::MarketEthDataWorker.perform_async(id)
     Cache::MarketOutcomePricesWorker.perform_async(id)
     Cache::MarketActionEventsWorker.perform_async(id)
     Cache::MarketPricesWorker.perform_async(id)
+    Cache::MarketLiquidityPricesWorker.perform_async(id)
   end
 
   def image_url
