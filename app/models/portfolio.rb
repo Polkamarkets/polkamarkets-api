@@ -174,7 +174,7 @@ class Portfolio < ApplicationRecord
     @chart_timeframe = timeframe.first
   end
 
-  def holdings_chart
+  def holdings_chart(refresh: false)
     expires_at = ChartDataService.next_datetime_for(chart_timeframe)
     # caching chart until next candlestick
     expires_in = expires_at.to_i - DateTime.now.to_i
@@ -182,7 +182,8 @@ class Portfolio < ApplicationRecord
     portfolio_chart =
       Rails.cache.fetch(
         "portfolios:#{eth_address}:chart:#{chart_timeframe}",
-        expires_in: expires_in.seconds
+        expires_in: expires_in.seconds,
+        force: refresh
       ) do
         # defaulting to [] if no portfolio data
         holdings_chart_for(chart_timeframe) || []
@@ -269,7 +270,8 @@ class Portfolio < ApplicationRecord
   end
 
   def refresh_cache!
-    $redis_store.keys("portfolios:#{eth_address}*").each { |key| $redis_store.del key }
+    # disabling cache delete for now
+    # $redis_store.keys("portfolios:#{eth_address}*").each { |key| $redis_store.del key }
 
     # triggering a refresh for all cached ethereum data
     Cache::PortfolioActionEventsWorker.perform_async(id)
