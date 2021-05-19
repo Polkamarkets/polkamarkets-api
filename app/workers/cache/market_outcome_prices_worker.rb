@@ -6,5 +6,7 @@ class Cache::MarketOutcomePricesWorker
     return if market.blank?
 
     market.outcome_prices('1h', refresh: true)
+    # caching outcome charts
+    market.outcomes.each { |outcome| outcome.price_charts(refresh: true) }
   end
 end

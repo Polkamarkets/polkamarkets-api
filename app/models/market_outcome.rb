@@ -19,7 +19,7 @@ class MarketOutcome < ApplicationRecord
     @eth_data = market_eth_data[:outcomes].find { |outcome| outcome[:id].to_s == eth_market_id.to_s }
   end
 
-  def price_charts
+  def price_charts(refresh: false)
     return nil if eth_market_id.blank? || market.eth_market_id.blank?
 
     timeframes = ChartDataService::TIMEFRAMES.keys
@@ -32,7 +32,8 @@ class MarketOutcome < ApplicationRecord
       price_chart =
         Rails.cache.fetch(
           "markets:#{market.eth_market_id}:outcomes:#{eth_market_id}:chart:#{timeframe}",
-          expires_in: expires_in.seconds
+          expires_in: expires_in.seconds,
+          force: refresh
         ) do
           outcome_prices = market.outcome_prices(timeframe)
           # defaulting to [] if market is not in chain
