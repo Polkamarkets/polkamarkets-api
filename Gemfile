@@ -58,6 +58,7 @@ gem 'sidekiq'
 gem 'pry-rails' # Powerful IRB alternative
 gem 'sentry-ruby'
 gem 'sentry-rails'
+gem 'newrelic_rpm'
 
 # ethereum gems
 gem 'ethereum.rb'

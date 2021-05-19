@@ -176,6 +176,7 @@ GEM
     msgpack (1.4.2)
     multi_json (1.15.0)
     multipart-post (2.1.1)
+    newrelic_rpm (6.12.0.367)
     nio4r (2.5.7)
     nokogiri (1.11.3)
       mini_portile2 (~> 2.5.0)
@@ -322,6 +323,7 @@ DEPENDENCIES
   googleauth
   jbuilder (~> 2.7)
   listen (~> 3.2)
+  newrelic_rpm
   pg (>= 0.18, < 2.0)
   pry-rails
   puma (~> 4.1)
