@@ -84,8 +84,8 @@ module Ethereum
       }
     end
 
-    def get_price_events(market_id = nil)
-      events = get_events('MarketOutcomePrice')
+    def get_price_events(market_id)
+      events = get_events('MarketOutcomePrice', [market_id])
 
       events.map do |event|
         {
@@ -94,13 +94,11 @@ module Ethereum
           price: from_big_number_to_float(event[:args][0]),
           timestamp: event[:args][1],
         }
-      end.select do |event|
-        market_id.blank? || event[:market_id] == market_id
       end
     end
 
     def get_liquidity_events(market_id = nil)
-      events = get_events('MarketLiquidity')
+      events = get_events('MarketLiquidity', [market_id])
 
       events.map do |event|
         {
@@ -109,13 +107,14 @@ module Ethereum
           price: from_big_number_to_float(event[:args][1]),
           timestamp: event[:args][2],
         }
-      end.select do |event|
-        market_id.blank? || event[:market_id] == market_id
       end
     end
 
     def get_action_events(market_id: nil, address: nil)
-      events = get_events('ParticipantAction')
+      # args: (address) participant, (uint) action, (uint) marketId,
+      args = [address, nil, market_id]
+
+      events = get_events('ParticipantAction', args)
 
       events.map do |event|
         {
@@ -127,9 +126,6 @@ module Ethereum
           value: from_big_number_to_float(event[:args][2]),
           timestamp: event[:args][3],
         }
-      end.select do |event|
-        (market_id.blank? || event[:market_id] == market_id) &&
-          (address.blank? || event[:address].downcase == address.downcase)
       end
     end
 

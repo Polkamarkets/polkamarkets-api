@@ -14,7 +14,7 @@ module Ethereum
       @contract = Ethereum::Contract.create(name: "PredictionMarket", address: contract_address, abi: abi, client: client)
     end
 
-    def get_events(event_name, filters = {})
+    def get_events(event_name, args = [])
       event_abi = contract.abi.find { |abi| abi['name'] == event_name.to_s }
       event_inputs = event_abi['inputs'].map { |input| OpenStruct.new(input) }
 
@@ -23,8 +23,22 @@ module Ethereum
       non_indexed_inputs = event_inputs.reject(&:indexed)
 
       sig = contract.parent.events.find { |e| e.name.to_s == event_name.to_s }.signature
+
       topics = [encoder.ensure_prefix(sig)]
-      # TODO: filter by topics
+      # filtering by indexed arguments (argument order has to be followed)
+      if args.present?
+        args.each_with_index do |arg, index|
+          encoded_argument =
+            if arg.blank?
+              nil
+            else
+              encoder.ensure_prefix(encoder.encode_arguments([indexed_inputs[index]], [arg]))
+            end
+
+          topics << encoded_argument
+        end
+      end
+
       events = contract.parent.client.eth_get_logs(topics: topics, address: contract.address, fromBlock: '0x0', toBlock: 'latest')
       events['result'].map do |log|
         decoded = {
