@@ -171,7 +171,7 @@ class Portfolio < ApplicationRecord
       (DateTime.now - duration).to_i < first_action_timestamp
     end
 
-    @chart_timeframe = timeframe.first
+    @chart_timeframe = timeframe&.first || 'all'
   end
 
   def holdings_chart(refresh: false)
