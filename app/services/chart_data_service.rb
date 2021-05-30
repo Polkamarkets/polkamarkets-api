@@ -6,7 +6,7 @@ class ChartDataService
     "24h" => 24.hours,
     "7d" => 7.days,
     "30d" => 30.days,
-    "all" => 30.days # TODO: for now we'll use the same logic as 30d
+    "all" => 30.days # default value, is overwritten when timeframe is higher
   }
 
   def initialize(items_arr, item_key)
@@ -15,8 +15,8 @@ class ChartDataService
     @item_key = item_key
   end
 
-  def chart_data_for(timeframe, candles = 12)
-    timestamps = self.class.timestamps_for(timeframe, candles)
+  def chart_data_for(timeframe)
+    timestamps = self.class.timestamps_for(timeframe, items_arr.last&.fetch(:timestamp))
 
     values_at_timestamps(timestamps)
   end
@@ -26,16 +26,24 @@ class ChartDataService
     items_arr.find { |item| item[:timestamp] < timestamp }
   end
 
-  def self.timestamps_for(timeframe, candles = 12)
+  def self.timestamps_for(timeframe, ending_timestamp = nil)
     # returns previous datetime for each candle (last one corresponding to now)
+    now = DateTime.now.to_i
     initial_datetime = previous_datetime_for(timeframe)
 
     # adding now as last candle
-    timestamps = [DateTime.now.to_i]
+    timestamps = [now]
 
     # calculating number of candles
     step = step_for(timeframe)
     points = TIMEFRAMES[timeframe] / step
+
+    # 'all' timeframe step / points can be recalculated
+    if timeframe == 'all' && ending_timestamp
+      step_days = ((now.to_i - ending_timestamp.to_i) / TIMEFRAMES[timeframe].to_f).ceil
+
+      step = step_days.days
+    end
 
     # subracting one candle (last candle -> now)
     points.times do |index|

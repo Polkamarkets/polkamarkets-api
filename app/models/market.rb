@@ -136,7 +136,7 @@ class Market < ApplicationRecord
     market_prices.group_by { |price| price[:outcome_id] }.map do |outcome_id, prices|
       chart_data_service = ChartDataService.new(prices, :price)
       # returning in hash form
-      [outcome_id, chart_data_service.chart_data_for(timeframe, candles)]
+      [outcome_id, chart_data_service.chart_data_for(timeframe)]
     end.to_h
   end
 
@@ -149,7 +149,7 @@ class Market < ApplicationRecord
       end
 
     chart_data_service = ChartDataService.new(liquidity_prices, :price)
-    chart_data_service.chart_data_for(timeframe, candles)
+    chart_data_service.chart_data_for(timeframe)
   end
 
   def action_events(address: nil, refresh: false)
