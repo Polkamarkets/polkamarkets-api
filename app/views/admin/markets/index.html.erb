@@ -26,7 +26,7 @@
           end
         %>
         <tr>
-          <td><%= image_tag market.image_url, width: 50 %></td>
+          <td><%= image_tag(market.image_url, width: 50) if market.image_url.present? %></td>
           <td><%= market.title %></td>
           <td><%= market.expires_at&.to_date&.to_s %></td>
           <td><%= market.category %></td>

@@ -3,6 +3,15 @@ module Api
   class MarketsController < BaseController
     def index
       markets = Market.published.order(created_at: :desc).includes(:outcomes).with_attached_image
+      if params[:state]
+        # when open, using database field to filter, otherwise using eth data
+        case params[:state]
+        when 'open'
+          markets = markets.open
+        else
+          markets = markets.select { |market| market.state == params[:state] }
+        end
+      end
 
       render json: markets, status: :ok
     end
