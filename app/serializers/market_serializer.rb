@@ -15,6 +15,7 @@ class MarketSerializer < ActiveModel::Serializer
     :liquidity_price,
     :volume,
     :shares,
+    :question_id,
     :resolved_outcome_id,
     :trading_view_symbol,
   )

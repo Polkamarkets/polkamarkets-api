@@ -28,6 +28,10 @@ module Ethereum
 
     def get_market(market_id)
       market_data = contract.call.get_market_data(market_id)
+      question_id = contract.call.get_market_question(market_id)
+      # formatting question_id
+      question_id = encoder.ensure_prefix(question_id.bytes.map { |v| v.to_s(16).rjust(2, '0') }.join)
+
       outcomes = get_market_outcomes(market_id)
 
       {
@@ -38,6 +42,7 @@ module Ethereum
         liquidity: from_big_number_to_float(market_data[3]),
         shares: from_big_number_to_float(market_data[5]),
         resolved_outcome_id: market_data[6],
+        question_id: question_id,
         outcomes: outcomes
       }
     end
