@@ -32,7 +32,7 @@
           <td><%= market.category %></td>
           <td>
             <% if market.resolved? %>
-              <span class="badge badge-<%= state_badge %>" data-toggle="tooltip" data-placement="top" title="Outcome: <%= market.resolved_outcome.title %>"><%= market.state %></span>
+              <span class="badge badge-<%= state_badge %>" data-toggle="tooltip" data-placement="top" title="Outcome: <%= market.resolved_outcome&.title %>"><%= market.state %></span>
             <% else %>
               <span class="badge badge-<%= state_badge %>"><%= market.state %></span>
             <% end %>

@@ -98,7 +98,7 @@ class Market < ApplicationRecord
   def resolved_outcome
     return unless resolved?
 
-    outcomes.find_by!(eth_market_id: resolved_outcome_id)
+    outcomes.find_by(eth_market_id: resolved_outcome_id)
   end
 
   def liquidity

@@ -4,6 +4,7 @@ class MarketSerializer < ActiveModel::Serializer
     :slug,
     :title,
     :description,
+    :created_at,
     :expires_at,
     :oracle_source,
     :state,
