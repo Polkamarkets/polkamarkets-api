@@ -3,6 +3,13 @@ module Api
   class MarketsController < BaseController
     def index
       markets = Market.published.order(created_at: :desc).includes(:outcomes).with_attached_image
+
+      if params[:id]
+        ids = params[:id].split(',').map(&:to_i)
+        # filtering by a list of ids, comma separated
+        markets = markets.where(eth_market_id: ids)
+      end
+
       if params[:state]
         # when open, using database field to filter, otherwise using eth data
         case params[:state]
