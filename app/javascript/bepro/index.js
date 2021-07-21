@@ -1,4 +1,5 @@
 // bepro-js library interaction with PredictionMarket contract
+import "regenerator-runtime/runtime.js";
 import * as beprojs from 'bepro-js'
 import $ from 'jquery'
 
