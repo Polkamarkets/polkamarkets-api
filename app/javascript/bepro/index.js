@@ -26,8 +26,7 @@ document.addEventListener("turbolinks:load", async (_event) => {
           name: target.dataset.name,
           duration: target.dataset.duration,
           oracleAddress: target.dataset.oracleAddress,
-          outcome1Name: target.dataset.outcome1Name,
-          outcome2Name: target.dataset.outcome2Name,
+          outcomes: [target.dataset.outcome1Name, target.dataset.outcome2Name],
           ethAmount: target.dataset.ethAmount
         })
 
