@@ -30,8 +30,7 @@ document.addEventListener("turbolinks:load", async (_event) => {
           ethAmount: target.dataset.ethAmount
         })
 
-        // TODO: improve this
-        const ethMarketId = parseInt(res.logs[1]['topics'][1])
+        const ethMarketId = parseInt(res.events.MarketLiquidity.returnValues[0])
 
         $.post(
           `/admin/markets/${target.dataset.marketId}/publish`,
