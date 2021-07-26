@@ -6,6 +6,7 @@ class MarketSerializer < ActiveModel::Serializer
     :description,
     :created_at,
     :expires_at,
+    :fee,
     :oracle_source,
     :state,
     :category,

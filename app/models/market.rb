@@ -101,6 +101,12 @@ class Market < ApplicationRecord
     eth_data[:question_id]
   end
 
+  def fee
+    return nil if eth_data.blank?
+
+    eth_data[:fee]
+  end
+
   def resolved_outcome
     return unless resolved?
 
