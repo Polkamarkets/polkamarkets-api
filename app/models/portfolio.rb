@@ -210,20 +210,23 @@ class Portfolio < ApplicationRecord
     return [] if action_events.blank?
 
     # fetching price chart from market ids
-    holding_market_ids = action_events.select { |a| ['buy', 'sell'].include?(a[:action]) }.map { |a| a[:market_id] }.uniq
+    holdings_market_ids = action_events.select { |a| ['buy', 'sell'].include?(a[:action]) }.map { |a| a[:market_id] }.uniq
     liquidity_market_ids = action_events
       .select { |a| ['add_liquidity', 'remove_liquidity']
       .include?(a[:action]) }
       .map { |a| a[:market_id] }
       .uniq
 
-    market_charts = holding_market_ids.map do |market_id|
-      market = Market.find_by!(eth_market_id: market_id)
+    holdings_markets = Market.where(eth_market_id: holdings_market_ids).all
+    liquidity_markets = Market.where(eth_market_id: liquidity_market_ids).all
+
+    market_charts = holdings_market_ids.map do |market_id|
+      market = holdings_markets.find { |market| market.eth_market_id == market_id }
       [market_id, market.outcome_prices(timeframe)]
     end.to_h
 
     liquidity_charts = liquidity_market_ids.map do |market_id|
-      market = Market.find_by!(eth_market_id: market_id)
+      market = liquidity_markets.find { |market| market.eth_market_id == market_id }
       [market_id, market.liquidity_prices(timeframe)]
     end.to_h
 
