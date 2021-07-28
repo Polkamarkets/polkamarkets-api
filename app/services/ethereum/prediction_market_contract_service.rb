@@ -9,6 +9,7 @@ module Ethereum
       3 => 'remove_liquidity',
       4 => 'claim_winnings',
       5 => 'claim_liquidity',
+      6 => 'claim_fees',
     }.freeze
 
     STATES_MAPPING = {
@@ -28,6 +29,10 @@ module Ethereum
 
     def get_market(market_id)
       market_data = contract.call.get_market_data(market_id)
+      market_alt_data = contract.call.get_market_alt_data(market_id)
+      # formatting question_id
+      question_id = encoder.ensure_prefix(market_alt_data[1].bytes.map { |v| v.to_s(16).rjust(2, '0') }.join)
+
       outcomes = get_market_outcomes(market_id)
 
       {
@@ -36,8 +41,10 @@ module Ethereum
         state: STATES_MAPPING[market_data[1]],
         expires_at: Time.at(market_data[2]).to_datetime,
         liquidity: from_big_number_to_float(market_data[3]),
+        fee: from_big_number_to_float(market_alt_data[0]),
         shares: from_big_number_to_float(market_data[5]),
         resolved_outcome_id: market_data[6],
+        question_id: question_id,
         outcomes: outcomes
       }
     end
@@ -84,6 +91,14 @@ module Ethereum
       }
     end
 
+    def get_user_liquidity_fees_earned(address)
+      # args: (address) participant, (uint) action, (uint) marketId,
+      args = [address, 6, nil]
+
+      events = get_events('ParticipantAction', args)
+      events.sum { |event| from_big_number_to_float(event[:args][2]) }
+    end
+
     def get_price_events(market_id)
       events = get_events('MarketOutcomePrice', [market_id])
 
@@ -127,6 +142,17 @@ module Ethereum
           timestamp: event[:args][3],
         }
       end
+    end
+
+    def get_market_resolved_at(market_id)
+      # args: (address) participant, (uint) marketId,
+      args = [nil, market_id]
+
+      events = get_events('MarketResolved', args)
+      # market still not resolved / no valid resolution event
+      return -1 if events.count != 1
+
+      events[0][:args][1]
     end
 
     def create_market(name, outcome_1_name, outcome_2_name, duration: 600, oracle_address: Config.ethereum.oracle_address, value: 1e17.to_i)

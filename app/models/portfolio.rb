@@ -75,9 +75,13 @@ class Portfolio < ApplicationRecord
     holdings.sum { |holding| holding[:liquidity_shares] }
   end
 
-  def liquidity_fees_earned
-    # TODO
-    0
+  def liquidity_fees_earned(refresh: false)
+    return @liquidity_fees_earned if @liquidity_fees_earned.present? && !refresh
+
+    @liquidity_fees_earned ||=
+      Rails.cache.fetch("portfolios:#{eth_address}:liquidity_fees", expires_in: 24.hours, force: refresh) do
+        Ethereum::PredictionMarketContractService.new.get_user_liquidity_fees_earned(eth_address)
+      end
   end
 
   def holdings_value
@@ -86,7 +90,7 @@ class Portfolio < ApplicationRecord
     # fetching holdings markets
     market_ids = holdings.map { |holding| holding[:market_id] }.uniq
     markets = Market.where(eth_market_id: market_ids).includes(:outcomes)
-    # ignoring resolved by markets
+    # ignoring resolved markets
     markets = markets.to_a.reject { |market| market.resolved? }
 
     markets.each do |market|
@@ -210,20 +214,23 @@ class Portfolio < ApplicationRecord
     return [] if action_events.blank?
 
     # fetching price chart from market ids
-    holding_market_ids = action_events.select { |a| ['buy', 'sell'].include?(a[:action]) }.map { |a| a[:market_id] }.uniq
+    holdings_market_ids = action_events.select { |a| ['buy', 'sell'].include?(a[:action]) }.map { |a| a[:market_id] }.uniq
     liquidity_market_ids = action_events
       .select { |a| ['add_liquidity', 'remove_liquidity']
       .include?(a[:action]) }
       .map { |a| a[:market_id] }
       .uniq
 
-    market_charts = holding_market_ids.map do |market_id|
-      market = Market.find_by!(eth_market_id: market_id)
+    holdings_markets = Market.where(eth_market_id: holdings_market_ids).all
+    liquidity_markets = Market.where(eth_market_id: liquidity_market_ids).all
+
+    market_charts = holdings_market_ids.map do |market_id|
+      market = holdings_markets.find { |market| market.eth_market_id == market_id }
       [market_id, market.outcome_prices(timeframe)]
     end.to_h
 
     liquidity_charts = liquidity_market_ids.map do |market_id|
-      market = Market.find_by!(eth_market_id: market_id)
+      market = liquidity_markets.find { |market| market.eth_market_id == market_id }
       [market_id, market.liquidity_prices(timeframe)]
     end.to_h
 
@@ -240,8 +247,14 @@ class Portfolio < ApplicationRecord
       holdings_at_timestamp = holdings_at(timestamp)
       if holdings_at_timestamp.present?
         holdings_at_timestamp[:holdings].each do |market_id, holdings|
+          market = holdings_markets.find { |market| market.eth_market_id == market_id } ||
+            liquidity_markets.find { |market| market.eth_market_id == market_id }
+
+          # ignoring resolved markets
+          next if market.resolved_at > 0 && market.resolved_at < timestamp
+
           # calculating liquidity value
-          if holdings[:liquidity_shares] > 0
+          if holdings[:liquidity_shares] > 0 && !market.resolved?
             price_item = liquidity_charts[market_id].select { |point| point[:timestamp] <= timestamp }&.last
             value += holdings[:liquidity_shares] * (price_item&.fetch(:value) || 0)
           end
@@ -276,5 +289,6 @@ class Portfolio < ApplicationRecord
     # triggering a refresh for all cached ethereum data
     Cache::PortfolioActionEventsWorker.perform_async(id)
     Cache::PortfolioHoldingsWorker.perform_async(id)
+    Cache::PortfolioLiquidityFeesWorker.perform_async(id)
   end
 end

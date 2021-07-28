@@ -6,6 +6,7 @@ class MarketSerializer < ActiveModel::Serializer
     :description,
     :created_at,
     :expires_at,
+    :fee,
     :oracle_source,
     :state,
     :category,
@@ -15,6 +16,7 @@ class MarketSerializer < ActiveModel::Serializer
     :liquidity_price,
     :volume,
     :shares,
+    :question_id,
     :resolved_outcome_id,
     :trading_view_symbol,
   )

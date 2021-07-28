@@ -95,6 +95,18 @@ class Market < ApplicationRecord
     eth_data[:resolved_outcome_id]
   end
 
+  def question_id
+    return nil if eth_data.blank?
+
+    eth_data[:question_id]
+  end
+
+  def fee
+    return nil if eth_data.blank?
+
+    eth_data[:fee]
+  end
+
   def resolved_outcome
     return unless resolved?
 
@@ -115,6 +127,14 @@ class Market < ApplicationRecord
 
   def liquidity_price
     prices[:liquidity_price]
+  end
+
+  def resolved_at(refresh: false)
+    return -1 if eth_market_id.blank?
+
+    Rails.cache.fetch("markets:#{eth_market_id}:resolved_at", expires_in: 24.hours, force: refresh) do
+      Ethereum::PredictionMarketContractService.new.get_market_resolved_at(eth_market_id)
+    end
   end
 
   def prices(refresh: false)

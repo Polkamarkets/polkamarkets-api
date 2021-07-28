@@ -46,7 +46,8 @@
           </td>
           <td class="d-flex justify-content-end">
             <% if market.eth_market_id && market.closed? && !market.resolved? %>
-              <%= link_to 'Resolve', '#', class: "btn btn-warning mr-1", data: { toggle: "modal", target: "#modal-resolve-#{market.id}" } %>
+              <%= link_to 'Resolve', '#', class: "btn btn-warning mr-1 btn-bepro-resolve", data: { eth_market_id: market.eth_market_id, market_id: market.id } %>
+              <%= link_to 'Answer', '#', class: "btn btn-warning mr-1", data: { toggle: "modal", target: "#modal-resolve-#{market.id}" } %>
               <!-- Modal -->
               <div class="modal fade" id="modal-resolve-<%= market.id %>" tabindex="-1" aria-hidden="true">
                 <div class="modal-dialog" role="document">
@@ -63,10 +64,12 @@
                         <% market.outcomes.each do |outcome|  %>
                           <button
                             type="button"
-                            class="btn btn-primary btn-bepro-resolve ml-1 mr-1"
+                            class="btn btn-primary btn-bepro-answer ml-1 mr-1"
                             data-market-id=<%= market.id %>
                             data-eth-market-id=<%= market.eth_market_id %>
                             data-eth-outcome-id=<%= outcome.eth_market_id %>
+                            data-question-id=<%= market.question_id %>
+                            data-erc20-amount="1"
                           >
                             <%= outcome.title %></button>
                         <% end %>
