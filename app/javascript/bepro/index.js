@@ -22,6 +22,9 @@ document.addEventListener("turbolinks:load", async (_event) => {
   bepro.start()
   await bepro.login()
 
+  const contract = getBeproContract()
+  console.log(contract);
+
   $('.btn-bepro-create').each(async (_index, btn) => {
     $(btn).on('click', async (event) => {
       const target = event.target
