@@ -9,6 +9,7 @@ module Ethereum
       3 => 'remove_liquidity',
       4 => 'claim_winnings',
       5 => 'claim_liquidity',
+      6 => 'claim_fees',
     }.freeze
 
     STATES_MAPPING = {
@@ -88,6 +89,14 @@ module Ethereum
           1 => from_big_number_to_float(user_data[2])
         }
       }
+    end
+
+    def get_user_liquidity_fees_earned(address)
+      # args: (address) participant, (uint) action, (uint) marketId,
+      args = [address, 6, nil]
+
+      events = get_events('ParticipantAction', args)
+      events.sum { |event| from_big_number_to_float(event[:args][2]) }
     end
 
     def get_price_events(market_id)

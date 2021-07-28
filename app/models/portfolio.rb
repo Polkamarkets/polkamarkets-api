@@ -75,9 +75,13 @@ class Portfolio < ApplicationRecord
     holdings.sum { |holding| holding[:liquidity_shares] }
   end
 
-  def liquidity_fees_earned
-    # TODO
-    0
+  def liquidity_fees_earned(refresh: false)
+    return @liquidity_fees_earned if @liquidity_fees_earned.present? && !refresh
+
+    @liquidity_fees_earned ||=
+      Rails.cache.fetch("portfolios:#{eth_address}:liquidity_fees", expires_in: 24.hours, force: refresh) do
+        Ethereum::PredictionMarketContractService.new.get_user_liquidity_fees_earned(eth_address)
+      end
   end
 
   def holdings_value
@@ -285,5 +289,6 @@ class Portfolio < ApplicationRecord
     # triggering a refresh for all cached ethereum data
     Cache::PortfolioActionEventsWorker.perform_async(id)
     Cache::PortfolioHoldingsWorker.perform_async(id)
+    Cache::PortfolioLiquidityFeesWorker.perform_async(id)
   end
 end
