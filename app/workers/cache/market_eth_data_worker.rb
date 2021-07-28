@@ -6,5 +6,6 @@ class Cache::MarketEthDataWorker
     return if market.blank?
 
     market.eth_data(true)
+    market.resolved_at(refresh: true)
   end
 end

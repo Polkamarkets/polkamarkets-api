@@ -86,7 +86,7 @@ class Portfolio < ApplicationRecord
     # fetching holdings markets
     market_ids = holdings.map { |holding| holding[:market_id] }.uniq
     markets = Market.where(eth_market_id: market_ids).includes(:outcomes)
-    # ignoring resolved by markets
+    # ignoring resolved markets
     markets = markets.to_a.reject { |market| market.resolved? }
 
     markets.each do |market|
@@ -243,8 +243,14 @@ class Portfolio < ApplicationRecord
       holdings_at_timestamp = holdings_at(timestamp)
       if holdings_at_timestamp.present?
         holdings_at_timestamp[:holdings].each do |market_id, holdings|
+          market = holdings_markets.find { |market| market.eth_market_id == market_id } ||
+            liquidity_markets.find { |market| market.eth_market_id == market_id }
+
+          # ignoring resolved markets
+          next if market.resolved_at > 0 && market.resolved_at < timestamp
+
           # calculating liquidity value
-          if holdings[:liquidity_shares] > 0
+          if holdings[:liquidity_shares] > 0 && !market.resolved?
             price_item = liquidity_charts[market_id].select { |point| point[:timestamp] <= timestamp }&.last
             value += holdings[:liquidity_shares] * (price_item&.fetch(:value) || 0)
           end

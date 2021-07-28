@@ -135,6 +135,17 @@ module Ethereum
       end
     end
 
+    def get_market_resolved_at(market_id)
+      # args: (address) participant, (uint) marketId,
+      args = [nil, market_id]
+
+      events = get_events('MarketResolved', args)
+      # market still not resolved / no valid resolution event
+      return -1 if events.count != 1
+
+      events[0][:args][1]
+    end
+
     def create_market(name, outcome_1_name, outcome_2_name, duration: 600, oracle_address: Config.ethereum.oracle_address, value: 1e17.to_i)
       function_name = 'createMarket'
       function_args = [
