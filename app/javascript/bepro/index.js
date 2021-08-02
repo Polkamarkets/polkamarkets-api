@@ -87,7 +87,7 @@ document.addEventListener("turbolinks:load", async (_event) => {
       const target = event.target
       const realitioContract = getRealitioContract()
       const answerId = realitioContract.params.web3.eth.abi.encodeParameter('int256', String(target.dataset.ethOutcomeId));
-      const amount = parseInt(target.dataset.erc20Amount) || 1;
+      const amount = (parseInt(target.dataset.erc20Amount) || 1000000000000000000).toString();
 
       // adding text to modal for confirmation purposes
       $(`#bepro-resolve-confirmation-${target.dataset.marketId}`).text(`Waiting resolution tx for ${btn.innerText}...`)
