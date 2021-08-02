@@ -71,7 +71,7 @@ module Ethereum
 
     def call_payable_function(function_name, function_args, value)
       function = contract.parent.functions.find { |f| f.name == function_name }
-      abi = contract.abi.find { |abi| abi['name'] == function_name }
+      abi = contract.abi.find { |abi| abi['name'] == function_name && abi['inputs'].count == function_args.count }
 
       inputs = abi['inputs'].map { |input| OpenStruct.new(input) }
 

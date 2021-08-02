@@ -17,13 +17,21 @@ const getRealitioContract = () => {
   })
 }
 
+const getERC20Contract = () => {
+  return bepro.getERC20Contract({
+    contractAddress: process.env.ETHEREUM_ERC20_CONTRACT_ADDRESS
+  })
+}
+
 document.addEventListener("turbolinks:load", async (_event) => {
   // starting bepro js (enforcing login immediately)
   bepro.start()
   await bepro.login()
 
-  const contract = getBeproContract()
-  console.log(contract);
+  // console.log for debugging purposes
+  console.log(getBeproContract())
+  console.log(getRealitioContract())
+  console.log(getERC20Contract())
 
   $('.btn-bepro-create').each(async (_index, btn) => {
     $(btn).on('click', async (event) => {
