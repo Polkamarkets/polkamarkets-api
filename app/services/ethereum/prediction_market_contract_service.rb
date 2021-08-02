@@ -31,7 +31,7 @@ module Ethereum
       market_data = contract.call.get_market_data(market_id)
       market_alt_data = contract.call.get_market_alt_data(market_id)
       # formatting question_id
-      question_id = encoder.ensure_prefix(market_alt_data[1].bytes.map { |v| v.to_s(16).rjust(2, '0') }.join)
+      question_id = encoder.ensure_prefix(market_alt_data[2].to_s(16).rjust(64, '0'))
 
       outcomes = get_market_outcomes(market_id)
 
@@ -155,7 +155,7 @@ module Ethereum
       events[0][:args][1]
     end
 
-    def create_market(name, outcome_1_name, outcome_2_name, duration: 600, oracle_address: Config.ethereum.oracle_address, value: 1e17.to_i)
+    def create_market(name, outcome_1_name, outcome_2_name, duration: (DateTime.now + 1.day).to_i, oracle_address: Config.ethereum.oracle_address, value: 1e17.to_i)
       function_name = 'createMarket'
       function_args = [
         name,
