@@ -1,24 +1,39 @@
-# README
+# Polkamarkets API
 
-This README would normally document whatever steps are necessary to get the
-application up and running.
+Polkamarkets is an Autonomous Prediction Market Protocol built for cross-chain information exchange and trading, based on Polkadot.
 
-Things you may want to cover:
+## Project Setup
 
-* Ruby version
+### 1. Required software
 
-* System dependencies
+- [Ruby](https://github.com/rbenv/rbenv) (`ruby 2.6.6 with rbenv`)
 
-* Configuration
+Databases:
+- [Postgres](https://www.postgresql.org/)
+- [Redis](https://redis.io/)
 
-* Database creation
+To allow env vars to be used in ruby:
+- [Direnv](https://direnv.net/)
 
-* Database initialization
+### 2. Installing the app 
 
-* How to run the test suite
+```
+git clone git@github.com:Polkamarkets/polkamarkets-api.git
+cd polkamarkets-api
+```
 
-* Services (job queues, cache servers, search engines, etc.)
+- Create `.envrc` file with env vars  
 
-* Deployment instructions
+```
+direnv allow
+bundle install
+rails db:create
+rails db:migrate
+rails eth:sync_db # syncs data from smart contract to local database
+```
 
-* ...
+### 3. Running the app
+
+```
+rails s
+```
