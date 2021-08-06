@@ -5,13 +5,17 @@ module Ethereum
     attr_accessor :client, :contract
 
     def initialize(url: nil, contract_address: nil)
+      # variables to define in child classes
+      raise "contract_name is not defined!" if @contract_name.blank?
+      raise "contract_address is not defined!" if @contract_address.blank?
+
       # chain parameters can be sent via params and env vars
       url ||= Config.ethereum.url
-      contract_address ||= Config.ethereum.contract_address
+      contract_address ||= @contract_address
 
       @client = Ethereum::HttpClient.new(url)
-      abi = JSON.parse(File.read('app/contracts/PredictionMarket.json'))['abi']
-      @contract = Ethereum::Contract.create(name: "PredictionMarket", address: contract_address, abi: abi, client: client)
+      abi = JSON.parse(File.read("app/contracts/#{@contract_name}.json"))['abi']
+      @contract = Ethereum::Contract.create(name: @contract_name, address: contract_address, abi: abi, client: client)
     end
 
     def get_events(event_name, args = [])
@@ -60,7 +64,7 @@ module Ethereum
       data = encoder.ensure_prefix(function.signature + input)
 
       tx_args = {
-        to: Config.ethereum.contract_address,
+        to: contract.address,
         data: data,
         value: '0x0',
       }
@@ -69,7 +73,7 @@ module Ethereum
       decoder.decode_arguments(function.outputs, tx['result']).flatten
     end
 
-    def call_payable_function(function_name, function_args, value)
+    def call_payable_function(function_name, function_args, value, from_address)
       function = contract.parent.functions.find { |f| f.name == function_name }
       abi = contract.abi.find { |abi| abi['name'] == function_name && abi['inputs'].count == function_args.count }
 
@@ -79,8 +83,8 @@ module Ethereum
       data = encoder.ensure_prefix(function.signature + input)
 
       tx_args = {
-        from: Config.ethereum.oracle_address,
-        to: Config.ethereum.contract_address,
+        from: from_address,
+        to: contract.address,
         data: data,
         value: value,
         nonce: client.get_nonce(key.address),

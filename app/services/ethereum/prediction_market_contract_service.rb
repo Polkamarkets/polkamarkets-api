@@ -18,6 +18,13 @@ module Ethereum
       2 => 'resolved',
     }
 
+    def initialize(url: nil, contract_address: nil)
+      @contract_name = 'PredictionMarket'
+      @contract_address = Config.ethereum.contract_address
+
+      super(url: url, contract_address: contract_address)
+    end
+
     def get_all_market_ids
       contract.call.get_markets
     end
@@ -165,7 +172,7 @@ module Ethereum
         outcome_2_name
       ]
 
-      call_payable_function(function_name, function_args, value)
+      call_payable_function(function_name, function_args, value, Config.ethereum.oracle_address)
     end
 
     def stats(market_id: nil)
