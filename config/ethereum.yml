@@ -2,11 +2,13 @@ production:
   url: <%= ENV['ETHEREUM_URL'] %>
   contract_address: "<%= ENV['ETHEREUM_CONTRACT_ADDRESS'].to_s %>"
   oracle_address: "<%= ENV['ETHEREUM_ORACLE_ADDRESS'].to_s %>"
+  realitio_contract_address: "<%= ENV['ETHEREUM_REALITIO_ERC20_CONTRACT_ADDRESS'].to_s %>"
 
 staging:
   url: <%= ENV['ETHEREUM_URL'] %>
   contract_address: "<%= ENV['ETHEREUM_CONTRACT_ADDRESS'].to_s %>"
   oracle_address: "<%= ENV['ETHEREUM_ORACLE_ADDRESS'].to_s %>"
+  realitio_contract_address: "<%= ENV['ETHEREUM_REALITIO_ERC20_CONTRACT_ADDRESS'].to_s %>"
 
 development:
   # local testnet
@@ -20,3 +22,4 @@ development:
   contract_address: "<%= ENV['ETHEREUM_CONTRACT_ADDRESS'].to_s %>"
   oracle_address: "<%= ENV['ETHEREUM_ORACLE_ADDRESS'].to_s %>"
   oracle_private_key: "<%= ENV['ETHEREUM_ORACLE_PRIVATE_KEY'].to_s %>" # DO NOT USE THIS IN PRODUCTION
+  realitio_contract_address: "<%= ENV['ETHEREUM_REALITIO_ERC20_CONTRACT_ADDRESS'].to_s %>"
