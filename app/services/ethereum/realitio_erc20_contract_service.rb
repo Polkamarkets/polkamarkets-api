@@ -8,5 +8,21 @@ module Ethereum
 
       super(url: url, contract_address: contract_address)
     end
+
+    def get_question(question_id)
+      # receiving question_id in bytes32 format (with 0x prefix), converting to rails format
+      question_id_b32 = [question_id[2..-1]].pack('H*')
+
+      question_data = contract.call.questions(question_id_b32)
+      question_is_finalized = contract.call.is_finalized(question_id_b32)
+
+      {
+        id: question_id,
+        bond: from_big_number_to_float(question_data[9]),
+        best_answer: encoder.ensure_prefix(question_data[7].unpack('H*').first),
+        is_finalized: question_is_finalized,
+        finalize_ts: question_data[4]
+      }
+    end
   end
 end
