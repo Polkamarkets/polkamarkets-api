@@ -19,6 +19,7 @@ class MarketSerializer < ActiveModel::Serializer
     :question_id,
     :resolved_outcome_id,
     :trading_view_symbol,
+    :question
   )
 
   has_many :outcomes, class_name: "MarketOutcome", serialize: "MarketOutcomeSerializer"
@@ -26,5 +27,9 @@ class MarketSerializer < ActiveModel::Serializer
   def id
     # returning eth market id in chain, not db market
     object.eth_market_id
+  end
+
+  def question
+    object.question_data
   end
 end
