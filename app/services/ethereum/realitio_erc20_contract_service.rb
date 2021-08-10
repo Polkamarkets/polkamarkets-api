@@ -16,10 +16,14 @@ module Ethereum
       question_data = contract.call.questions(question_id_b32)
       question_is_finalized = contract.call.is_finalized(question_id_b32)
 
+      best_answer = encoder.ensure_prefix(question_data[7].unpack('H*').first)
+      # hotfix on smart contract return of 0 value
+      best_answer = '0x0000000000000000000000000000000000000000000000000000000000000000' if best_answer == '0x'
+
       {
         id: question_id,
         bond: from_big_number_to_float(question_data[9]),
-        best_answer: encoder.ensure_prefix(question_data[7].unpack('H*').first),
+        best_answer: best_answer,
         is_finalized: question_is_finalized,
         finalize_ts: question_data[4]
       }
