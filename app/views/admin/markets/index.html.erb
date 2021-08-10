@@ -71,8 +71,21 @@
                             data-question-id=<%= market.question_id %>
                             data-erc20-amount="1000000000000000000"
                           >
-                            <%= outcome.title %></button>
+                            <%= outcome.title %>
+                          </button>
                         <% end %>
+                        <%# invalid outcome CTA %>
+                        <button
+                          type="button"
+                          class="btn btn-primary btn-bepro-answer ml-1 mr-1"
+                          data-market-id=<%= market.id %>
+                          data-eth-market-id=<%= market.eth_market_id %>
+                          data-eth-outcome-id=<%= -1 %>
+                          data-question-id=<%= market.question_id %>
+                          data-erc20-amount="1000000000000000000"
+                        >
+                          Invalid
+                        </button>
                       </div>
                       <p><b>⚠️ WARNING ⚠️</b> This action cannot be undone.</p>
                       <p id="bepro-resolve-confirmation-<%= market.id %>"></p>
