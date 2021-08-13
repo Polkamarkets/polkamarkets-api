@@ -1,3 +1,10 @@
+GIT
+  remote: https://github.com/vbstreetz/money-tree
+  revision: 244549cbc855b65c4a003ae1b089a0adc793f482
+  specs:
+    money-tree (0.10.0)
+      ffi
+
 GEM
   remote: https://rubygems.org/
   specs:
@@ -171,8 +178,6 @@ GEM
     mini_mime (1.1.0)
     mini_portile2 (2.5.0)
     minitest (5.14.4)
-    money-tree (0.10.0)
-      ffi
     msgpack (1.4.2)
     multi_json (1.15.0)
     multipart-post (2.1.1)
@@ -323,6 +328,7 @@ DEPENDENCIES
   googleauth
   jbuilder (~> 2.7)
   listen (~> 3.2)
+  money-tree!
   newrelic_rpm
   pg (>= 0.18, < 2.0)
   pry-rails

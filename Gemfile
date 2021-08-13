@@ -62,6 +62,7 @@ gem 'newrelic_rpm'
 gem 'ethereum.rb'
 # local payable ethereum transactions - only in dev/staging mode
 gem 'eth'
+gem 'money-tree', git: 'https://github.com/vbstreetz/money-tree'
 
 # serializers
 gem 'active_model_serializers'
