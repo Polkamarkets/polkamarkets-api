@@ -10,10 +10,10 @@ class Erc20FaucetService
     # not a valid eth address
     return false if !address.match(/0[x,X][a-fA-F0-9]{40}$/)
 
+    erc20_service.transfer(address, ERC20_AMOUNT)
+
     set_user_received(address)
     set_user_received(user)
-
-    erc20_service.transfer(address, ERC20_AMOUNT)
 
     true
   end

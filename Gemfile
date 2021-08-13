@@ -42,6 +42,12 @@ group :development do
   gem 'spring-watcher-listen', '~> 2.0.0'
 end
 
+group :development, :staging do
+  # local payable ethereum transactions - only in dev/staging mode
+  gem 'eth'
+  gem 'money-tree', git: 'https://github.com/rickmark/money-tree', ref: '890464a0eab0fadd8fccdb3810d9d04ab10bf608'
+end
+
 # Windows does not include zoneinfo files, so bundle the tzinfo-data gem
 gem 'tzinfo-data', platforms: [:mingw, :mswin, :x64_mingw, :jruby]
 
@@ -60,9 +66,6 @@ gem 'newrelic_rpm'
 
 # ethereum gems
 gem 'ethereum.rb'
-# local payable ethereum transactions - only in dev/staging mode
-gem 'eth'
-gem 'money-tree', git: 'https://github.com/rickmark/money-tree', ref: '890464a0eab0fadd8fccdb3810d9d04ab10bf608'
 
 # serializers
 gem 'active_model_serializers'
