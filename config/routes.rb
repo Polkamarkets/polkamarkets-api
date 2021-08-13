@@ -40,6 +40,8 @@ Rails.application.routes.draw do
     end
 
     resources :whitelist, only: [:show]
+
+    post 'webhooks/faucet' => "webhooks#faucet"
   end
 
   root to: 'api/ping#ping'
