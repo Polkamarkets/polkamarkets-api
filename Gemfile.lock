@@ -1,9 +1,9 @@
 GIT
-  remote: https://github.com/vbstreetz/money-tree
-  revision: 244549cbc855b65c4a003ae1b089a0adc793f482
+  remote: https://github.com/rickmark/money-tree
+  revision: 890464a0eab0fadd8fccdb3810d9d04ab10bf608
+  ref: 890464a0eab0fadd8fccdb3810d9d04ab10bf608
   specs:
     money-tree (0.10.0)
-      ffi
 
 GEM
   remote: https://rubygems.org/
