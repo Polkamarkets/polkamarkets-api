@@ -40,8 +40,12 @@ group :development do
   # Spring speeds up development by keeping your application running in the background. Read more: https://github.com/rails/spring
   gem 'spring'
   gem 'spring-watcher-listen', '~> 2.0.0'
-  # local payable ethereum transactions - only in dev mode
+end
+
+group :development, :staging do
+  # local payable ethereum transactions - only in dev/staging mode
   gem 'eth'
+  gem 'money-tree', git: 'https://github.com/rickmark/money-tree', ref: '890464a0eab0fadd8fccdb3810d9d04ab10bf608'
 end
 
 # Windows does not include zoneinfo files, so bundle the tzinfo-data gem

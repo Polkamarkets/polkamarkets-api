@@ -203,6 +203,7 @@ class Market < ApplicationRecord
     Cache::MarketActionEventsWorker.perform_async(id)
     Cache::MarketPricesWorker.perform_async(id)
     Cache::MarketLiquidityPricesWorker.perform_async(id)
+    Cache::MarketQuestionDataWorker.perform_async(id)
   end
 
   def image_url
@@ -210,5 +211,12 @@ class Market < ApplicationRecord
     return self['image_url'] if image.blank?
 
     Rails.application.routes.url_helpers.rails_blob_url(image)
+  end
+
+  # realitio data
+  def question_data(refresh: false)
+    Rails.cache.fetch("markets:#{eth_market_id}:question", expires_in: 24.hours, force: refresh) do
+      Ethereum::RealitioErc20ContractService.new.get_question(question_id)
+    end
   end
 end
