@@ -15,6 +15,7 @@ module Ethereum
 
       question_data = contract.call.questions(question_id_b32)
       question_is_finalized = contract.call.is_finalized(question_id_b32)
+      question_is_claimed = question_is_finalized && question_data[8].blank?
 
       best_answer = encoder.ensure_prefix(question_data[7].unpack('H*').first)
       # hotfix on smart contract return of 0 value
@@ -25,6 +26,7 @@ module Ethereum
         bond: from_big_number_to_float(question_data[9]),
         best_answer: best_answer,
         is_finalized: question_is_finalized,
+        is_claimed: question_is_claimed,
         finalize_ts: question_data[4]
       }
     end
