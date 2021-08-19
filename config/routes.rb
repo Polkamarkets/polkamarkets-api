@@ -42,6 +42,9 @@ Rails.application.routes.draw do
     resources :whitelist, only: [:show]
 
     post 'webhooks/faucet' => "webhooks#faucet"
+
+    # workaround due to js-ipfs library CORS error
+    post 'ipfs/add' => "ipfs#add"
   end
 
   root to: 'api/ping#ping'
