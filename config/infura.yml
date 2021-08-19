@@ -1,0 +1,14 @@
+default: &default
+  ipfs_api_url: <%= ENV['INFURA_IPFS_API_URL'] %>
+  ipfs_project_id: <%= ENV['INFURA_IPFS_PROJECT_ID'] %>
+  ipfs_project_secret: <%= ENV['INFURA_IPFS_PROJECT_SECRET'] %>
+
+
+production:
+  <<: *default
+
+staging:
+  <<: *default
+
+development:
+  <<: *default
