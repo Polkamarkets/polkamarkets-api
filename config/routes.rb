@@ -43,7 +43,7 @@ Rails.application.routes.draw do
 
     post 'webhooks/faucet' => "webhooks#faucet"
 
-    # workaround due to js-ipfs library CORS error
+    # workaround due to js-ipfs library CORS error: https://community.infura.io/t/ipfs-cors-error/3149/
     post 'ipfs/add' => "ipfs#add"
   end
 
