@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2021_05_14_184723) do
+ActiveRecord::Schema.define(version: 2021_08_24_213117) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -42,6 +42,7 @@ ActiveRecord::Schema.define(version: 2021_05_14_184723) do
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
     t.integer "eth_market_id"
+    t.index ["market_id", "eth_market_id"], name: "index_market_outcomes_on_market_id_and_eth_market_id", unique: true
     t.index ["market_id", "title"], name: "index_market_outcomes_on_market_id_and_title", unique: true
     t.index ["market_id"], name: "index_market_outcomes_on_market_id"
   end
@@ -60,6 +61,7 @@ ActiveRecord::Schema.define(version: 2021_05_14_184723) do
     t.string "oracle_source"
     t.string "slug"
     t.string "trading_view_symbol"
+    t.index ["eth_market_id"], name: "index_markets_on_eth_market_id", unique: true
     t.index ["slug"], name: "index_markets_on_slug", unique: true
   end
 
