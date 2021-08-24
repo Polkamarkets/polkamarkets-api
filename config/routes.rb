@@ -27,7 +27,7 @@ Rails.application.routes.draw do
   end
 
   scope :module => 'api' do
-    resources :markets, only: [:index, :show] do
+    resources :markets, only: [:index, :show, :create] do
       member do
         post :reload
       end

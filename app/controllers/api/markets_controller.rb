@@ -30,6 +30,12 @@ module Api
       render json: market, status: :ok
     end
 
+    def create
+      market = Market.create_from_eth_market_id!(params[:id].to_i)
+
+      render json: market, status: :ok
+    end
+
     def reload
       # forcing cache refresh of market
       market = Market.find_by_slug_or_eth_market_id(params[:id])

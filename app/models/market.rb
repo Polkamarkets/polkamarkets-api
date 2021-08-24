@@ -26,10 +26,12 @@ class Market < ApplicationRecord
   end
 
   def self.create_from_eth_market_id!(eth_market_id)
+    raise "Market #{eth_market_id} is already created" if Market.where(eth_market_id: eth_market_id).exists?
+
     eth_data = Ethereum::PredictionMarketContractService.new.get_market(eth_market_id)
 
     # invalid market
-    return false if eth_data[:outcomes].blank?
+    raise "Market #{eth_market_id} does not exist" if eth_data[:outcomes].blank?
 
     market = Market.new(
       title: eth_data[:title],
