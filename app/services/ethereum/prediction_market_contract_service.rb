@@ -59,6 +59,7 @@ module Ethereum
           subcategory = question[2].split(';').last
           outcome_titles = JSON.parse("[#{question[1]}]")
           outcomes.each_with_index { |outcome, i| outcome[:title] = outcome_titles[i] }
+          image_hash = events[0][:args][2]
         end
       end
 
@@ -67,6 +68,7 @@ module Ethereum
         title: title,
         category: category,
         subcategory: subcategory,
+        image_hash: image_hash,
         state: STATES_MAPPING[market_data[1]],
         expires_at: Time.at(market_data[2]).to_datetime,
         liquidity: from_big_number_to_float(market_data[3]),
