@@ -8,6 +8,7 @@ class MarketSerializer < ActiveModel::Serializer
     :expires_at,
     :fee,
     :state,
+    :verified,
     :category,
     :subcategory,
     :image_url,
