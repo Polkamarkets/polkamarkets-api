@@ -3,7 +3,7 @@ class Market < ApplicationRecord
   extend FriendlyId
   friendly_id :title, use: :slugged
 
-  validates_presence_of :title, :category, :expires_at, :oracle_source
+  validates_presence_of :title, :category, :expires_at
   validates_uniqueness_of :eth_market_id
 
   has_many :outcomes, -> { order('eth_market_id ASC, created_at ASC') }, class_name: "MarketOutcome", dependent: :destroy, inverse_of: :market
@@ -37,7 +37,6 @@ class Market < ApplicationRecord
       title: eth_data[:title],
       category: eth_data[:category],
       subcategory: eth_data[:subcategory],
-      oracle_source: "https://google.com", # TODO remove: deprecated
       eth_market_id: eth_market_id,
       expires_at: eth_data[:expires_at],
       published_at: DateTime.now,
