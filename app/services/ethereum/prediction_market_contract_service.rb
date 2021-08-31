@@ -41,10 +41,34 @@ module Ethereum
       question_id = encoder.ensure_prefix(market_alt_data[2].to_s(16).rjust(64, '0'))
 
       outcomes = get_market_outcomes(market_id)
+      # legacy markets have title straight from the market struct
+      title = market_data[0]
+      category = nil
+      subcategory = nil
+
+      if title.blank?
+        # new contract, fetching market details from event
+        events = get_events('MarketCreated', [nil, market_id])
+
+        if events.present?
+          # decoding question from event. format from realitio
+          # https://reality.eth.link/app/docs/html/contracts.html#how-questions-are-structured
+          question = events[0][:args][1].split("\u241f")
+          title = question[0]
+          category = question[2].split(';').first
+          subcategory = question[2].split(';').last
+          outcome_titles = JSON.parse("[#{question[1]}]")
+          outcomes.each_with_index { |outcome, i| outcome[:title] = outcome_titles[i] }
+          image_hash = events[0][:args][2]
+        end
+      end
 
       {
         id: market_id,
-        title: market_data[0],
+        title: title,
+        category: category,
+        subcategory: subcategory,
+        image_hash: image_hash,
         state: STATES_MAPPING[market_data[1]],
         expires_at: Time.at(market_data[2]).to_datetime,
         liquidity: from_big_number_to_float(market_data[3]),

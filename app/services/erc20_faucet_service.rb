@@ -1,7 +1,7 @@
 class Erc20FaucetService
   include BigNumberHelper
 
-  ERC20_AMOUNT = 500
+  ERC20_AMOUNT = 1000
 
   def transfer_or_ignore(user, address)
     # not allowing same user / address to request erc20 in a 24h period

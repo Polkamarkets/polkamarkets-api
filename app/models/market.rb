@@ -3,7 +3,8 @@ class Market < ApplicationRecord
   extend FriendlyId
   friendly_id :title, use: :slugged
 
-  validates_presence_of :title, :category, :expires_at, :oracle_source
+  validates_presence_of :title, :category, :expires_at
+  validates_uniqueness_of :eth_market_id
 
   has_many :outcomes, -> { order('eth_market_id ASC, created_at ASC') }, class_name: "MarketOutcome", dependent: :destroy, inverse_of: :market
 
@@ -25,20 +26,21 @@ class Market < ApplicationRecord
   end
 
   def self.create_from_eth_market_id!(eth_market_id)
+    raise "Market #{eth_market_id} is already created" if Market.where(eth_market_id: eth_market_id).exists?
+
     eth_data = Ethereum::PredictionMarketContractService.new.get_market(eth_market_id)
 
     # invalid market
-    return false if eth_data[:outcomes].blank?
+    raise "Market #{eth_market_id} does not exist" if eth_data[:outcomes].blank?
 
     market = Market.new(
       title: eth_data[:title],
-      category: "Foo", # no data from category in blockchain
-      subcategory: "Bar", # no data from category in blockchain
-      oracle_source: "https://google.com", # TODO review: no data from oracle source in blockchain
+      category: eth_data[:category],
+      subcategory: eth_data[:subcategory],
       eth_market_id: eth_market_id,
       expires_at: eth_data[:expires_at],
       published_at: DateTime.now,
-      image_url: 'https://s2.coinmarketcap.com/static/img/coins/200x200/8579.png', # no data from image in blockchain
+      image_url: IpfsService.image_url_from_hash(eth_data[:image_hash])
     )
     eth_data[:outcomes].each do |outcome|
       market.outcomes << MarketOutcome.new(title: outcome[:title], eth_market_id: outcome[:id])

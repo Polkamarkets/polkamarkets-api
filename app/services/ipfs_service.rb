@@ -1,4 +1,10 @@
 class IpfsService
+  def self.image_url_from_hash(hash)
+    return nil if hash.blank?
+
+    Config.infura.ipfs_api_url + "cat?arg=#{hash}"
+  end
+
   def add(file)
     uri = Config.infura.ipfs_api_url + 'add'
 
