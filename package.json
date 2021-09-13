@@ -2,14 +2,14 @@
   "name": "polkamarkets_api",
   "private": true,
   "engines": {
-    "node": "10.x"
+    "node": "14.x"
   },
   "dependencies": {
     "@rails/actioncable": "^6.0.0",
     "@rails/activestorage": "^6.0.0",
     "@rails/ujs": "^6.0.0",
     "@rails/webpacker": "4.3.0",
-    "bepro-js": "bepronetwork/bepro-js#feature/prediction-markets",
+    "bepro-js": "bepronetwork/bepro-js#feature/prediction-markets-refactor-sc",
     "bootstrap": "^4.5.3",
     "jquery": "^3.5.1",
     "popper.js": "^1.16.1",
