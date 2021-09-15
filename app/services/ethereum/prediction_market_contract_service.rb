@@ -26,19 +26,20 @@ module Ethereum
     end
 
     def get_all_market_ids
-      contract.call.get_markets
+      BeproService.prediction_market(method: 'getMarkets')
     end
 
     def get_all_markets
-      market_ids = contract.call.get_markets
+      market_ids = BeproService.prediction_market(method: 'getMarkets')
       market_ids.map { |market_id| get_market(market_id) }
     end
 
     def get_market(market_id)
-      market_data = contract.call.get_market_data(market_id)
-      market_alt_data = contract.call.get_market_alt_data(market_id)
+      market_data = BeproService.prediction_market(method: 'getMarketData', args: market_id)
+      market_alt_data = BeproService.prediction_market(method: 'getMarketAltData', args: market_id)
+
       # formatting question_id
-      question_id = encoder.ensure_prefix(market_alt_data[2].to_s(16).rjust(64, '0'))
+      question_id = market_alt_data[1]
 
       outcomes = get_market_outcomes(market_id)
       # legacy markets have title straight from the market struct
@@ -70,7 +71,7 @@ module Ethereum
         subcategory: subcategory,
         image_hash: image_hash,
         state: STATES_MAPPING[market_data[1]],
-        expires_at: Time.at(market_data[2]).to_datetime,
+        expires_at: Time.at(market_data[2].to_i).to_datetime,
         liquidity: from_big_number_to_float(market_data[3]),
         fee: from_big_number_to_float(market_alt_data[0]),
         shares: from_big_number_to_float(market_data[5]),
@@ -82,9 +83,10 @@ module Ethereum
 
     def get_market_outcomes(market_id)
       # currently only binary
-      outcome_ids = contract.call.get_market_outcome_ids(market_id)
+
+      outcome_ids = BeproService.prediction_market(method: 'getMarketOutcomeIds', args: market_id)
       outcome_ids.map do |outcome_id|
-        outcome_data = contract.call.get_market_outcome_data(market_id, outcome_id)
+        outcome_data = BeproService.prediction_market(method: 'getMarketOutcomeData', args: [market_id, outcome_id])
 
         {
           id: outcome_id,
@@ -96,7 +98,7 @@ module Ethereum
     end
 
     def get_market_prices(market_id)
-      market_prices = contract.call.get_market_prices(market_id)
+      market_prices = BeproService.prediction_market(method: 'getMarketPrices', args: market_id)
 
       {
         liquidity_price: from_big_number_to_float(market_prices[0]),
@@ -108,7 +110,7 @@ module Ethereum
     end
 
     def get_user_market_shares(market_id, address)
-      user_data = contract.call.get_user_market_shares(market_id, address)
+      user_data = BeproService.prediction_market(method: 'getUserMarketShares', args: [market_id, address])
 
       # TODO: improve this
       {
