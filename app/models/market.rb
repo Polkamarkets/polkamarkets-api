@@ -35,12 +35,12 @@ class Market < ApplicationRecord
 
     market = Market.new(
       title: eth_data[:title],
-      category: eth_data[:category],
-      subcategory: eth_data[:subcategory],
+      category: eth_data[:category] || 'foo',
+      subcategory: eth_data[:subcategory] || 'bar',
       eth_market_id: eth_market_id,
       expires_at: eth_data[:expires_at],
       published_at: DateTime.now,
-      image_url: IpfsService.image_url_from_hash(eth_data[:image_hash])
+      image_url: IpfsService.image_url_from_hash(eth_data[:image_hash] || 'QmRufywuLNzd7xVUwRzp3wBFnFUJ1EmzVH1R5Hq9xMWfkX')
     )
     eth_data[:outcomes].each do |outcome|
       market.outcomes << MarketOutcome.new(title: outcome[:title], eth_market_id: outcome[:id])
