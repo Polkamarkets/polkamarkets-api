@@ -70,7 +70,7 @@ module Ethereum
         category: category,
         subcategory: subcategory,
         image_hash: image_hash,
-        state: STATES_MAPPING[market_data[1]],
+        state: STATES_MAPPING[market_data[1].to_i],
         expires_at: Time.at(market_data[2].to_i).to_datetime,
         liquidity: from_big_number_to_float(market_data[3]),
         fee: from_big_number_to_float(market_alt_data[0]),
