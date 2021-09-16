@@ -10,16 +10,11 @@ module Ethereum
     end
 
     def get_question(question_id)
-      # receiving question_id in bytes32 format (with 0x prefix), converting to rails format
-      question_id_b32 = [question_id[2..-1]].pack('H*')
+      question_data = BeproService.realitio(method: 'questions', args: question_id)
+      question_is_finalized = BeproService.realitio(method: 'isFinalized', args: question_id)
 
-      question_data = contract.call.questions(question_id_b32)
-      question_is_finalized = contract.call.is_finalized(question_id_b32)
       question_is_claimed = question_is_finalized && question_data[8].blank?
-
-      best_answer = encoder.ensure_prefix(question_data[7].unpack('H*').first)
-      # hotfix on smart contract return of 0 value
-      best_answer = '0x0000000000000000000000000000000000000000000000000000000000000000' if best_answer == '0x'
+      best_answer = question_data[7]
 
       {
         id: question_id,
