@@ -26,17 +26,17 @@ module Ethereum
     end
 
     def get_all_market_ids
-      BeproService.prediction_market(method: 'getMarkets')
+      BeproService.prediction_market.call(method: 'getMarkets')
     end
 
     def get_all_markets
-      market_ids = BeproService.prediction_market(method: 'getMarkets')
+      market_ids = BeproService.prediction_market.call(method: 'getMarkets')
       market_ids.map { |market_id| get_market(market_id) }
     end
 
     def get_market(market_id)
-      market_data = BeproService.prediction_market(method: 'getMarketData', args: market_id)
-      market_alt_data = BeproService.prediction_market(method: 'getMarketAltData', args: market_id)
+      market_data = BeproService.prediction_market.call(method: 'getMarketData', args: market_id)
+      market_alt_data = BeproService.prediction_market.call(method: 'getMarketAltData', args: market_id)
 
       # formatting question_id
       question_id = market_alt_data[1]
@@ -84,9 +84,9 @@ module Ethereum
     def get_market_outcomes(market_id)
       # currently only binary
 
-      outcome_ids = BeproService.prediction_market(method: 'getMarketOutcomeIds', args: market_id)
+      outcome_ids = BeproService.prediction_market.call(method: 'getMarketOutcomeIds', args: market_id)
       outcome_ids.map do |outcome_id|
-        outcome_data = BeproService.prediction_market(method: 'getMarketOutcomeData', args: [market_id, outcome_id])
+        outcome_data = BeproService.prediction_market.call(method: 'getMarketOutcomeData', args: [market_id, outcome_id])
 
         {
           id: outcome_id,
@@ -98,7 +98,7 @@ module Ethereum
     end
 
     def get_market_prices(market_id)
-      market_prices = BeproService.prediction_market(method: 'getMarketPrices', args: market_id)
+      market_prices = BeproService.prediction_market.call(method: 'getMarketPrices', args: market_id)
 
       {
         liquidity_price: from_big_number_to_float(market_prices[0]),
@@ -110,7 +110,7 @@ module Ethereum
     end
 
     def get_user_market_shares(market_id, address)
-      user_data = BeproService.prediction_market(method: 'getUserMarketShares', args: [market_id, address])
+      user_data = BeproService.prediction_market.call(method: 'getUserMarketShares', args: [market_id, address])
 
       # TODO: improve this
       {
