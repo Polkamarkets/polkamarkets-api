@@ -42,8 +42,8 @@ module Ethereum
       question_id = market_alt_data[1]
 
       outcomes = get_market_outcomes(market_id)
-      # legacy markets have title straight from the market struct
-      title = market_data[0]
+      # TODO remove; deprecated
+      title = ''
       category = nil
       subcategory = nil
 
@@ -73,12 +73,12 @@ module Ethereum
         category: category,
         subcategory: subcategory,
         image_hash: image_hash,
-        state: STATES_MAPPING[market_data[1].to_i],
-        expires_at: Time.at(market_data[2].to_i).to_datetime,
-        liquidity: from_big_number_to_float(market_data[3]),
+        state: STATES_MAPPING[market_data[0]],
+        expires_at: Time.at(market_data[1]).to_datetime,
+        liquidity: from_big_number_to_float(market_data[2]),
         fee: from_big_number_to_float(market_alt_data[0]),
-        shares: from_big_number_to_float(market_data[5]),
-        resolved_outcome_id: market_data[6],
+        shares: from_big_number_to_float(market_data[4]),
+        resolved_outcome_id: market_data[5],
         question_id: question_id,
         outcomes: outcomes
       }
@@ -93,9 +93,9 @@ module Ethereum
 
         {
           id: outcome_id,
-          title: outcome_data[0],
-          price: from_big_number_to_float(outcome_data[1]),
-          shares: from_big_number_to_float(outcome_data[2]),
+          title: '', # TODO remove; deprecated
+          price: from_big_number_to_float(outcome_data[0]),
+          shares: from_big_number_to_float(outcome_data[1]),
         }
       end
     end
@@ -128,10 +128,10 @@ module Ethereum
     end
 
     def get_user_liquidity_fees_earned(address)
-      # args: (address) participant, (uint) action, (uint) marketId,
+      # args: (address) user, (uint) action, (uint) marketId,
       args = [address, 6, nil]
 
-      events = get_events('ParticipantAction', args)
+      events = get_events('MarketActionTx', args)
       events.sum { |event| from_big_number_to_float(event[:args][2]) }
     end
 
@@ -162,10 +162,10 @@ module Ethereum
     end
 
     def get_action_events(market_id: nil, address: nil)
-      # args: (address) participant, (uint) action, (uint) marketId,
+      # args: (address) user, (uint) action, (uint) marketId,
       args = [address, nil, market_id]
 
-      events = get_events('ParticipantAction', args)
+      events = get_events('MarketActionTx', args)
 
       events.map do |event|
         {
@@ -181,7 +181,7 @@ module Ethereum
     end
 
     def get_market_resolved_at(market_id)
-      # args: (address) participant, (uint) marketId,
+      # args: (address) user, (uint) marketId,
       args = [nil, market_id]
 
       events = get_events('MarketResolved', args)

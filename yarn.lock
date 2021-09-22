@@ -1376,6 +1376,22 @@
     webpack-cli "^3.3.10"
     webpack-sources "^1.4.3"
 
+"@reality.eth/contracts@^2.3.1":
+  version "2.3.1"
+  resolved "https://registry.yarnpkg.com/@reality.eth/contracts/-/contracts-2.3.1.tgz#76e4ae61e4776c434ab3745803922d3992f9332c"
+  integrity sha512-bOAKabKnJCuSKwfDsf4lbyu06fS1WcfN0wkwZwo2R6QRkrWiTNuJrv52kwQNDX014SA3Jnw9fE0ZhDdg5No5Ew==
+
+"@reality.eth/reality-eth-lib@^2.0.13":
+  version "2.1.1"
+  resolved "https://registry.yarnpkg.com/@reality.eth/reality-eth-lib/-/reality-eth-lib-2.1.1.tgz#e74000d3ab5df0e7cb5ae4658e140fbf5a657f83"
+  integrity sha512-lvN8U0Lo5cKQS4oLz/4Tym5VgTD5kLcjv3YWv1pznwzzSoOVNIiGSqBgdMHhi5NyA2RSKSl3aG0nkorfwg0zKQ==
+  dependencies:
+    "@reality.eth/contracts" "^2.3.1"
+    bignumber.js "^7.2.1"
+    bn.js "^4.11.8"
+    ethereumjs-abi "^0.6.5"
+    sprintf-js "^1.1.1"
+
 "@sindresorhus/is@^0.14.0":
   version "0.14.0"
   resolved "https://registry.yarnpkg.com/@sindresorhus/is/-/is-0.14.0.tgz#9fb3a3cf3132328151f353de4632e01e52102bea"
@@ -2828,13 +2844,14 @@ bech32@1.1.4, bech32@^1.1.3:
   resolved "https://registry.yarnpkg.com/bech32/-/bech32-1.1.4.tgz#e38c9f37bf179b8eb16ae3a772b40c356d4832e9"
   integrity sha512-s0IrSOzLlbvX7yp4WBfPITzpAU8sqQcpsmwXDiKwrG4r491vwCO/XpejasRNl0piBMe/DvP4Tz0mIS/X1DPJBQ==
 
-bepro-js@bepronetwork/bepro-js#feature/prediction-markets:
+bepro-js@bepronetwork/bepro-js#feature/prediction-markets-refactor-sc:
   version "1.1.7"
-  resolved "https://codeload.github.com/bepronetwork/bepro-js/tar.gz/a15116563545fa58a7d835b252fca2e39ffd7372"
+  resolved "https://codeload.github.com/bepronetwork/bepro-js/tar.gz/000c817a8e641028ee47049090c94bd662820597"
   dependencies:
     "@openzeppelin/contracts" "^3.2.0"
     "@openzeppelin/contracts-upgradeable" "^3.2.0"
     "@openzeppelin/truffle-upgrades" "^1.7.0"
+    "@reality.eth/reality-eth-lib" "^2.0.13"
     abi-decoder "^1.2.0"
     accounting "^0.4.1"
     babel-cli "^6.26.0"
@@ -4982,6 +4999,14 @@ ethereum-cryptography@^0.1.3:
     secp256k1 "^4.0.1"
     setimmediate "^1.0.5"
 
+ethereumjs-abi@^0.6.5:
+  version "0.6.8"
+  resolved "https://registry.yarnpkg.com/ethereumjs-abi/-/ethereumjs-abi-0.6.8.tgz#71bc152db099f70e62f108b7cdfca1b362c6fcae"
+  integrity sha512-Tx0r/iXI6r+lRsdvkFDlut0N08jWMnKRZ6Gkq+Nmw75lZe4e6o3EkSnkaBP5NF6+m5PTGAr9JP43N3LyeoglsA==
+  dependencies:
+    bn.js "^4.11.8"
+    ethereumjs-util "^6.0.0"
+
 ethereumjs-testrpc@^6.0.3:
   version "6.0.3"
   resolved "https://registry.yarnpkg.com/ethereumjs-testrpc/-/ethereumjs-testrpc-6.0.3.tgz#7a0b87bf3670f92f607f98fa6a78801d9741b124"
@@ -4989,7 +5014,7 @@ ethereumjs-testrpc@^6.0.3:
   dependencies:
     webpack "^3.0.0"
 
-ethereumjs-util@6.2.1:
+ethereumjs-util@6.2.1, ethereumjs-util@^6.0.0:
   version "6.2.1"
   resolved "https://registry.yarnpkg.com/ethereumjs-util/-/ethereumjs-util-6.2.1.tgz#fcb4e4dd5ceacb9d2305426ab1a5cd93e3163b69"
   integrity sha512-W2Ktez4L01Vexijrm5EB6w7dg4n/TgpoYU4avuT5T3Vmnw/eCRtiBrJfQYS/DCSvDIOLn2k57GcHdeBcgVxAqw==
@@ -10350,6 +10375,11 @@ split-string@^3.0.1, split-string@^3.0.2:
   integrity sha512-NzNVhJDYpwceVVii8/Hu6DKfD2G+NrQHlS/V/qgv763EYudVwEcMQNxd2lh+0VrUByXN/oJkl5grOhYWvQUYiw==
   dependencies:
     extend-shallow "^3.0.0"
+
+sprintf-js@^1.1.1:
+  version "1.1.2"
+  resolved "https://registry.yarnpkg.com/sprintf-js/-/sprintf-js-1.1.2.tgz#da1765262bf8c0f571749f2ad6c26300207ae673"
+  integrity sha512-VE0SOVEHCk7Qc8ulkWw3ntAzXuqf7S2lvwQaDLRnUeIEaKNQJzV6BwmLKhOqT61aGhfUMrXeaBk+oDGCzvhcug==
 
 sprintf-js@~1.0.2:
   version "1.0.3"
