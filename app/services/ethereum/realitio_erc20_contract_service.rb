@@ -22,7 +22,7 @@ module Ethereum
         best_answer: best_answer,
         is_finalized: question_is_finalized,
         is_claimed: question_is_claimed,
-        finalize_ts: question_data[4]
+        finalize_ts: question_data[4].to_i
       }
     end
   end

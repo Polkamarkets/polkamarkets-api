@@ -65,12 +65,12 @@ module Ethereum
         category: category,
         subcategory: subcategory,
         image_hash: image_hash,
-        state: STATES_MAPPING[market_data[0]],
+        state: STATES_MAPPING[market_data[0].to_i],
         expires_at: Time.at(market_data[1].to_i).to_datetime,
         liquidity: from_big_number_to_float(market_data[2]),
         fee: from_big_number_to_float(market_alt_data[0]),
         shares: from_big_number_to_float(market_data[4]),
-        resolved_outcome_id: market_data[5],
+        resolved_outcome_id: market_data[5].to_i,
         question_id: question_id,
         outcomes: outcomes
       }
@@ -84,7 +84,7 @@ module Ethereum
         outcome_data = BeproService.prediction_market.call(method: 'getMarketOutcomeData', args: [market_id, outcome_id])
 
         {
-          id: outcome_id,
+          id: outcome_id.to_i,
           title: '', # TODO remove; deprecated
           price: from_big_number_to_float(outcome_data[0]),
           shares: from_big_number_to_float(outcome_data[1]),
