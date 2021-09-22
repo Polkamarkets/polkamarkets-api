@@ -36,8 +36,8 @@ class BeproService
     JSON.parse(response.body.to_s)
   end
 
-  def get_events(event_name:, filter:)
-    uri = Config.bepro.api_url + "/events?contract=#{@contract_name}&eventName=#{event_name}&#{filter.to_query}"
+  def get_events(event_name:, filter: {})
+    uri = Config.bepro.api_url + "/events?contract=#{@contract_name}&eventName=#{event_name}&filter=#{filter.to_json}"
 
     response = HTTP.get(uri)
 
