@@ -5,7 +5,7 @@ class BeproService
 
   def self.prediction_market
     new(contract_name: PREDICTION_MARKET_CONTRACT)
-  end 
+  end
 
   def self.erc20
     new(contract_name: ERC20_CONTRACT)
@@ -19,13 +19,13 @@ class BeproService
     @contract_name = contract_name
   end
 
-  def call(method:, args:)
+  def call(method:, args: [])
     if args.kind_of?(Array)
       args = args.compact.join(',')
     end
 
-    uri = Config.bepro.bepro_api_url + "call?contract=#{@contract_name}&method=#{method}"
-    uri = Config.bepro.bepro_api_url + "call?contract=#{@contract_name}&method=#{method}&args=#{args}" if args.present?
+    uri = Config.bepro.api_url + "/call?contract=#{@contract_name}&method=#{method}"
+    uri = Config.bepro.api_url + "/call?contract=#{@contract_name}&method=#{method}&args=#{args}" if args.present?
 
     response = HTTP.get(uri)
 
@@ -37,8 +37,7 @@ class BeproService
   end
 
   def get_events(event_name:, filter:)
-    
-    uri = Config.bepro.bepro_api_url + "events?contract=#{@contract_name}&eventName=#{event_name}&#{filter.to_query}"
+    uri = Config.bepro.api_url + "/events?contract=#{@contract_name}&eventName=#{event_name}&#{filter.to_query}"
 
     response = HTTP.get(uri)
 
