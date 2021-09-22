@@ -51,6 +51,9 @@ module Ethereum
         # new contract, fetching market details from event
         events = get_events('MarketCreated', [nil, market_id])
 
+        # Example
+        # events = BeproService.prediction_market.get_events(event_name: 'MarketCreated', filter: { marketId: market_id })
+
         if events.present?
           # decoding question from event. format from realitio
           # https://reality.eth.link/app/docs/html/contracts.html#how-questions-are-structured
