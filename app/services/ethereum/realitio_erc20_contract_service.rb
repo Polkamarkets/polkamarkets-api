@@ -13,7 +13,7 @@ module Ethereum
       question_data = BeproService.realitio.call(method: 'questions', args: question_id)
       question_is_finalized = BeproService.realitio.call(method: 'isFinalized', args: question_id)
 
-      question_is_claimed = question_is_finalized && question_data[8].blank?
+      question_is_claimed = question_is_finalized && question_data[8].hex == 0
       best_answer = question_data[7]
 
       {
