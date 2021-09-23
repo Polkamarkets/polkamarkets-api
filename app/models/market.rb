@@ -28,7 +28,7 @@ class Market < ApplicationRecord
   def self.create_from_eth_market_id!(eth_market_id)
     raise "Market #{eth_market_id} is already created" if Market.where(eth_market_id: eth_market_id).exists?
 
-    eth_data = Ethereum::PredictionMarketContractService.new.get_market(eth_market_id)
+    eth_data = Bepro::PredictionMarketContractService.new.get_market(eth_market_id)
 
     # invalid market
     raise "Market #{eth_market_id} does not exist" if eth_data[:outcomes].blank?
@@ -56,7 +56,7 @@ class Market < ApplicationRecord
     return @eth_data if @eth_data.present? && !refresh
 
     Rails.cache.fetch("markets:#{eth_market_id}", expires_in: 24.hours, force: refresh) do
-      @eth_data = Ethereum::PredictionMarketContractService.new.get_market(eth_market_id)
+      @eth_data = Bepro::PredictionMarketContractService.new.get_market(eth_market_id)
     end
   end
 
@@ -135,7 +135,7 @@ class Market < ApplicationRecord
     return -1 if eth_market_id.blank?
 
     Rails.cache.fetch("markets:#{eth_market_id}:resolved_at", expires_in: 24.hours, force: refresh) do
-      Ethereum::PredictionMarketContractService.new.get_market_resolved_at(eth_market_id)
+      Bepro::PredictionMarketContractService.new.get_market_resolved_at(eth_market_id)
     end
   end
 
@@ -143,7 +143,7 @@ class Market < ApplicationRecord
     return {} if eth_market_id.blank?
 
     Rails.cache.fetch("markets:#{eth_market_id}:prices", expires_in: 24.hours, force: refresh) do
-      Ethereum::PredictionMarketContractService.new.get_market_prices(eth_market_id)
+      Bepro::PredictionMarketContractService.new.get_market_prices(eth_market_id)
     end
   end
 
@@ -152,7 +152,7 @@ class Market < ApplicationRecord
 
     market_prices =
       Rails.cache.fetch("markets:#{eth_market_id}:events:price", expires_in: 24.hours, force: refresh) do
-        Ethereum::PredictionMarketContractService.new.get_price_events(eth_market_id)
+        Bepro::PredictionMarketContractService.new.get_price_events(eth_market_id)
       end
 
     market_prices.group_by { |price| price[:outcome_id] }.map do |outcome_id, prices|
@@ -167,7 +167,7 @@ class Market < ApplicationRecord
 
     liquidity_prices =
       Rails.cache.fetch("markets:#{eth_market_id}:events:liquidity", expires_in: 24.hours, force: refresh) do
-        Ethereum::PredictionMarketContractService.new.get_liquidity_events(eth_market_id)
+        Bepro::PredictionMarketContractService.new.get_liquidity_events(eth_market_id)
       end
 
     chart_data_service = ChartDataService.new(liquidity_prices, :price)
@@ -181,7 +181,7 @@ class Market < ApplicationRecord
 
     market_actions =
       Rails.cache.fetch("markets:#{eth_market_id}:actions", expires_in: 24.hours, force: refresh) do
-        Ethereum::PredictionMarketContractService.new.get_action_events(market_id: eth_market_id)
+        Bepro::PredictionMarketContractService.new.get_action_events(market_id: eth_market_id)
       end
 
     market_actions.select do |action|
@@ -218,7 +218,7 @@ class Market < ApplicationRecord
   # realitio data
   def question_data(refresh: false)
     Rails.cache.fetch("markets:#{eth_market_id}:question", expires_in: 24.hours, force: refresh) do
-      Ethereum::RealitioErc20ContractService.new.get_question(question_id)
+      Bepro::RealitioErc20ContractService.new.get_question(question_id)
     end
   end
 end

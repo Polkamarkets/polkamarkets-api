@@ -2,7 +2,7 @@ module Admin
   class StatsController < BaseController
 
     def index
-      stats = Ethereum::PredictionMarketContractService.new.stats(market_id: market&.eth_market_id)
+      stats = Bepro::PredictionMarketContractService.new.stats(market_id: market&.eth_market_id)
 
       render json: stats, status: :ok
     end

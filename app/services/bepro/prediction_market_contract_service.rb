@@ -1,4 +1,4 @@
-module Ethereum
+module Bepro
   class PredictionMarketContractService < SmartContractService
     include BigNumberHelper
 
@@ -19,24 +19,21 @@ module Ethereum
     }
 
     def initialize(url: nil, contract_address: nil)
-      @contract_name = 'PredictionMarket'
-      @contract_address = Config.ethereum.contract_address
-
-      super(url: url, contract_address: contract_address)
+      super(contract_name: 'predictionMarket', contract_address: Config.ethereum.prediction_market_contract_address)
     end
 
     def get_all_market_ids
-      BeproService.prediction_market.call(method: 'getMarkets')
+      call(method: 'getMarkets')
     end
 
     def get_all_markets
-      market_ids = BeproService.prediction_market.call(method: 'getMarkets')
+      market_ids = call(method: 'getMarkets')
       market_ids.map { |market_id| get_market(market_id) }
     end
 
     def get_market(market_id)
-      market_data = BeproService.prediction_market.call(method: 'getMarketData', args: market_id)
-      market_alt_data = BeproService.prediction_market.call(method: 'getMarketAltData', args: market_id)
+      market_data = call(method: 'getMarketData', args: market_id)
+      market_alt_data = call(method: 'getMarketAltData', args: market_id)
 
       # formatting question_id
       question_id = market_alt_data[1]
@@ -44,7 +41,7 @@ module Ethereum
       outcomes = get_market_outcomes(market_id)
 
       # fetching market details from event
-      events = BeproService.prediction_market.get_events(event_name: 'MarketCreated', filter: { marketId: market_id.to_s })
+      events = get_events(event_name: 'MarketCreated', filter: { marketId: market_id.to_s })
 
       raise "Market #{market_id}: MarketCreated event not found" if events.blank?
       raise "Market #{market_id}: MarketCreated event count: #{events.count} != 1" if events.count != 1
@@ -79,9 +76,9 @@ module Ethereum
     def get_market_outcomes(market_id)
       # currently only binary
 
-      outcome_ids = BeproService.prediction_market.call(method: 'getMarketOutcomeIds', args: market_id)
+      outcome_ids = call(method: 'getMarketOutcomeIds', args: market_id)
       outcome_ids.map do |outcome_id|
-        outcome_data = BeproService.prediction_market.call(method: 'getMarketOutcomeData', args: [market_id, outcome_id])
+        outcome_data = call(method: 'getMarketOutcomeData', args: [market_id, outcome_id])
 
         {
           id: outcome_id.to_i,
@@ -93,7 +90,7 @@ module Ethereum
     end
 
     def get_market_prices(market_id)
-      market_prices = BeproService.prediction_market.call(method: 'getMarketPrices', args: market_id)
+      market_prices = call(method: 'getMarketPrices', args: market_id)
 
       {
         liquidity_price: from_big_number_to_float(market_prices[0]),
@@ -105,7 +102,7 @@ module Ethereum
     end
 
     def get_user_market_shares(market_id, address)
-      user_data = BeproService.prediction_market.call(method: 'getUserMarketShares', args: [market_id, address])
+      user_data = call(method: 'getUserMarketShares', args: [market_id, address])
 
       # TODO: improve this
       {
@@ -120,7 +117,7 @@ module Ethereum
     end
 
     def get_user_liquidity_fees_earned(address)
-      events = BeproService.prediction_market.get_events(
+      events = get_events(
         event_name: 'MarketActionTx',
         filter: {
           user: address,
@@ -131,7 +128,7 @@ module Ethereum
     end
 
     def get_price_events(market_id)
-      events = BeproService.prediction_market.get_events(
+      events = get_events(
         event_name: 'MarketOutcomePrice',
         filter: {
           marketId: market_id.to_s,
@@ -149,7 +146,7 @@ module Ethereum
     end
 
     def get_liquidity_events(market_id = nil)
-      events = BeproService.prediction_market.get_events(
+      events = get_events(
         event_name: 'MarketLiquidity',
         filter: {
           marketId: market_id.to_s,
@@ -167,7 +164,7 @@ module Ethereum
     end
 
     def get_action_events(market_id: nil, address: nil)
-      events = BeproService.prediction_market.get_events(
+      events = get_events(
         event_name: 'MarketActionTx',
         filter: {
           marketId: market_id.to_s,
@@ -192,7 +189,7 @@ module Ethereum
       # args: (address) user, (uint) marketId,
       args = [nil, market_id]
 
-      events = BeproService.prediction_market.get_events(
+      events = get_events(
         event_name: 'MarketResolved',
         filter: {
           marketId: market_id.to_s,
