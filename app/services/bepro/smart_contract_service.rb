@@ -26,7 +26,7 @@ module Bepro
       response = HTTP.get(uri)
 
       unless response.status.success?
-        raise "BeproService #{response.status} :: #{response.body.to_s}"
+        raise "BeproService #{response.status} :: #{response.body.to_s}; uri: #{uri}"
       end
 
       JSON.parse(response.body.to_s)
@@ -39,7 +39,7 @@ module Bepro
       response = HTTP.get(uri)
 
       unless response.status.success?
-        raise "BeproService #{response.status} :: #{response.body.to_s}"
+        raise "BeproService #{response.status} :: #{response.body.to_s}; uri: #{uri}"
       end
 
       JSON.parse(response.body.to_s)
