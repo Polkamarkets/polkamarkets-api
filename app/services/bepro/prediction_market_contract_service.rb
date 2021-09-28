@@ -124,7 +124,8 @@ module Bepro
           action: 6
         }
       )
-      events.sum { |event| event['returnValues']['value'] }
+
+      events.sum { |event| from_big_number_to_float(event['returnValues']['value']) }
     end
 
     def get_price_events(market_id)
