@@ -46,7 +46,7 @@ module Admin
       raise "Market #{@market.id} already has a Ethereum Market assigned!" if @market.eth_market_id.present?
 
       eth_market_id = params[:eth_market_id].to_i
-      eth_market_data = Ethereum::PredictionMarketContractService.new.get_market(eth_market_id)
+      eth_market_data = Bepro::PredictionMarketContractService.new.get_market(eth_market_id)
 
       if eth_market_data[:title] != @market.title ||
         eth_market_data[:outcomes].each_with_index.any? { |outcome, index| outcome[:title] != @market.outcomes[index].title }

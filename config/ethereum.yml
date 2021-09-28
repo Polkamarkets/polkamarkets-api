@@ -1,7 +1,7 @@
 default: &default
   url: <%= ENV['ETHEREUM_URL'] %>
   network_id: <%= ENV['ETHEREUM_NETWORK_ID'] %>
-  contract_address: "<%= ENV['ETHEREUM_CONTRACT_ADDRESS'].to_s %>"
+  prediction_market_contract_address: "<%= ENV['ETHEREUM_PREDICTION_MARKET_CONTRACT_ADDRESS'].to_s %>"
   oracle_address: "<%= ENV['ETHEREUM_ORACLE_ADDRESS'].to_s %>"
   realitio_contract_address: "<%= ENV['ETHEREUM_REALITIO_ERC20_CONTRACT_ADDRESS'].to_s %>"
   erc20_contract_address: "<%= ENV['ETHEREUM_ERC20_CONTRACT_ADDRESS'].to_s %>"

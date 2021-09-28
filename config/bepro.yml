@@ -1,0 +1,11 @@
+default: &default
+  api_url: <%= ENV['BEPRO_API_URL'] %>
+
+production:
+  <<: *default
+
+staging:
+  <<: *default
+
+development:
+  <<: *default

@@ -1,4 +1,4 @@
-module Ethereum
+module Bepro
   class PredictionMarketContractService < SmartContractService
     include BigNumberHelper
 
@@ -19,49 +19,42 @@ module Ethereum
     }
 
     def initialize(url: nil, contract_address: nil)
-      @contract_name = 'PredictionMarket'
-      @contract_address = Config.ethereum.contract_address
-
-      super(url: url, contract_address: contract_address)
+      super(contract_name: 'predictionMarket', contract_address: Config.ethereum.prediction_market_contract_address)
     end
 
     def get_all_market_ids
-      contract.call.get_markets
+      call(method: 'getMarkets')
     end
 
     def get_all_markets
-      market_ids = contract.call.get_markets
+      market_ids = call(method: 'getMarkets')
       market_ids.map { |market_id| get_market(market_id) }
     end
 
     def get_market(market_id)
-      market_data = contract.call.get_market_data(market_id)
-      market_alt_data = contract.call.get_market_alt_data(market_id)
+      market_data = call(method: 'getMarketData', args: market_id)
+      market_alt_data = call(method: 'getMarketAltData', args: market_id)
+
       # formatting question_id
-      question_id = encoder.ensure_prefix(market_alt_data[2].to_s(16).rjust(64, '0'))
+      question_id = market_alt_data[1]
 
       outcomes = get_market_outcomes(market_id)
-      # TODO remove; deprecated
-      title = ''
-      category = nil
-      subcategory = nil
 
-      if title.blank?
-        # new contract, fetching market details from event
-        events = get_events('MarketCreated', [nil, market_id])
+      # fetching market details from event
+      events = get_events(event_name: 'MarketCreated', filter: { marketId: market_id.to_s })
 
-        if events.present?
-          # decoding question from event. format from realitio
-          # https://reality.eth.link/app/docs/html/contracts.html#how-questions-are-structured
-          question = events[0][:args][1].split("\u241f")
-          title = question[0]
-          category = question[2].split(';').first
-          subcategory = question[2].split(';').last
-          outcome_titles = JSON.parse("[#{question[1]}]")
-          outcomes.each_with_index { |outcome, i| outcome[:title] = outcome_titles[i] }
-          image_hash = events[0][:args][2]
-        end
-      end
+      raise "Market #{market_id}: MarketCreated event not found" if events.blank?
+      raise "Market #{market_id}: MarketCreated event count: #{events.count} != 1" if events.count != 1
+
+      # decoding question from event. format from realitio
+      # https://reality.eth.link/app/docs/html/contracts.html#how-questions-are-structured
+      question = events[0]['returnValues']['question'].split("\u241f")
+      title = question[0]
+      category = question[2].split(';').first
+      subcategory = question[2].split(';').last
+      outcome_titles = JSON.parse("[#{question[1]}]")
+      outcomes.each_with_index { |outcome, i| outcome[:title] = outcome_titles[i] }
+      image_hash = events[0]['returnValues']['image']
 
       {
         id: market_id,
@@ -69,12 +62,12 @@ module Ethereum
         category: category,
         subcategory: subcategory,
         image_hash: image_hash,
-        state: STATES_MAPPING[market_data[0]],
-        expires_at: Time.at(market_data[1]).to_datetime,
+        state: STATES_MAPPING[market_data[0].to_i],
+        expires_at: Time.at(market_data[1].to_i).to_datetime,
         liquidity: from_big_number_to_float(market_data[2]),
         fee: from_big_number_to_float(market_alt_data[0]),
         shares: from_big_number_to_float(market_data[4]),
-        resolved_outcome_id: market_data[5],
+        resolved_outcome_id: market_data[5].to_i,
         question_id: question_id,
         outcomes: outcomes
       }
@@ -82,12 +75,13 @@ module Ethereum
 
     def get_market_outcomes(market_id)
       # currently only binary
-      outcome_ids = contract.call.get_market_outcome_ids(market_id)
+
+      outcome_ids = call(method: 'getMarketOutcomeIds', args: market_id)
       outcome_ids.map do |outcome_id|
-        outcome_data = contract.call.get_market_outcome_data(market_id, outcome_id)
+        outcome_data = call(method: 'getMarketOutcomeData', args: [market_id, outcome_id])
 
         {
-          id: outcome_id,
+          id: outcome_id.to_i,
           title: '', # TODO remove; deprecated
           price: from_big_number_to_float(outcome_data[0]),
           shares: from_big_number_to_float(outcome_data[1]),
@@ -96,7 +90,7 @@ module Ethereum
     end
 
     def get_market_prices(market_id)
-      market_prices = contract.call.get_market_prices(market_id)
+      market_prices = call(method: 'getMarketPrices', args: market_id)
 
       {
         liquidity_price: from_big_number_to_float(market_prices[0]),
@@ -108,7 +102,7 @@ module Ethereum
     end
 
     def get_user_market_shares(market_id, address)
-      user_data = contract.call.get_user_market_shares(market_id, address)
+      user_data = call(method: 'getUserMarketShares', args: [market_id, address])
 
       # TODO: improve this
       {
@@ -123,54 +117,71 @@ module Ethereum
     end
 
     def get_user_liquidity_fees_earned(address)
-      # args: (address) user, (uint) action, (uint) marketId,
-      args = [address, 6, nil]
+      events = get_events(
+        event_name: 'MarketActionTx',
+        filter: {
+          user: address,
+          action: 6
+        }
+      )
 
-      events = get_events('MarketActionTx', args)
-      events.sum { |event| from_big_number_to_float(event[:args][2]) }
+      events.sum { |event| from_big_number_to_float(event['returnValues']['value']) }
     end
 
     def get_price_events(market_id)
-      events = get_events('MarketOutcomePrice', [market_id])
+      events = get_events(
+        event_name: 'MarketOutcomePrice',
+        filter: {
+          marketId: market_id.to_s,
+        }
+      )
 
       events.map do |event|
         {
-          market_id: event[:topics][1].hex,
-          outcome_id: event[:topics][2].hex,
-          price: from_big_number_to_float(event[:args][0]),
-          timestamp: event[:args][1],
+          market_id: event['returnValues']['marketId'].to_i,
+          outcome_id: event['returnValues']['outcomeId'].to_i,
+          price: from_big_number_to_float(event['returnValues']['value']),
+          timestamp: event['returnValues']['timestamp'].to_i,
         }
       end
     end
 
     def get_liquidity_events(market_id = nil)
-      events = get_events('MarketLiquidity', [market_id])
+      events = get_events(
+        event_name: 'MarketLiquidity',
+        filter: {
+          marketId: market_id.to_s,
+        }
+      )
 
       events.map do |event|
         {
-          market_id: event[:topics][1].hex,
-          value: from_big_number_to_float(event[:args][0]),
-          price: from_big_number_to_float(event[:args][1]),
-          timestamp: event[:args][2],
+          market_id: event['returnValues']['marketId'].to_i,
+          value: from_big_number_to_float(event['returnValues']['value']),
+          price: from_big_number_to_float(event['returnValues']['price']),
+          timestamp: event['returnValues']['timestamp'].to_i,
         }
       end
     end
 
     def get_action_events(market_id: nil, address: nil)
-      # args: (address) user, (uint) action, (uint) marketId,
-      args = [address, nil, market_id]
-
-      events = get_events('MarketActionTx', args)
+      events = get_events(
+        event_name: 'MarketActionTx',
+        filter: {
+          marketId: market_id.to_s,
+          user: address,
+        }
+      )
 
       events.map do |event|
         {
-          address: "0x" + event[:topics][1].last(40),
-          action: ACTIONS_MAPPING[event[:topics][2].hex],
-          market_id: event[:topics][3].hex,
-          outcome_id: event[:args][0],
-          shares: from_big_number_to_float(event[:args][1]),
-          value: from_big_number_to_float(event[:args][2]),
-          timestamp: event[:args][3],
+          address: event['returnValues']['user'],
+          action: ACTIONS_MAPPING[event['returnValues']['action'].to_i],
+          market_id: event['returnValues']['marketId'].to_i,
+          outcome_id: event['returnValues']['outcomeId'].to_i,
+          shares: from_big_number_to_float(event['returnValues']['shares']),
+          value: from_big_number_to_float(event['returnValues']['value']),
+          timestamp: event['returnValues']['timestamp'].to_i,
         }
       end
     end
@@ -179,11 +190,16 @@ module Ethereum
       # args: (address) user, (uint) marketId,
       args = [nil, market_id]
 
-      events = get_events('MarketResolved', args)
+      events = get_events(
+        event_name: 'MarketResolved',
+        filter: {
+          marketId: market_id.to_s,
+        }
+      )
       # market still not resolved / no valid resolution event
       return -1 if events.count != 1
 
-      events[0][:args][1]
+      events[0]['returnValues']['timestamp'].to_i
     end
 
     def create_market(name, outcome_1_name, outcome_2_name, duration: (DateTime.now + 1.day).to_i, oracle_address: Config.ethereum.oracle_address, value: 1e17.to_i)

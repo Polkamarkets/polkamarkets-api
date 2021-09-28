@@ -10,7 +10,7 @@ namespace :eth do
     $redis_store.keys('markets:*').each { |key| $redis_store.del key }
     $redis_store.keys('portfolios:*').each { |key| $redis_store.del key }
 
-    market_ids = Ethereum::PredictionMarketContractService.new.get_all_market_ids
+    market_ids = Bepro::PredictionMarketContractService.new.get_all_market_ids
     market_ids.map { |market_id| Market.create_from_eth_market_id!(market_id) }
   end
 
@@ -25,7 +25,7 @@ namespace :eth do
     $redis_store.keys('markets:*').each { |key| $redis_store.del key }
     $redis_store.keys('portfolios:*').each { |key| $redis_store.del key }
 
-    service = Ethereum::PredictionMarketContractService.new
+    service = Bepro::PredictionMarketContractService.new
 
     markets = JSON.parse(File.read(Rails.root.join("db/seeds_data/markets.json")))
     markets.map do |market_data|

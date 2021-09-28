@@ -21,7 +21,7 @@ class Portfolio < ApplicationRecord
 
     @market_actions ||=
       Rails.cache.fetch("portfolios:#{eth_address}:actions", expires_in: 24.hours, force: refresh) do
-        Ethereum::PredictionMarketContractService.new.get_action_events(address: eth_address)
+        Bepro::PredictionMarketContractService.new.get_action_events(address: eth_address)
       end
   end
 
@@ -35,7 +35,7 @@ class Portfolio < ApplicationRecord
     @holdings ||=
       Rails.cache.fetch("portfolios:#{eth_address}:holdings", expires_in: 24.hours, force: refresh) do
         portfolio_market_ids.map do |market_id|
-          Ethereum::PredictionMarketContractService.new.get_user_market_shares(market_id, eth_address)
+          Bepro::PredictionMarketContractService.new.get_user_market_shares(market_id, eth_address)
         end
       end
   end
@@ -80,7 +80,7 @@ class Portfolio < ApplicationRecord
 
     @liquidity_fees_earned ||=
       Rails.cache.fetch("portfolios:#{eth_address}:liquidity_fees", expires_in: 24.hours, force: refresh) do
-        Ethereum::PredictionMarketContractService.new.get_user_liquidity_fees_earned(eth_address)
+        Bepro::PredictionMarketContractService.new.get_user_liquidity_fees_earned(eth_address)
       end
   end
 
