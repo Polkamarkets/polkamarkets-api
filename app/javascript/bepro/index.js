@@ -7,7 +7,7 @@ const bepro = new beprojs.Application({ mainnet: false })
 
 const getBeproContract = () => {
   return bepro.getPredictionMarketContract({
-    contractAddress: process.env.ETHEREUM_CONTRACT_ADDRESS
+    contractAddress: process.env.ETHEREUM_PREDICTION_MARKET_CONTRACT_ADDRESS
   })
 }
 
