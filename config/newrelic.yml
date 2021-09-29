@@ -3,7 +3,7 @@
 # .NET, PHP, Python, Node, and Go applications with deep visibility and low
 # overhead.  For more information, visit www.newrelic.com.
 #
-# Generated May 19, 2021
+# Generated September 29, 2021
 #
 # This configuration file is custom generated for NewRelic Administration
 #
@@ -12,7 +12,7 @@
 
 common: &default_settings
   # Required license key associated with your New Relic account.
-  license_key: e0958d8d5dce06920d68bb10dfa8ce3af2cdNRAL
+  license_key: <%= ENV['NEW_RELIC_LICENSE_KEY'] %>
 
   # Your application name. Renaming here affects where data displays in New
   # Relic.  For more details, see https://docs.newrelic.com/docs/apm/new-relic-apm/maintenance/renaming-applications
