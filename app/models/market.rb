@@ -127,6 +127,12 @@ class Market < ApplicationRecord
     eth_data[:shares]
   end
 
+  def voided
+    return nil if eth_data.blank?
+
+    eth_data[:voided]
+  end
+
   def liquidity_price
     prices[:liquidity_price]
   end

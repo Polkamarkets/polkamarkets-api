@@ -29,6 +29,7 @@ document.addEventListener("turbolinks:load", async (_event) => {
   await bepro.login()
 
   // console.log for debugging purposes
+  console.log(bepro);
   console.log(getBeproContract())
   console.log(getRealitioContract())
   console.log(getERC20Contract())

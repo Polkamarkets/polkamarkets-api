@@ -18,6 +18,7 @@ class MarketSerializer < ActiveModel::Serializer
     :shares,
     :question_id,
     :resolved_outcome_id,
+    :voided,
     :trading_view_symbol,
     :question
   )
