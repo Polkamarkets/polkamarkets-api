@@ -34,6 +34,7 @@ module Bepro
     def get_market(market_id)
       market_data = call(method: 'getMarketData', args: market_id)
       market_alt_data = call(method: 'getMarketAltData', args: market_id)
+      is_market_voided = call(method: 'isMarketVoided', args: market_id)
 
       # formatting question_id
       question_id = market_alt_data[1]
@@ -69,6 +70,7 @@ module Bepro
         shares: from_big_number_to_float(market_data[4]),
         resolved_outcome_id: market_data[5].to_i,
         question_id: question_id,
+        voided: is_market_voided,
         outcomes: outcomes
       }
     end
