@@ -24,6 +24,7 @@ Rails.application.routes.draw do
     end
 
     get 'stats' => "stats#index"
+    get 'leaderboard' => "stats#leaderboard"
   end
 
   scope :module => 'api' do

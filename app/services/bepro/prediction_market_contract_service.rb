@@ -10,6 +10,7 @@ module Bepro
       4 => 'claim_winnings',
       5 => 'claim_liquidity',
       6 => 'claim_fees',
+      7 => 'claim_voided',
     }.freeze
 
     STATES_MAPPING = {
