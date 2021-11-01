@@ -1,5 +1,5 @@
 default: &default
-  token: <%= ENV['DISCORD_BOT_TOKEN'] %>
+  bot_token: <%= ENV['DISCORD_BOT_TOKEN'] %>
 
 production:
   <<: *default
