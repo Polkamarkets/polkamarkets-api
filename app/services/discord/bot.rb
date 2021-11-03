@@ -14,7 +14,7 @@ class Discord::Bot
     @bot.run
   end
 
-  def send_message_to_channel(channel_id: message:)
+  def send_message_to_channel(channel_id:, message:)
     @bot.send_message(channel_id, message)
     @bot.stop
   end
