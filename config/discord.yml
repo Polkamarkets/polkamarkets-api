@@ -1,6 +1,5 @@
 default: &default
   bot_token: <%= ENV['DISCORD_BOT_TOKEN'] %>
-  server_id: <%= ENV['DISCORD_SERVER_ID'] %>
   channel_id: <%= ENV['DISCORD_CHANNEL_ID'] %>
 
 production:
