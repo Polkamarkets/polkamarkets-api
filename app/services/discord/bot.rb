@@ -11,12 +11,15 @@ class Discord::Bot
   end
 
   def start
-    @bot.run
+    @bot.run true
   end
 
-  def send_message_to_channel(channel_id:, message:)
-    @bot.send_message(channel_id, message)
+  def stop
     @bot.stop
+  end
+
+  def send_message_to_channel(message:)
+    @bot.send_message(Config.discord.channel_id, message)
   end
 
 end
