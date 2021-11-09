@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2021_08_30_214315) do
+ActiveRecord::Schema.define(version: 2021_11_09_055902) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -62,6 +62,7 @@ ActiveRecord::Schema.define(version: 2021_08_30_214315) do
     t.string "slug"
     t.string "trading_view_symbol"
     t.boolean "verified", default: false
+    t.string "banner_url"
     t.index ["eth_market_id"], name: "index_markets_on_eth_market_id", unique: true
     t.index ["slug"], name: "index_markets_on_slug", unique: true
   end
