@@ -20,7 +20,8 @@ class MarketSerializer < ActiveModel::Serializer
     :resolved_outcome_id,
     :voided,
     :trading_view_symbol,
-    :question
+    :question,
+    :banner_url
   )
 
   has_many :outcomes, class_name: "MarketOutcome", serialize: "MarketOutcomeSerializer"

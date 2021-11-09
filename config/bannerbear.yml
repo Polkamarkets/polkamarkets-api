@@ -1,0 +1,12 @@
+default: &default
+  api_key: <%= ENV['BANNERBEAR_API_KEY'] %>
+  template_id: <%= ENV['BANNERBEAR_TEMPLATE_ID'] %>
+
+production:
+  <<: *default
+
+staging:
+  <<: *default
+
+development:
+  <<: *default

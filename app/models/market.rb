@@ -47,6 +47,9 @@ class Market < ApplicationRecord
     end
 
     market.save!
+    # updating banner image asynchrounously
+    MarketBannerWorker.perform_async(market.id)
+
     market
   end
 
@@ -219,6 +222,11 @@ class Market < ApplicationRecord
     return self['image_url'] if image.blank?
 
     Rails.application.routes.url_helpers.rails_blob_url(image)
+  end
+
+  def update_banner_image
+    banner_image_url = BannerbearService.new.create_banner_image(self)
+    self.update(banner_url: banner_image_url)
   end
 
   # realitio data
