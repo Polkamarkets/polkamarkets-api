@@ -3,8 +3,6 @@ require 'sidekiq/web'
 Rails.application.routes.draw do
   # For details on the DSL available within this file, see https://guides.rubyonrails.org/routing.html
   namespace :admin do
-    root :to => "markets#index"
-
     Sidekiq::Web.use Rack::Auth::Basic do |username, password|
       # Protect against timing attacks:
       # - See https://codahale.com/a-lesson-in-timing-attacks/
@@ -15,13 +13,6 @@ Rails.application.routes.draw do
         ActiveSupport::SecurityUtils.secure_compare(::Digest::SHA256.hexdigest(password), ::Digest::SHA256.hexdigest(ENV["ADMIN_PASSWORD"]))
     end if !Rails.env.development?
     mount Sidekiq::Web, at: "/sidekiq"
-
-    resources :markets do
-      member do
-        post :publish
-        post :resolve
-      end
-    end
 
     get 'stats' => "stats#index"
     get 'leaderboard' => "stats#leaderboard"
@@ -42,7 +33,9 @@ Rails.application.routes.draw do
 
     resources :whitelist, only: [:show]
 
-    post 'webhooks/faucet' => "webhooks#faucet"
+    if !Rails.env.production?
+      post 'webhooks/faucet' => "webhooks#faucet"
+    end
 
     # workaround due to js-ipfs library CORS error: https://community.infura.io/t/ipfs-cors-error/3149/
     post 'ipfs/add' => "ipfs#add"
