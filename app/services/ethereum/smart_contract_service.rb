@@ -10,7 +10,7 @@ module Ethereum
       raise "contract_address is not defined!" if @contract_address.blank?
 
       # chain parameters can be sent via params and env vars
-      url ||= Config.ethereum.url
+      url ||= Rails.application.config_for(:ethereum).url
       contract_address ||= @contract_address
 
       @client = Ethereum::HttpClient.new(url)
@@ -108,7 +108,7 @@ module Ethereum
     end
 
     def key
-      @_key ||= Eth::Key.new priv: Config.ethereum.oracle_private_key
+      @_key ||= Eth::Key.new priv: Rails.application.config_for(:ethereum).oracle_private_key
     end
   end
 end

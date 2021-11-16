@@ -3,7 +3,7 @@ class BannerbearService
     uri = bannerbear_url + 'images'
 
     modifications = {
-      template: Config.bannerbear.template_id,
+      template: Rails.application.config_for(:bannerbear).template_id,
       modifications: [
         {
           name: "title",
@@ -29,7 +29,7 @@ class BannerbearService
     }
 
     response = HTTP
-      .auth("Bearer #{Config.bannerbear.api_key}")
+      .auth("Bearer #{Rails.application.config_for(:bannerbear).api_key}")
       .post(uri, json: modifications)
 
     unless response.status.success?

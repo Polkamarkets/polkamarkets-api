@@ -4,7 +4,7 @@ module Ethereum
 
     def initialize(url: nil, contract_address: nil)
       @contract_name = 'ERC20'
-      @contract_address = Config.ethereum.erc20_contract_address
+      @contract_address = Rails.application.config_for(:ethereum).erc20_contract_address
 
       super(url: url, contract_address: contract_address)
     end
@@ -17,7 +17,7 @@ module Ethereum
           from_integer_to_big_number(amount)
         ],
         0,
-        Config.ethereum.oracle_address
+        Rails.application.config_for(:ethereum).oracle_address
       )
     end
   end

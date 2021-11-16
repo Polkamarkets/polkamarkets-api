@@ -2,9 +2,9 @@ namespace :whitelist do
   desc "cache whitelist addresses from spreadsheet to redis"
   task :cache, [:symbol] => :environment do |task, args|
     spreadsheet = GoogleSpreadsheetsService.new.fetch_spreadsheet(
-      Config.whitelist.spreadsheet_id,
-      Config.whitelist.spreadsheet_tab,
-      Config.whitelist.spreadsheet_range,
+      Rails.application.config_for(:whitelist).spreadsheet_id,
+      Rails.application.config_for(:whitelist).spreadsheet_tab,
+      Rails.application.config_for(:whitelist).spreadsheet_range,
     )
 
     # row 5 - has access boolean

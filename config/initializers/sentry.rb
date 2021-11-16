@@ -1,5 +1,5 @@
 Sentry.init do |config|
-  config.dsn = Config.sentry.dsn
+  config.dsn = Rails.application.config_for(:sentry).dsn
   config.breadcrumbs_logger = [:active_support_logger]
   config.enabled_environments = %w[production]
 

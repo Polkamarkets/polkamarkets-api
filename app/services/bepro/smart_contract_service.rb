@@ -20,7 +20,7 @@ module Bepro
         args = args.compact.join(',')
       end
 
-      uri = Config.bepro.api_url + "/call?contract=#{contract_name}&address=#{contract_address}&method=#{method}"
+      uri = Rails.application.config_for(:bepro).api_url + "/call?contract=#{contract_name}&address=#{contract_address}&method=#{method}"
       uri << "&args=#{args}" if args.present?
 
       response = HTTP.get(uri)
@@ -33,7 +33,7 @@ module Bepro
     end
 
     def get_events(event_name:, filter: {})
-      uri = Config.bepro.api_url + "/events?contract=#{contract_name}&address=#{contract_address}&eventName=#{event_name}"
+      uri = Rails.application.config_for(:bepro).api_url + "/events?contract=#{contract_name}&address=#{contract_address}&eventName=#{event_name}"
       uri << "&filter=#{filter.to_json}" if filter.present?
 
       response = HTTP.get(uri)

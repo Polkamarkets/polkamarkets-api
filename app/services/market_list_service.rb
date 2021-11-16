@@ -16,7 +16,7 @@ class MarketListService
   def market_ids
     list[:markets]
       .to_a
-      .select { |market| market[:network_id] == Config.ethereum.network_id }
+      .select { |market| market[:network_id] == Rails.application.config_for(:ethereum).network_id }
       .map { |market| market[:id] }
       .compact
   end
@@ -24,7 +24,7 @@ class MarketListService
   def market_slugs
     list[:markets]
       .to_a
-      .select { |market| market[:network_id] == Config.ethereum.network_id }
+      .select { |market| market[:network_id] == Rails.application.config_for(:ethereum).network_id }
       .map { |market| market[:slug] }
       .compact
   end
