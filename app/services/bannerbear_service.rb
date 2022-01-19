@@ -2,6 +2,9 @@ class BannerbearService
   def create_banner_image(market)
     uri = bannerbear_url + 'images'
 
+    return if Rails.application.config_for(:bannerbear).template_id.blank? ||
+      Rails.application.config_for(:bannerbear).api_key.blank?
+
     modifications = {
       template: Rails.application.config_for(:bannerbear).template_id,
       modifications: [
