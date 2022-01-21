@@ -2,7 +2,7 @@ module Bepro
   class RealitioErc20ContractService < SmartContractService
     include BigNumberHelper
 
-    def initialize(url: nil, contract_address: nil)
+    def initialize(network_id:, url: nil, contract_address: nil)
       super(
         contract_name: 'realitio',
         contract_address: Rails.application.config_for(:ethereum)["network_#{network_id}"]['realitio_contract_address'],

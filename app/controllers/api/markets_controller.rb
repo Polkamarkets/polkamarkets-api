@@ -9,6 +9,10 @@ module Api
         markets = markets.where(eth_market_id: ids)
       end
 
+      if params[:network_id]
+        markets = markets.where(network_id: params[:network_id])
+      end
+
       if params[:state]
         # when open, using database field to filter, otherwise using eth data
         case params[:state]
@@ -24,7 +28,7 @@ module Api
 
     def show
       # finding items by eth market id
-      market = Market.find_by_slug_or_eth_market_id(params[:id])
+      market = Market.find_by_slug_or_eth_market_id(params[:id], params[:network_id])
 
       render json: market, status: :ok
     end
