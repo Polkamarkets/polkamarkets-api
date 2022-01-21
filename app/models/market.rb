@@ -4,7 +4,7 @@ class Market < ApplicationRecord
   friendly_id :title, use: :slugged
 
   validates_presence_of :title, :category, :expires_at, :network_id
-  validates_uniqueness_of :eth_market_id
+  validates_uniqueness_of :eth_market_id, scope: :network_id
 
   has_many :outcomes, -> { order('eth_market_id ASC, created_at ASC') }, class_name: "MarketOutcome", dependent: :destroy, inverse_of: :market
 
