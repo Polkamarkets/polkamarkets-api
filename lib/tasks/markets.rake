@@ -1,11 +1,13 @@
 namespace :markets do
   desc "checks for new markets and creates them"
   task :check_new_markets, [:symbol] => :environment do |task, args|
-    eth_market_ids = Bepro::PredictionMarketContractService.new.get_all_market_ids.map(&:to_i)
-    db_market_ids = Market.pluck(:eth_market_id)
+    Rails.application.config_for(:ethereum).network_ids.each do |network_id|
+      eth_market_ids = Bepro::PredictionMarketContractService.new(network_id: network_id).get_all_market_ids.map(&:to_i)
+      db_market_ids = Market.where(network_id: network_id).pluck(:eth_market_id)
 
-    (eth_market_ids - db_market_ids).each do |market_id|
-      Market.create_from_eth_market_id!(market_id)
+      (eth_market_ids - db_market_ids).each do |market_id|
+        Market.create_from_eth_market_id!(network_id, market_id)
+      end
     end
   end
 

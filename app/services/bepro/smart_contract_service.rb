@@ -6,13 +6,14 @@ module Bepro
       'realitio'
     ].freeze
 
-    attr_accessor :contract_name, :contract_address
+    attr_accessor :contract_name, :contract_address, :api_url
 
-    def initialize(contract_name:, contract_address:)
+    def initialize(api_url:, contract_name:, contract_address:)
       raise "Smart contract #{contract_name} not defined" unless SMART_CONTRACTS.include?(contract_name)
 
       @contract_name = contract_name
       @contract_address = contract_address
+      @api_url = api_url
     end
 
     def call(method:, args: [])
@@ -20,7 +21,7 @@ module Bepro
         args = args.compact.join(',')
       end
 
-      uri = Rails.application.config_for(:bepro).api_url + "/call?contract=#{contract_name}&address=#{contract_address}&method=#{method}"
+      uri = api_url + "/call?contract=#{contract_name}&address=#{contract_address}&method=#{method}"
       uri << "&args=#{args}" if args.present?
 
       response = HTTP.get(uri)
@@ -33,7 +34,7 @@ module Bepro
     end
 
     def get_events(event_name:, filter: {})
-      uri = Rails.application.config_for(:bepro).api_url + "/events?contract=#{contract_name}&address=#{contract_address}&eventName=#{event_name}"
+      uri = api_url + "/events?contract=#{contract_name}&address=#{contract_address}&eventName=#{event_name}"
       uri << "&filter=#{filter.to_json}" if filter.present?
 
       response = HTTP.get(uri)

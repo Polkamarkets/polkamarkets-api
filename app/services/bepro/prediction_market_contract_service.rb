@@ -19,8 +19,12 @@ module Bepro
       2 => 'resolved',
     }
 
-    def initialize(url: nil, contract_address: nil)
-      super(contract_name: 'predictionMarket', contract_address: Rails.application.config_for(:ethereum).prediction_market_contract_address)
+    def initialize(network_id:, url: nil, contract_address: nil)
+      super(
+        contract_name: 'predictionMarket',
+        contract_address: Rails.application.config_for(:ethereum)["network_#{network_id}"]['prediction_market_contract_address'],
+        api_url: Rails.application.config_for(:ethereum)["network_#{network_id}"]['bepro_api_url']
+      )
     end
 
     def get_all_market_ids
@@ -203,19 +207,6 @@ module Bepro
       return -1 if events.count != 1
 
       events[0]['returnValues']['timestamp'].to_i
-    end
-
-    def create_market(name, outcome_1_name, outcome_2_name, duration: (DateTime.now + 1.day).to_i, oracle_address: Rails.application.config_for(:ethereum).oracle_address, value: 1e17.to_i)
-      function_name = 'createMarket'
-      function_args = [
-        name,
-        duration,
-        oracle_address,
-        outcome_1_name,
-        outcome_2_name
-      ]
-
-      call_payable_function(function_name, function_args, value, Rails.application.config_for(:ethereum).oracle_address)
     end
 
     def stats(market_id: nil)

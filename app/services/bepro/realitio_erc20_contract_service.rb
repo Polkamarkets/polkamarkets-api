@@ -3,7 +3,11 @@ module Bepro
     include BigNumberHelper
 
     def initialize(url: nil, contract_address: nil)
-      super(contract_name: 'realitio', contract_address: Rails.application.config_for(:ethereum).realitio_contract_address)
+      super(
+        contract_name: 'realitio',
+        contract_address: Rails.application.config_for(:ethereum)["network_#{network_id}"]['realitio_contract_address'],
+        api_url: Rails.application.config_for(:ethereum)["network_#{network_id}"]['bepro_api_url']
+      )
     end
 
     def get_question(question_id)
