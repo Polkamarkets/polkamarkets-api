@@ -20,7 +20,7 @@ class Market < ApplicationRecord
 
   IMMUTABLE_FIELDS = [:title]
 
-  def self.find_by_slug_or_eth_market_id(id_or_slug, network_id)
+  def self.find_by_slug_or_eth_market_id(id_or_slug, network_id = nil)
     Market.find_by(slug: id_or_slug) ||
       Market.find_by!(eth_market_id: id_or_slug, network_id: network_id)
   end
