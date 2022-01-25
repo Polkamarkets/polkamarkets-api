@@ -1,6 +1,7 @@
 class MarketSerializer < ActiveModel::Serializer
   attributes(
     :id,
+    :network_id,
     :slug,
     :title,
     :description,

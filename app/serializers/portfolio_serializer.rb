@@ -1,6 +1,7 @@
 class PortfolioSerializer < ActiveModel::Serializer
   attributes(
     :address,
+    :network_id,
     :holdings_value,
     :holdings_performance,
     :holdings_chart,
