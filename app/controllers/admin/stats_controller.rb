@@ -1,7 +1,12 @@
 module Admin
   class StatsController < BaseController
     def index
-      stats = Bepro::PredictionMarketContractService.new.stats(market_id: market&.eth_market_id)
+      stats = Rails.application.config_for(:ethereum).network_ids.map do |network_id|
+        [
+          network_id,
+          Bepro::PredictionMarketContractService.new(network_id: network_id).stats(market_id: market&.eth_market_id)
+        ]
+      end.to_h
 
       render json: stats, status: :ok
     end
