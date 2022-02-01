@@ -1,4 +1,10 @@
 class TokenRatesService
+  NETWORK_TOKENS = {
+    1 => 'ethereum',
+    1284 => 'moonbeam',
+    1285 => 'moonriver'
+  }.freeze
+
   def get_rates(tokens, currency)
     uri = "https://api.coingecko.com/api/v3/simple/price?ids=#{tokens.join(',')}&vs_currencies=#{currency}"
 
