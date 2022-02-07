@@ -48,7 +48,7 @@ class Portfolio < ApplicationRecord
     # fetching holdings markets
     market_ids = holdings.map { |holding| holding[:market_id] }.uniq
 
-    markets = Market.where(eth_market_id: market_ids).includes(:outcomes)
+    markets = Market.where(eth_market_id: market_ids, network_id: network_id).includes(:outcomes)
     # filtering holdings by resolved by markets
     markets = markets.to_a.select { |market| market.resolved? }
 
@@ -90,7 +90,7 @@ class Portfolio < ApplicationRecord
 
     # fetching holdings markets
     market_ids = holdings.map { |holding| holding[:market_id] }.uniq
-    markets = Market.where(eth_market_id: market_ids).includes(:outcomes)
+    markets = Market.where(eth_market_id: market_ids, network_id: network_id).includes(:outcomes)
     # ignoring resolved markets
     markets = markets.to_a.reject { |market| market.resolved? }
 
@@ -222,8 +222,8 @@ class Portfolio < ApplicationRecord
       .map { |a| a[:market_id] }
       .uniq
 
-    holdings_markets = Market.where(eth_market_id: holdings_market_ids).all
-    liquidity_markets = Market.where(eth_market_id: liquidity_market_ids).all
+    holdings_markets = Market.where(eth_market_id: holdings_market_ids, network_id: network_id).all
+    liquidity_markets = Market.where(eth_market_id: liquidity_market_ids, network_id: network_id).all
 
     market_charts = holdings_market_ids.map do |market_id|
       market = holdings_markets.find { |market| market.eth_market_id == market_id }
