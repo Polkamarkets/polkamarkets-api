@@ -37,6 +37,7 @@ class StatsService
       actions = network[:bepro_pm].get_action_events
       bonds = network[:bepro_realitio].get_bond_events
 
+      markets_created = network[:bepro_pm].get_market_count
       volume = actions.select { |v| ['buy', 'sell'].include?(v[:action]) }
       bonds_volume = bonds.sum { |bond| bond[:value] }
       volume_movr = volume.sum { |v| v[:value] }
@@ -46,7 +47,7 @@ class StatsService
       [
         network_id,
         {
-          markets_created: Market.where(network_id: network_id).published.count,
+          markets_created: markets_created,
           bond_volume: bonds_volume,
           bond_volume_eur: bonds_volume * rates[:polkamarkets],
           volume: volume_movr,

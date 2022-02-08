@@ -36,6 +36,11 @@ module Bepro
       from_big_number_to_float(call(method: 'fee').join.to_i)
     end
 
+    def get_market_count
+      # there's currently an issue with bepro-api with returning results with only one item
+      call(method: 'marketIndex').join.to_i
+    end
+
     def get_all_markets
       market_ids = call(method: 'getMarkets')
       market_ids.map { |market_id| get_market(market_id) }
