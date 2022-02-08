@@ -1,12 +1,19 @@
 default: &default
-  <% ENV["ETHEREUM_NETWORK_IDS"].split(',') do |network_id| %>
+  <% ENV["ETHEREUM_NETWORK_IDS"].to_s.split(',') do |network_id| %>
     network_<%= network_id %>:
       bepro_api_url: <%= ENV["ETHEREUM_NETWORK_#{network_id}_BEPRO_API_URL"] %>
       prediction_market_contract_address: "<%= ENV["ETHEREUM_NETWORK_#{network_id}_PREDICTION_MARKET_CONTRACT_ADDRESS"].to_s %>"
       realitio_contract_address: "<%= ENV["ETHEREUM_NETWORK_#{network_id}_REALITIO_ERC20_CONTRACT_ADDRESS"].to_s %>"
   <% end %>
+  <% ENV["STATS_NETWORK_IDS"].to_s.split(',') do |network_id| %>
+    stats_network_<%= network_id %>:
+      bepro_api_url: <%= ENV["STATS_NETWORK_#{network_id}_BEPRO_API_URL"] %>
+      prediction_market_contract_address: "<%= ENV["STATS_NETWORK_#{network_id}_PREDICTION_MARKET_CONTRACT_ADDRESS"].to_s %>"
+      realitio_contract_address: "<%= ENV["STATS_NETWORK_#{network_id}_REALITIO_ERC20_CONTRACT_ADDRESS"].to_s %>"
+  <% end %>
     market_list_url: <%= ENV['ETHEREUM_MARKET_LIST_URL'] %>
-    network_ids: <%= ENV["ETHEREUM_NETWORK_IDS"].split(',') %>
+    network_ids: <%= ENV["ETHEREUM_NETWORK_IDS"].to_s.split(',') %>
+    stats_network_ids: <%= ENV["STATS_NETWORK_IDS"].to_s.split(',') %>
 
 production:
   <<: *default
