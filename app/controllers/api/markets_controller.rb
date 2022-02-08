@@ -34,7 +34,7 @@ module Api
     end
 
     def create
-      market = Market.create_from_eth_market_id!(params[:id].to_i)
+      market = Market.create_from_eth_market_id!(params[:network_id], params[:id].to_i)
 
       render json: market, status: :ok
     end
