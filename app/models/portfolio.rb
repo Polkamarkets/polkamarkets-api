@@ -1,5 +1,6 @@
 class Portfolio < ApplicationRecord
   validates_presence_of :eth_address
+  validates_uniqueness_of :eth_address, scope: :network_id
 
   before_validation :normalize_eth_address
 
@@ -20,8 +21,8 @@ class Portfolio < ApplicationRecord
     return @market_actions if @market_actions.present? && !refresh
 
     @market_actions ||=
-      Rails.cache.fetch("portfolios:#{eth_address}:actions", expires_in: 24.hours, force: refresh) do
-        Bepro::PredictionMarketContractService.new.get_action_events(address: eth_address)
+      Rails.cache.fetch("portfolios:network_#{network_id}:#{eth_address}:actions", expires_in: 24.hours, force: refresh) do
+        Bepro::PredictionMarketContractService.new(network_id: network_id).get_action_events(address: eth_address)
       end
   end
 
@@ -33,9 +34,9 @@ class Portfolio < ApplicationRecord
     return @holdings if @holdings.present? && !refresh
 
     @holdings ||=
-      Rails.cache.fetch("portfolios:#{eth_address}:holdings", expires_in: 24.hours, force: refresh) do
+      Rails.cache.fetch("portfolios:network_#{network_id}:#{eth_address}:holdings", expires_in: 24.hours, force: refresh) do
         portfolio_market_ids.map do |market_id|
-          Bepro::PredictionMarketContractService.new.get_user_market_shares(market_id, eth_address)
+          Bepro::PredictionMarketContractService.new(network_id: network_id).get_user_market_shares(market_id, eth_address)
         end
       end
   end
@@ -47,7 +48,7 @@ class Portfolio < ApplicationRecord
     # fetching holdings markets
     market_ids = holdings.map { |holding| holding[:market_id] }.uniq
 
-    markets = Market.where(eth_market_id: market_ids).includes(:outcomes)
+    markets = Market.where(eth_market_id: market_ids, network_id: network_id).includes(:outcomes)
     # filtering holdings by resolved by markets
     markets = markets.to_a.select { |market| market.resolved? }
 
@@ -79,8 +80,8 @@ class Portfolio < ApplicationRecord
     return @liquidity_fees_earned if @liquidity_fees_earned.present? && !refresh
 
     @liquidity_fees_earned ||=
-      Rails.cache.fetch("portfolios:#{eth_address}:liquidity_fees", expires_in: 24.hours, force: refresh) do
-        Bepro::PredictionMarketContractService.new.get_user_liquidity_fees_earned(eth_address)
+      Rails.cache.fetch("portfolios:network_#{network_id}:#{eth_address}:liquidity_fees", expires_in: 24.hours, force: refresh) do
+        Bepro::PredictionMarketContractService.new(network_id: network_id).get_user_liquidity_fees_earned(eth_address)
       end
   end
 
@@ -89,7 +90,7 @@ class Portfolio < ApplicationRecord
 
     # fetching holdings markets
     market_ids = holdings.map { |holding| holding[:market_id] }.uniq
-    markets = Market.where(eth_market_id: market_ids).includes(:outcomes)
+    markets = Market.where(eth_market_id: market_ids, network_id: network_id).includes(:outcomes)
     # ignoring resolved markets
     markets = markets.to_a.reject { |market| market.resolved? }
 
@@ -185,7 +186,7 @@ class Portfolio < ApplicationRecord
 
     portfolio_chart =
       Rails.cache.fetch(
-        "portfolios:#{eth_address}:chart:#{chart_timeframe}",
+        "portfolios:network_#{network_id}:#{eth_address}:chart:#{chart_timeframe}",
         expires_in: expires_in.seconds,
         force: refresh
       ) do
@@ -221,8 +222,8 @@ class Portfolio < ApplicationRecord
       .map { |a| a[:market_id] }
       .uniq
 
-    holdings_markets = Market.where(eth_market_id: holdings_market_ids).all
-    liquidity_markets = Market.where(eth_market_id: liquidity_market_ids).all
+    holdings_markets = Market.where(eth_market_id: holdings_market_ids, network_id: network_id).all
+    liquidity_markets = Market.where(eth_market_id: liquidity_market_ids, network_id: network_id).all
 
     market_charts = holdings_market_ids.map do |market_id|
       market = holdings_markets.find { |market| market.eth_market_id == market_id }

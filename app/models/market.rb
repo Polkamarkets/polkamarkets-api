@@ -3,8 +3,8 @@ class Market < ApplicationRecord
   extend FriendlyId
   friendly_id :title, use: :slugged
 
-  validates_presence_of :title, :category, :expires_at
-  validates_uniqueness_of :eth_market_id
+  validates_presence_of :title, :category, :expires_at, :network_id
+  validates_uniqueness_of :eth_market_id, scope: :network_id
 
   has_many :outcomes, -> { order('eth_market_id ASC, created_at ASC') }, class_name: "MarketOutcome", dependent: :destroy, inverse_of: :market
 
@@ -20,15 +20,18 @@ class Market < ApplicationRecord
 
   IMMUTABLE_FIELDS = [:title]
 
-  def self.find_by_slug_or_eth_market_id(id_or_slug)
+  def self.find_by_slug_or_eth_market_id(id_or_slug, network_id = nil)
     Market.find_by(slug: id_or_slug) ||
-      Market.find_by!(eth_market_id: id_or_slug)
+      Market.find_by!(eth_market_id: id_or_slug, network_id: network_id)
   end
 
-  def self.create_from_eth_market_id!(eth_market_id)
-    raise "Market #{eth_market_id} is already created" if Market.where(eth_market_id: eth_market_id).exists?
+  def self.create_from_eth_market_id!(network_id, eth_market_id)
+    raise "Market #{eth_market_id} is already created" if Market.where(network_id: network_id, eth_market_id: eth_market_id).exists?
 
-    eth_data = Bepro::PredictionMarketContractService.new.get_market(eth_market_id)
+    eth_data =
+      Rails.cache.fetch("markets:network_#{network_id}:#{eth_market_id}", expires_in: 24.hours, force: true) do
+        Bepro::PredictionMarketContractService.new(network_id: network_id).get_market(eth_market_id)
+      end
 
     # invalid market
     raise "Market #{eth_market_id} does not exist" if eth_data[:outcomes].blank?
@@ -40,7 +43,8 @@ class Market < ApplicationRecord
       eth_market_id: eth_market_id,
       expires_at: eth_data[:expires_at],
       published_at: DateTime.now,
-      image_url: IpfsService.image_url_from_hash(eth_data[:image_hash])
+      image_url: IpfsService.image_url_from_hash(eth_data[:image_hash]),
+      network_id: network_id
     )
     eth_data[:outcomes].each do |outcome|
       market.outcomes << MarketOutcome.new(title: outcome[:title], eth_market_id: outcome[:id])
@@ -50,6 +54,9 @@ class Market < ApplicationRecord
     # updating banner image asynchrounously
     MarketBannerWorker.perform_async(market.id)
 
+    # triggering workers to upgrade cache data
+    market.refresh_cache!
+
     market
   end
 
@@ -58,8 +65,8 @@ class Market < ApplicationRecord
 
     return @eth_data if @eth_data.present? && !refresh
 
-    Rails.cache.fetch("markets:#{eth_market_id}", expires_in: 24.hours, force: refresh) do
-      @eth_data = Bepro::PredictionMarketContractService.new.get_market(eth_market_id)
+    Rails.cache.fetch("markets:network_#{network_id}:#{eth_market_id}", expires_in: 24.hours, force: refresh) do
+      @eth_data = Bepro::PredictionMarketContractService.new(network_id: network_id).get_market(eth_market_id)
     end
   end
 
@@ -143,16 +150,16 @@ class Market < ApplicationRecord
   def resolved_at(refresh: false)
     return -1 if eth_market_id.blank?
 
-    Rails.cache.fetch("markets:#{eth_market_id}:resolved_at", expires_in: 24.hours, force: refresh) do
-      Bepro::PredictionMarketContractService.new.get_market_resolved_at(eth_market_id)
+    Rails.cache.fetch("markets:network_#{network_id}:#{eth_market_id}:resolved_at", expires_in: 24.hours, force: refresh) do
+      Bepro::PredictionMarketContractService.new(network_id: network_id).get_market_resolved_at(eth_market_id)
     end
   end
 
   def prices(refresh: false)
     return {} if eth_market_id.blank?
 
-    Rails.cache.fetch("markets:#{eth_market_id}:prices", expires_in: 24.hours, force: refresh) do
-      Bepro::PredictionMarketContractService.new.get_market_prices(eth_market_id)
+    Rails.cache.fetch("markets:network_#{network_id}:#{eth_market_id}:prices", expires_in: 24.hours, force: refresh) do
+      Bepro::PredictionMarketContractService.new(network_id: network_id).get_market_prices(eth_market_id)
     end
   end
 
@@ -160,8 +167,8 @@ class Market < ApplicationRecord
     return {} if eth_market_id.blank?
 
     market_prices =
-      Rails.cache.fetch("markets:#{eth_market_id}:events:price", expires_in: 24.hours, force: refresh) do
-        Bepro::PredictionMarketContractService.new.get_price_events(eth_market_id)
+      Rails.cache.fetch("markets:network_#{network_id}:#{eth_market_id}:events:price", expires_in: 24.hours, force: refresh) do
+        Bepro::PredictionMarketContractService.new(network_id: network_id).get_price_events(eth_market_id)
       end
 
     market_prices.group_by { |price| price[:outcome_id] }.map do |outcome_id, prices|
@@ -175,8 +182,8 @@ class Market < ApplicationRecord
     return [] if eth_market_id.blank?
 
     liquidity_prices =
-      Rails.cache.fetch("markets:#{eth_market_id}:events:liquidity", expires_in: 24.hours, force: refresh) do
-        Bepro::PredictionMarketContractService.new.get_liquidity_events(eth_market_id)
+      Rails.cache.fetch("markets:network_#{network_id}:#{eth_market_id}:events:liquidity", expires_in: 24.hours, force: refresh) do
+        Bepro::PredictionMarketContractService.new(network_id: network_id).get_liquidity_events(eth_market_id)
       end
 
     chart_data_service = ChartDataService.new(liquidity_prices, :price)
@@ -189,8 +196,8 @@ class Market < ApplicationRecord
     # TODO: review caching both globally and locally
 
     market_actions =
-      Rails.cache.fetch("markets:#{eth_market_id}:actions", expires_in: 24.hours, force: refresh) do
-        Bepro::PredictionMarketContractService.new.get_action_events(market_id: eth_market_id)
+      Rails.cache.fetch("markets:network_#{network_id}:#{eth_market_id}:actions", expires_in: 24.hours, force: refresh) do
+        Bepro::PredictionMarketContractService.new(network_id: network_id).get_action_events(market_id: eth_market_id)
       end
 
     market_actions.select do |action|
@@ -231,8 +238,8 @@ class Market < ApplicationRecord
 
   # realitio data
   def question_data(refresh: false)
-    Rails.cache.fetch("markets:#{eth_market_id}:question", expires_in: 24.hours, force: refresh) do
-      Bepro::RealitioErc20ContractService.new.get_question(question_id)
+    Rails.cache.fetch("markets:network_#{network_id}:#{eth_market_id}:question", expires_in: 24.hours, force: refresh) do
+      Bepro::RealitioErc20ContractService.new(network_id: network_id).get_question(question_id)
     end
   end
 end

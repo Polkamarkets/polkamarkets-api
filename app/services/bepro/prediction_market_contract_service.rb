@@ -19,12 +19,26 @@ module Bepro
       2 => 'resolved',
     }
 
-    def initialize(url: nil, contract_address: nil)
-      super(contract_name: 'predictionMarket', contract_address: Rails.application.config_for(:ethereum).prediction_market_contract_address)
+    def initialize(network_id: nil, api_url: nil, contract_address: nil)
+      super(
+        contract_name: 'predictionMarket',
+        contract_address: contract_address || Rails.application.config_for(:ethereum)["network_#{network_id}"]['prediction_market_contract_address'],
+        api_url: api_url || Rails.application.config_for(:ethereum)["network_#{network_id}"]['bepro_api_url']
+      )
     end
 
     def get_all_market_ids
       call(method: 'getMarkets')
+    end
+
+    def get_fee
+      # there's currently an issue with bepro-api with returning results with only one item
+      from_big_number_to_float(call(method: 'fee').join.to_i)
+    end
+
+    def get_market_count
+      # there's currently an issue with bepro-api with returning results with only one item
+      call(method: 'marketIndex').join.to_i
     end
 
     def get_all_markets
@@ -43,7 +57,9 @@ module Bepro
       outcomes = get_market_outcomes(market_id)
 
       # fetching market details from event
-      events = get_events(event_name: 'MarketCreated', filter: { marketId: market_id.to_s })
+      events = get_events(event_name: 'MarketCreated')
+      # not using marketId filter for cache query hit purposes
+      events.select! { |event| event['returnValues']['marketId'] == market_id.to_s }
 
       raise "Market #{market_id}: MarketCreated event not found" if events.blank?
       raise "Market #{market_id}: MarketCreated event count: #{events.count} != 1" if events.count != 1
@@ -203,19 +219,6 @@ module Bepro
       return -1 if events.count != 1
 
       events[0]['returnValues']['timestamp'].to_i
-    end
-
-    def create_market(name, outcome_1_name, outcome_2_name, duration: (DateTime.now + 1.day).to_i, oracle_address: Rails.application.config_for(:ethereum).oracle_address, value: 1e17.to_i)
-      function_name = 'createMarket'
-      function_args = [
-        name,
-        duration,
-        oracle_address,
-        outcome_1_name,
-        outcome_2_name
-      ]
-
-      call_payable_function(function_name, function_args, value, Rails.application.config_for(:ethereum).oracle_address)
     end
 
     def stats(market_id: nil)

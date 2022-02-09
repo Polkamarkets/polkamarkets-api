@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2021_11_09_055902) do
+ActiveRecord::Schema.define(version: 2022_01_21_102041) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -63,7 +63,8 @@ ActiveRecord::Schema.define(version: 2021_11_09_055902) do
     t.string "trading_view_symbol"
     t.boolean "verified", default: false
     t.string "banner_url"
-    t.index ["eth_market_id"], name: "index_markets_on_eth_market_id", unique: true
+    t.integer "network_id", null: false
+    t.index ["eth_market_id", "network_id"], name: "index_markets_on_eth_market_id_and_network_id", unique: true
     t.index ["slug"], name: "index_markets_on_slug", unique: true
   end
 
@@ -71,7 +72,8 @@ ActiveRecord::Schema.define(version: 2021_11_09_055902) do
     t.string "eth_address", null: false
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
-    t.index ["eth_address"], name: "index_portfolios_on_eth_address", unique: true
+    t.integer "network_id", null: false
+    t.index ["eth_address", "network_id"], name: "index_portfolios_on_eth_address_and_network_id", unique: true
   end
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"

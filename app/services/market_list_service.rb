@@ -13,18 +13,18 @@ class MarketListService
     @list = JSON.parse(response.body.to_s).deep_symbolize_keys
   end
 
-  def market_ids
+  def market_ids(network_id)
     list[:markets]
       .to_a
-      .select { |market| market[:network_id] == Rails.application.config_for(:ethereum).network_id }
+      .select { |market| market[:network_id] == network_id }
       .map { |market| market[:id] }
       .compact
   end
 
-  def market_slugs
+  def market_slugs(network_id)
     list[:markets]
       .to_a
-      .select { |market| market[:network_id] == Rails.application.config_for(:ethereum).network_id }
+      .select { |market| market[:network_id] == network_id }
       .map { |market| market[:slug] }
       .compact
   end
