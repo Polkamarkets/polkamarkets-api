@@ -36,7 +36,7 @@ module Api
     def create
       market = Market.create_from_eth_market_id!(params[:network_id], params[:id].to_i)
 
-      render json: market, status: :ok
+      render json: market, serializer: MinifiedMarketSerializer, status: :ok
     end
 
     def reload

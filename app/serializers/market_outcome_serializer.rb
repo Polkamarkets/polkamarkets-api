@@ -8,7 +8,7 @@ class MarketOutcomeSerializer < ActiveModel::Serializer
     :price_charts
   )
 
-  has_many :outcomes, class_name: "MarketOutcome", serialize: "MarketOutcomeSerializer"
+  belongs_to :market, serializer: MarketSerializer
 
   def id
     # returning eth market id in chain, not db market

@@ -28,7 +28,10 @@ class Market < ApplicationRecord
   def self.create_from_eth_market_id!(network_id, eth_market_id)
     raise "Market #{eth_market_id} is already created" if Market.where(network_id: network_id, eth_market_id: eth_market_id).exists?
 
-    eth_data = Bepro::PredictionMarketContractService.new(network_id: network_id).get_market(eth_market_id)
+    eth_data =
+      Rails.cache.fetch("markets:network_#{network_id}:#{eth_market_id}", expires_in: 24.hours, force: true) do
+        Bepro::PredictionMarketContractService.new(network_id: network_id).get_market(eth_market_id)
+      end
 
     # invalid market
     raise "Market #{eth_market_id} does not exist" if eth_data[:outcomes].blank?
@@ -50,6 +53,9 @@ class Market < ApplicationRecord
     market.save!
     # updating banner image asynchrounously
     MarketBannerWorker.perform_async(market.id)
+
+    # triggering workers to upgrade cache data
+    market.refresh_cache!
 
     market
   end

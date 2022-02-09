@@ -57,7 +57,9 @@ module Bepro
       outcomes = get_market_outcomes(market_id)
 
       # fetching market details from event
-      events = get_events(event_name: 'MarketCreated', filter: { marketId: market_id.to_s })
+      events = get_events(event_name: 'MarketCreated')
+      # not using marketId filter for cache query hit purposes
+      events.select! { |event| event['returnValues']['marketId'] == market_id.to_s }
 
       raise "Market #{market_id}: MarketCreated event not found" if events.blank?
       raise "Market #{market_id}: MarketCreated event count: #{events.count} != 1" if events.count != 1
