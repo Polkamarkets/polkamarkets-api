@@ -31,7 +31,7 @@ class MarketOutcome < ApplicationRecord
 
       price_chart =
         Rails.cache.fetch(
-          "markets:#{market.eth_market_id}:outcomes:#{eth_market_id}:chart:#{timeframe}",
+          "markets:network_#{market.network_id}:#{market.eth_market_id}:outcomes:#{eth_market_id}:chart:#{timeframe}",
           expires_in: expires_in.seconds,
           force: refresh
         ) do
