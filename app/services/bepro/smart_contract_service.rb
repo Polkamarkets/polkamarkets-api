@@ -3,7 +3,8 @@ module Bepro
     SMART_CONTRACTS = [
       'predictionMarket',
       'erc20',
-      'realitio'
+      'realitio',
+      'achievements'
     ].freeze
 
     attr_accessor :contract_name, :contract_address, :api_url
