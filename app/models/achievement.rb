@@ -4,6 +4,8 @@ class Achievement < ApplicationRecord
 
   DEFAULT_IMAGE_URL = 'https://ipfs.infura.io:5001/api/v0/cat?arg=QmTxWoieQryavmHnYkgpiZTFLAwrovzmFjJfGUHvZX2JnP'
 
+  has_many :tokens, class_name: "AchievementToken", dependent: :destroy, inverse_of: :achievement
+
   enum action: {
     buy: 0,
     add_liquidity: 1,
@@ -22,7 +24,7 @@ class Achievement < ApplicationRecord
     raise "Achievement #{eth_id} does not exist" unless achievement_ids.include?(eth_id)
 
     eth_data =
-      Rails.cache.fetch("achievements:network_#{network_id}:#{eth_id}", expires_in: 24.hours, force: true) do
+      Rails.cache.fetch("achievements:network_#{network_id}:#{eth_id}", force: true) do
         Bepro::AchievementsContractService.new(network_id: network_id).get_achievement(eth_id)
       end
 

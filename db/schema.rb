@@ -10,10 +10,20 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2022_03_01_024008) do
+ActiveRecord::Schema.define(version: 2022_03_01_033949) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
+
+  create_table "achievement_tokens", force: :cascade do |t|
+    t.bigint "achievement_id", null: false
+    t.integer "eth_id", null: false
+    t.integer "network_id", null: false
+    t.string "image_url"
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["achievement_id"], name: "index_achievement_tokens_on_achievement_id"
+  end
 
   create_table "achievements", force: :cascade do |t|
     t.integer "eth_id", null: false
@@ -90,6 +100,7 @@ ActiveRecord::Schema.define(version: 2022_03_01_024008) do
     t.index ["eth_address", "network_id"], name: "index_portfolios_on_eth_address_and_network_id", unique: true
   end
 
+  add_foreign_key "achievement_tokens", "achievements"
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "market_outcomes", "markets"
 end
