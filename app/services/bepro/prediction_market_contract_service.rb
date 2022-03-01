@@ -87,7 +87,7 @@ module Bepro
         shares: from_big_number_to_float(market_data[4]),
         resolved_outcome_id: market_data[5].to_i,
         question_id: question_id,
-        voided: is_market_voided,
+        voided: is_market_voided[0],
         outcomes: outcomes
       }
     end

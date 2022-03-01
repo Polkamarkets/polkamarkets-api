@@ -10,13 +10,19 @@ module Bepro
       )
     end
 
+    def get_achievement_ids
+      achievement_index = call(method: 'achievementIndex')[0].to_i
+
+      (0..(achievement_index - 1)).to_a
+    end
+
     def get_achievement(achievement_id)
       achievement_data = call(method: 'achievements', args: achievement_id)
 
       {
         id: achievement_id,
         action: Achievement::actions.key(achievement_data[0].to_i),
-        occurences: achievement_data[1].to_i,
+        occurrences: achievement_data[1].to_i,
       }
     end
   end
