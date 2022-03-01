@@ -12,7 +12,7 @@ module Api
 
     def show
       # finding items by eth id
-      achievement = Achievement.find_by!(params[:id], params[:network_id])
+      achievement = Achievement.find_by!(eth_id: params[:id], network_id: params[:network_id])
 
       render json: achievement, status: :ok
     end
