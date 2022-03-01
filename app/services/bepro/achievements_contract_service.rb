@@ -25,5 +25,17 @@ module Bepro
         occurrences: achievement_data[1].to_i,
       }
     end
+
+    def get_achievement_token(token_id)
+      # ensuring token exists, will raise an error if it does not
+      call(method: 'tokenURI', args: token_id)
+      # tokenId => achievementId mapping in SC
+      achievement_id = call(method: 'tokens', args: token_id)[0].to_i
+
+      {
+        id: token_id,
+        achievement_id: achievement_id,
+      }
+    end
   end
 end
