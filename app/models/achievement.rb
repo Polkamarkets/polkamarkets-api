@@ -12,6 +12,8 @@ class Achievement < ApplicationRecord
     create_market: 4,
   }
 
+  scope :verified, -> { where(verified: true) }
+
   def self.create_from_eth_id!(network_id, eth_id)
     raise "Achievement #{eth_id} is already created" if Achievement.where(network_id: network_id, eth_id: eth_id).exists?
 
