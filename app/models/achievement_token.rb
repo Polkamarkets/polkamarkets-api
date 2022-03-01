@@ -16,16 +16,30 @@ class AchievementToken < ApplicationRecord
     achievement = Achievement.find_by!(network_id: network_id, eth_id: eth_data[:achievement_id])
 
     achievement_token = AchievementToken.new(
+      achievement: achievement,
       network_id: network_id,
       eth_id: eth_id,
     )
 
-    achievement_token.achievement = achievement
     achievement_token.save!
+
+    # updating token image asynchrounously
+    AchievementTokenImageWorker.perform_async(achievement_token.id)
+
     achievement_token
   end
 
   def image_url
     self['image_url'] || achievement.image_url
+  end
+
+  def get_rank
+    # TODO
+    123
+  end
+
+  def update_image
+    token_image_url = BannerbearService.new.create_achivement_token_image(self)
+    self.update(image_url: token_image_url)
   end
 end
