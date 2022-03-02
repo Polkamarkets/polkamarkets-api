@@ -1,0 +1,18 @@
+default: &default
+  mainnet: 1
+  ropsten: 3
+  rinkeby: 4
+  goerli: 5
+  kovan: 42
+  moonbeam: 1284
+  moonriver: 1285
+  local: 1337
+
+production:
+  <<: *default
+
+staging:
+  <<: *default
+
+development:
+  <<: *default

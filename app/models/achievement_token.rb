@@ -42,4 +42,21 @@ class AchievementToken < ApplicationRecord
     token_image_url = BannerbearService.new.create_achivement_token_image(self)
     self.update(image_url: token_image_url)
   end
+
+  def name
+    "#{achievement.title} ##{get_rank}"
+  end
+
+  def attributes
+    [
+      {
+        value: achievement.action.humanize,
+        trait_type: 'Action',
+      },
+      {
+        value: achievement.occurrences,
+        trait_type: 'Occurrences',
+      }
+    ]
+  end
 end
