@@ -37,5 +37,9 @@ module Bepro
         achievement_id: achievement_id,
       }
     end
+
+    def get_achievement_token_index
+      return call(method: 'tokenIndex')[0].to_i
+    end
   end
 end
