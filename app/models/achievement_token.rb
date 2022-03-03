@@ -34,8 +34,7 @@ class AchievementToken < ApplicationRecord
   end
 
   def get_rank
-    # TODO
-    123
+    AchievementToken.where(achievement_id: achievement_id).where('eth_id <= ?', eth_id).count
   end
 
   def update_image
