@@ -11,7 +11,7 @@ module Bepro
     end
 
     def get_achievement_ids
-      achievement_index = call(method: 'achievementIndex')[0].to_i
+      achievement_index = call(method: 'achievementIndex').to_i
 
       (0..(achievement_index - 1)).to_a
     end
@@ -30,7 +30,7 @@ module Bepro
       # ensuring token exists, will raise an error if it does not
       call(method: 'tokenURI', args: token_id)
       # tokenId => achievementId mapping in SC
-      achievement_id = call(method: 'tokens', args: token_id)[0].to_i
+      achievement_id = call(method: 'tokens', args: token_id).to_i
 
       {
         id: token_id,
@@ -39,7 +39,7 @@ module Bepro
     end
 
     def get_achievement_token_index
-      return call(method: 'tokenIndex')[0].to_i
+      return call(method: 'tokenIndex').to_i
     end
   end
 end

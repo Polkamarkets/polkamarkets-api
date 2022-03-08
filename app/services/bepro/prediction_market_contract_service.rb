@@ -32,13 +32,11 @@ module Bepro
     end
 
     def get_fee
-      # there's currently an issue with bepro-api with returning results with only one item
-      from_big_number_to_float(call(method: 'fee').join.to_i)
+      from_big_number_to_float(call(method: 'fee').to_i)
     end
 
     def get_market_count
-      # there's currently an issue with bepro-api with returning results with only one item
-      call(method: 'marketIndex').join.to_i
+      call(method: 'marketIndex').to_i
     end
 
     def get_all_markets
@@ -87,7 +85,7 @@ module Bepro
         shares: from_big_number_to_float(market_data[4]),
         resolved_outcome_id: market_data[5].to_i,
         question_id: question_id,
-        voided: is_market_voided[0],
+        voided: is_market_voided,
         outcomes: outcomes
       }
     end
