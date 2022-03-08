@@ -2,7 +2,7 @@ class Achievement < ApplicationRecord
   validates_presence_of :eth_id, :network_id, :action, :occurrences
   validates_uniqueness_of :eth_id, scope: :network_id
 
-  DEFAULT_IMAGE_URL = 'https://ipfs.infura.io:5001/api/v0/cat?arg=QmTxWoieQryavmHnYkgpiZTFLAwrovzmFjJfGUHvZX2JnP'
+  DEFAULT_IMAGE_URL = 'https://ipfs.io/ipfs/QmTxWoieQryavmHnYkgpiZTFLAwrovzmFjJfGUHvZX2JnP'
 
   has_many :tokens, class_name: "AchievementToken", dependent: :destroy, inverse_of: :achievement
 
