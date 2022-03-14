@@ -31,7 +31,11 @@ module Bepro
         raise "BeproService #{response.status} :: #{response.body.to_s}; uri: #{uri}"
       end
 
-      JSON.parse(response.body.to_s)
+      begin
+        JSON.parse(response.body.to_s)
+      rescue => e
+        response.body.to_s
+      end
     end
 
     def get_events(event_name:, filter: {})

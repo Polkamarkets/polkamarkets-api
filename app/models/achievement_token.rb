@@ -23,8 +23,12 @@ class AchievementToken < ApplicationRecord
 
     achievement_token.save!
 
-    # updating token image synchrounously
-    AchievementTokenImageWorker.new.perform(achievement_token.id)
+    # updating token image synchrounously and triggering a worker in the background in case the request fails
+    begin
+      AchievementTokenImageWorker.new.perform(achievement_token.id)
+    rescue => e
+      AchievementTokenImageWorker.perform_async(achievement_token.id)
+    end
 
     achievement_token
   end
