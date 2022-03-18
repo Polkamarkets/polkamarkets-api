@@ -1,10 +1,5 @@
 class BannerbearService
   def create_banner_image(market)
-    uri = bannerbear_url + 'images'
-
-    return if Rails.application.config_for(:bannerbear).template_id.blank? ||
-      Rails.application.config_for(:bannerbear).api_key.blank?
-
     modifications = {
       template: Rails.application.config_for(:bannerbear).template_id,
       modifications: [
@@ -30,6 +25,36 @@ class BannerbearService
         }
       ]
     }
+
+    create_image(modifications)
+  end
+
+  def create_achivement_token_image(achievement_token)
+    modifications = {
+      template: Rails.application.config_for(:bannerbear).achievements_template_id,
+      modifications: [
+        {
+          name: "rank",
+          text: "##{achievement_token.get_rank}"
+        },
+        {
+          name: "background_image",
+          image_url: achievement_token.achievement.image_url
+        },
+        {
+          name: "chain_image",
+          image_url: Rails.application.config_for(:ethereum)["network_#{achievement_token.network_id}"]['image_url']
+        }
+      ]
+    }
+
+    create_image(modifications)
+  end
+
+  def create_image(modifications)
+    uri = bannerbear_url + 'images'
+
+    return if modifications[:template].blank? || Rails.application.config_for(:bannerbear).api_key.blank?
 
     response = HTTP
       .auth("Bearer #{Rails.application.config_for(:bannerbear).api_key}")

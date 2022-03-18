@@ -3,7 +3,8 @@ module Bepro
     SMART_CONTRACTS = [
       'predictionMarket',
       'erc20',
-      'realitio'
+      'realitio',
+      'achievements'
     ].freeze
 
     attr_accessor :contract_name, :contract_address, :api_url
@@ -30,7 +31,11 @@ module Bepro
         raise "BeproService #{response.status} :: #{response.body.to_s}; uri: #{uri}"
       end
 
-      JSON.parse(response.body.to_s)
+      begin
+        JSON.parse(response.body.to_s)
+      rescue => e
+        response.body.to_s
+      end
     end
 
     def get_events(event_name:, filter: {})

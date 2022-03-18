@@ -4,7 +4,7 @@ class IpfsService
 
     # Rails.application.config_for(:infura).ipfs_api_url + "cat?arg=#{hash}"
     # Infura URL changed to POST request, changing to direct ipfs request
-    "https://ipfs.io/ipfs/#{hash}"
+    "https://infura-ipfs.io/ipfs/#{hash}"
   end
 
   def add(file)
