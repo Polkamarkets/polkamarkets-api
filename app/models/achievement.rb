@@ -32,7 +32,10 @@ class Achievement < ApplicationRecord
       action: eth_data[:action],
       occurrences: eth_data[:occurrences],
       eth_id: eth_id,
-      network_id: network_id
+      network_id: network_id,
+      title: eth_data[:title],
+      description: eth_data[:description],
+      image_url: IpfsService.image_url_from_hash(eth_data[:image_hash])
     )
 
     achievement.save!
