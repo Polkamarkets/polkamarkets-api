@@ -1,0 +1,11 @@
+default: &default
+  api_key: <%= ENV['NEWSAPI_API_KEY'] %>
+
+production:
+  <<: *default
+
+staging:
+  <<: *default
+
+development:
+  <<: *default
