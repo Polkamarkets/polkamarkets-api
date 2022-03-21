@@ -54,4 +54,8 @@ class Achievement < ApplicationRecord
         Bepro::AchievementsContractService.new(network_id: network_id).get_achievement(eth_id)
       end
   end
+
+  def token_count
+    tokens.count
+  end
 end

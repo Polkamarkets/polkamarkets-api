@@ -7,7 +7,8 @@ class AchievementSerializer < ActiveModel::Serializer
     :image_url,
     :verified,
     :title,
-    :description
+    :description,
+    :token_count
   )
 
   def id
