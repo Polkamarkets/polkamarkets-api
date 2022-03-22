@@ -215,6 +215,14 @@ class Market < ApplicationRecord
       .sum { |a| a[:value] }
   end
 
+  def news(refresh: false)
+    return [] if eth_market_id.blank?
+
+    Rails.cache.fetch("markets:network_#{network_id}:#{eth_market_id}:news", expires_in: 24.hours, force: refresh) do
+      NewsAPIService.new.get_latest_news
+    end
+  end
+
   def refresh_cache!
     # disabling cache delete for now
     # $redis_store.keys("markets:#{eth_market_id}*").each { |key| $redis_store.del key }
@@ -226,6 +234,9 @@ class Market < ApplicationRecord
     Cache::MarketPricesWorker.perform_async(id)
     Cache::MarketLiquidityPricesWorker.perform_async(id)
     Cache::MarketQuestionDataWorker.perform_async(id)
+
+    # News API data
+    Cache::MarketNewsWorker.perform_async(id)
   end
 
   def image_url
