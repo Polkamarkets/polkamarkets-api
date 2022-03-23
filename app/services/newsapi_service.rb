@@ -9,7 +9,7 @@ class NewsAPIService
   end
 
   def get_latest_news(category, subcategory)
-    latest_news = service.get_everything(q: CGI.escape("#{category} OR #{subcategory}"), 
+    latest_news = service.get_everything(q: CGI.escape("#{category} AND #{subcategory}"), 
       language: 'en',
       sortBy: 'relevancy'
       pageSize: 3)
