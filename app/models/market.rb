@@ -219,7 +219,7 @@ class Market < ApplicationRecord
     return [] if eth_market_id.blank?
 
     Rails.cache.fetch("markets:network_#{network_id}:#{eth_market_id}:news", expires_in: 24.hours, force: refresh) do
-      NewsAPIService.new.get_latest_news
+      NewsAPIService.new.get_latest_news(eth_data[:category], eth_data[:subcategory])
     end
   end
 
