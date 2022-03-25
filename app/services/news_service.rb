@@ -11,7 +11,7 @@ class NewsService
     articles = service.get_everything(q: "#{category}%20AND%20#{subcategory}", 
       language: 'en',
       sortBy: 'relevancy',
-      pageSize: 3)
+      pageSize: 9)
     
     latest_news = articles.map do |article|
       {
