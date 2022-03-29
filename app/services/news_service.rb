@@ -14,7 +14,8 @@ class NewsService
       pageSize: 9)
     
     latest_news = articles.map do |article|
-      {
+      { 
+        source: article.name,
         title: article.title,
         description: article.description,
         url: article.url,
