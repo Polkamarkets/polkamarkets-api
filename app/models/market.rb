@@ -215,11 +215,24 @@ class Market < ApplicationRecord
       .sum { |a| a[:value] }
   end
 
+  def keywords
+    title_keywords = TextRazorService.new.get_entities(title).sort_by { |e| e['confidenceScore'] }.reverse
+    title_keywords.select! do |entity|
+      entity['confidenceScore'] >= 1
+    end
+
+    puts title_keywords
+
+    return [category, subcategory] if title_keywords.count == 0
+
+    title_keywords.map { |entity| entity['entityEnglishId'].presence || entity['matchedText'] }.uniq[0..2]
+  end
+
   def news(refresh: false)
     return [] if eth_market_id.blank?
 
     Rails.cache.fetch("markets:network_#{network_id}:#{eth_market_id}:news", expires_in: 24.hours, force: refresh) do
-      NewsService.new.get_latest_news(eth_data[:category], eth_data[:subcategory])
+      GnewsService.new.get_latest_news(keywords)
     end
   end
 
