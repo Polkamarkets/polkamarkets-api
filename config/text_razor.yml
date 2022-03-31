@@ -1,0 +1,11 @@
+default: &default
+  api_key: <%= ENV['TEXT_RAZOR_API_KEY'] %>
+
+production:
+  <<: *default
+
+staging:
+  <<: *default
+
+development:
+  <<: *default
