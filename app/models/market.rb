@@ -221,8 +221,6 @@ class Market < ApplicationRecord
       entity['confidenceScore'] >= 1
     end
 
-    puts title_keywords
-
     return [category, subcategory] if title_keywords.count == 0
 
     title_keywords.map { |entity| entity['entityEnglishId'].presence || entity['matchedText'] }.uniq[0..2]
