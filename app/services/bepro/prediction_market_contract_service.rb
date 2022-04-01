@@ -36,7 +36,8 @@ module Bepro
     end
 
     def get_market_count
-      call(method: 'marketIndex').to_i
+      response = call(method: 'marketIndex')
+      response.is_a?(Array) ? response.join.to_i : response.to_i
     end
 
     def get_all_markets
