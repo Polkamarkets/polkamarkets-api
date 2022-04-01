@@ -32,7 +32,8 @@ module Bepro
     end
 
     def get_fee
-      from_big_number_to_float(call(method: 'fee').to_i)
+      response = call(method: 'fee')
+      from_big_number_to_float(response.is_a?(Array) ? response.join.to_i : response.to_i)
     end
 
     def get_market_count
