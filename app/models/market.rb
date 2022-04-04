@@ -51,15 +51,12 @@ class Market < ApplicationRecord
     end
 
     market.save!
-<<<<<<< HEAD
     # updating banner image asynchrounously
     MarketBannerWorker.perform_async(market.id)
 
     # triggering workers to upgrade cache data
     market.refresh_cache!
-=======
     publish_market_created_on_discord(market: market)
->>>>>>> 8a9eb15 (feat(MarketModel): create publish market created)
 
     market
   end
