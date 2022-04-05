@@ -29,20 +29,43 @@ class StatsService
     @networks = ethereum_networks + stats_networks
   end
 
-  def get_stats
+  def get_stats(from: nil, to: nil)
     # TODO: volume chart
     # TODO: TVL chart
-    networks.map do |network|
+    stats = networks.map do |network|
       network_id = network[:network_id]
       actions = network[:bepro_pm].get_action_events
       bonds = network[:bepro_realitio].get_bond_events
+      market_ids = actions.map { |action| action[:market_id] }.uniq
 
-      markets_created = network[:bepro_pm].get_market_count
+      create_market_actions = market_ids.map do |market_id|
+        # first action represents market creation
+        action = actions.find { |action| action[:market_id] == market_id }
+      end
+
+      # filtering by timestamps, if provided
+      actions.select! do |action|
+        (!from || action[:timestamp] >= from) &&
+          (!to || action[:timestamp] <= to)
+      end
+
+      bonds.select! do |bond|
+        (!from || bond[:timestamp] >= from) &&
+          (!to || bond[:timestamp] <= to)
+      end
+
+      create_market_actions.select! do |action|
+        (!from || action[:timestamp] >= from) &&
+          (!to || action[:timestamp] <= to)
+      end
+
+      markets_created = create_market_actions.count
       volume = actions.select { |v| ['buy', 'sell'].include?(v[:action]) }
       bonds_volume = bonds.sum { |bond| bond[:value] }
       volume_movr = volume.sum { |v| v[:value] }
       fee = network[:bepro_pm].get_fee
       fees_movr = volume.sum { |v| v[:value] } * fee
+      users = actions.map { |a| a[:address] }.uniq.count
 
       [
         network_id,
@@ -53,10 +76,23 @@ class StatsService
           volume: volume_movr,
           volume_eur: volume_movr * rate(network_id),
           fees: fees_movr,
-          fees_eur: fees_movr * rate(network_id)
+          fees_eur: fees_movr * rate(network_id),
+          users: users,
+          transactions: actions.count
         }
       ]
     end.to_h
+
+    stats[:total] = {
+      markets_created: stats.values.sum { |v| v[:markets_created] },
+      bond_volume_eur: stats.values.sum { |v| v[:bond_volume_eur] },
+      volume_eur: stats.values.sum { |v| v[:volume_eur] },
+      fees_eur: stats.values.sum { |v| v[:fees_eur] },
+      users: stats.values.sum { |v| v[:users] },
+      transactions: stats.values.sum { |v| v[:transactions] }
+    }
+
+    stats
   end
 
   def rate(network_id)
