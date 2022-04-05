@@ -29,7 +29,7 @@ class StatsService
     @networks = ethereum_networks + stats_networks
   end
 
-  def get_stats
+  def get_stats(from: nil, to: nil)
     # TODO: volume chart
     # TODO: TVL chart
     networks.map do |network|
@@ -37,12 +37,24 @@ class StatsService
       actions = network[:bepro_pm].get_action_events
       bonds = network[:bepro_realitio].get_bond_events
 
+      # filtering by timestamps, if provided
+      actions = actions.select! do |action|
+        (!from || action[:timestamp] >= from) &&
+          (!to || action[:timestamp] <= to)
+      end
+
+      bonds = bonds.select! do |bond|
+        (!from || bond[:timestamp] >= from) &&
+          (!to || bond[:timestamp] <= to)
+      end
+
       markets_created = network[:bepro_pm].get_market_count
       volume = actions.select { |v| ['buy', 'sell'].include?(v[:action]) }
       bonds_volume = bonds.sum { |bond| bond[:value] }
       volume_movr = volume.sum { |v| v[:value] }
       fee = network[:bepro_pm].get_fee
       fees_movr = volume.sum { |v| v[:value] } * fee
+      users = actions.map { |a| a[:address] }.uniq.count
 
       [
         network_id,
@@ -53,7 +65,9 @@ class StatsService
           volume: volume_movr,
           volume_eur: volume_movr * rate(network_id),
           fees: fees_movr,
-          fees_eur: fees_movr * rate(network_id)
+          fees_eur: fees_movr * rate(network_id),
+          users: users,
+          transactions: actions.count
         }
       ]
     end.to_h
