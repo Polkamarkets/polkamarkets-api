@@ -2,12 +2,12 @@ class Discord::PublishMarketCreatedWorker
   include Sidekiq::Worker
 
   def perform(market_id)
-    bot = Discord::Bot.build
-    bot.start
+    market = Market.find_by(id: market_id)
+    return if market.blank?
 
-    message = Market::MarketToDiscordBotPresenter.build.build_message(market_id: market_id)
-    bot.send_message_to_channel(message: message)
-    
-    bot.stop
+    bot = Discord::Bot.new
+
+    message = I18n.t('market.discord.market_created', title: market.title, url: market.polkamarkets_web_url)
+    bot.send_message_to_channel(Rails.application.config_for(:discord).channel_id, message)
   end
 end

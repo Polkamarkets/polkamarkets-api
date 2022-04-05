@@ -1,25 +1,11 @@
-require 'discordrb'
-
 class Discord::Bot
-  def self.build
-    bot = Discordrb::Bot.new(token: Config.discord.bot_token)
-    new(bot: bot)
+  attr_accessor :bot
+
+  def initialize
+    @bot = Discordrb::Bot.new(token: Rails.application.config_for(:discord).bot_token)
   end
 
-  def initialize(bot:)
-    @bot = bot
+  def send_message_to_channel(channel, message)
+    @bot.send_message(channel, message)
   end
-
-  def start
-    @bot.run true
-  end
-
-  def stop
-    @bot.stop
-  end
-
-  def send_message_to_channel(message:)
-    @bot.send_message(Config.discord.channel_id, message)
-  end
-
 end

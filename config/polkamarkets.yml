@@ -1,8 +1,11 @@
-production:
+default: &default
   web_url: <%= ENV['POLKAMARKETS_WEB_URL'] %>
+
+production:
+  <<: *default
 
 staging:
-  web_url: <%= ENV['POLKAMARKETS_WEB_URL'] %>
+  <<: *default
 
 development:
-  web_url: 'http://localhost:3000'
+  <<: *default
