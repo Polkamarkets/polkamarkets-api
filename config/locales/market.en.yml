@@ -1,0 +1,4 @@
+en:
+  market:
+    discord:
+      market_created: "New market created 👀\n\n**%{title}**\n\n%{url}"

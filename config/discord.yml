@@ -1,5 +1,6 @@
 default: &default
-  web_url: <%= ENV['POLKAMARKETS_WEB_URL'] %>
+  bot_token: <%= ENV['DISCORD_BOT_TOKEN'] %>
+  channel_id: <%= ENV['DISCORD_CHANNEL_ID'] %>
 
 production:
   <<: *default

@@ -51,11 +51,15 @@ class Market < ApplicationRecord
     end
 
     market.save!
+
     # updating banner image asynchrounously
     MarketBannerWorker.perform_async(market.id)
 
     # triggering workers to upgrade cache data
     market.refresh_cache!
+
+    # triggering discord bot 5 minutes later (so it allows banner image to be updated)
+    Discord::PublishMarketCreatedWorker.perform_in(5.minutes, market.id)
 
     market
   end
@@ -241,5 +245,9 @@ class Market < ApplicationRecord
     Rails.cache.fetch("markets:network_#{network_id}:#{eth_market_id}:question", expires_in: 24.hours, force: refresh) do
       Bepro::RealitioErc20ContractService.new(network_id: network_id).get_question(question_id)
     end
+  end
+
+  def polkamarkets_web_url
+    "#{Rails.application.config_for(:polkamarkets).web_url}/markets/#{slug}"
   end
 end
