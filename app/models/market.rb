@@ -51,18 +51,17 @@ class Market < ApplicationRecord
     end
 
     market.save!
+
     # updating banner image asynchrounously
     MarketBannerWorker.perform_async(market.id)
 
     # triggering workers to upgrade cache data
     market.refresh_cache!
-    publish_market_created_on_discord(market: market)
+
+    # triggering discord bot 5 minutes later (so it allows banner image to be updated)
+    Discord::PublishMarketCreatedWorker.perform_in(5.minutes, market.id)
 
     market
-  end
-
-  def self.publish_market_created_on_discord(market:)
-    Discord::PublishMarketCreatedWorker.perform_async(market.id)
   end
 
   def eth_data(refresh = false)
