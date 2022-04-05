@@ -247,4 +247,8 @@ class Market < ApplicationRecord
       Bepro::RealitioErc20ContractService.new(network_id: network_id).get_question(question_id)
     end
   end
+
+  def polkamarkets_web_url
+    "#{Rails.application.config_for(:polkamarkets).web_url}/markets/#{slug}"
+  end
 end
