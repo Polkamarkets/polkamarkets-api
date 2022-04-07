@@ -79,6 +79,9 @@ gem 'rack-cors'
 gem 'googleauth'
 gem 'google-api-client'
 
+# News API
+gem 'news-api'
+
 # s3
 gem 'aws-sdk-s3'
 

@@ -215,6 +215,30 @@ class Market < ApplicationRecord
       .sum { |a| a[:value] }
   end
 
+  def keywords(refresh: false)
+    Rails.cache.fetch("markets:network_#{network_id}:#{eth_market_id}:keywords", force: refresh) do
+      title_keywords = TextRazorService.new.get_entities(title).sort_by { |e| e['confidenceScore'] }.reverse
+      title_keywords.select! do |entity|
+        entity['confidenceScore'] >= 1
+      end
+
+      return [category, subcategory] if title_keywords.count == 0
+
+      title_keywords.map { |entity| entity['entityEnglishId'].presence || entity['matchedText'] }.uniq[0..2]
+    end
+  end
+
+  def news(refresh: false)
+    return [] if eth_market_id.blank?
+
+    Rails.cache.fetch("markets:network_#{network_id}:#{eth_market_id}:news", force: refresh) do
+      # only fetching news if market is not resolved
+      return [] if resolved?
+
+      GnewsService.new.get_latest_news(keywords)
+    end
+  end
+
   def refresh_cache!
     # disabling cache delete for now
     # $redis_store.keys("markets:#{eth_market_id}*").each { |key| $redis_store.del key }
@@ -226,6 +250,9 @@ class Market < ApplicationRecord
     Cache::MarketPricesWorker.perform_async(id)
     Cache::MarketLiquidityPricesWorker.perform_async(id)
     Cache::MarketQuestionDataWorker.perform_async(id)
+
+    # News API data
+    Cache::MarketNewsWorker.perform_async(id)
   end
 
   def image_url
