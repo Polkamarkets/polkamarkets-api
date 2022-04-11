@@ -57,6 +57,7 @@ class Market < ApplicationRecord
 
     # triggering workers to upgrade cache data
     market.refresh_cache!
+    market.refresh_news!
 
     # triggering discord bot 5 minutes later (so it allows banner image to be updated)
     Discord::PublishMarketCreatedWorker.perform_in(5.minutes, market.id)
@@ -250,8 +251,9 @@ class Market < ApplicationRecord
     Cache::MarketPricesWorker.perform_async(id)
     Cache::MarketLiquidityPricesWorker.perform_async(id)
     Cache::MarketQuestionDataWorker.perform_async(id)
+  end
 
-    # News API data
+  def refresh_news!
     Cache::MarketNewsWorker.perform_async(id)
   end
 

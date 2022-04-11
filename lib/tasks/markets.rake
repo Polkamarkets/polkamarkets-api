@@ -18,4 +18,9 @@ namespace :markets do
   task :refresh_cache, [:symbol] => :environment do |task, args|
     Market.all.each { |m| m.refresh_cache! }
   end
+
+  desc "refreshes markets news"
+  task :refresh_news, [:symbol] => :environment do |task, args|
+    Market.all.each { |m| m.refresh_news! }
+  end
 end
