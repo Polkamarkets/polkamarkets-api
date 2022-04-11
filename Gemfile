@@ -66,9 +66,6 @@ gem 'sentry-rails'
 gem 'sentry-sidekiq'
 gem 'newrelic_rpm'
 
-# ethereum gems
-gem 'ethereum.rb'
-
 # serializers
 gem 'active_model_serializers'
 
