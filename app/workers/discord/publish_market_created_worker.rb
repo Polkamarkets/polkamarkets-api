@@ -2,6 +2,9 @@ class Discord::PublishMarketCreatedWorker
   include Sidekiq::Worker
 
   def perform(market_id)
+    # ignores job if discord is not configured
+    return unless Discord::Bot.configured?
+
     market = Market.find_by(id: market_id)
     return if market.blank?
 
