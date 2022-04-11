@@ -4,7 +4,7 @@ class GnewsService
 
     q = keywords.map { |keyword| "\"#{keyword}\""}.join(' OR ')
 
-    uri = URI::Parser.new.escape("#{gnews_url}?q=#{q}&token=#{Rails.application.config_for(:news).gnews_api_key}&lang=en")
+    uri = URI::Parser.new.escape("#{gnews_url}?q=#{q}&token=#{Rails.application.config_for(:news).gnews_api_key}&lang=en&max=100")
 
     response = HTTP.get(uri)
 
@@ -13,7 +13,10 @@ class GnewsService
     end
 
     articles = JSON.parse(response.body.to_s)['articles']
-    articles.map do |article|
+    # filtering repeated articles
+    articles.uniq! { |article| article['title'] }
+
+    articles[0..9].map do |article|
       {
         source: article['source']['name'],
         title: article['title'],
