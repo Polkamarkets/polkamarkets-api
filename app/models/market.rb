@@ -218,9 +218,12 @@ class Market < ApplicationRecord
 
   def keywords(refresh: false)
     Rails.cache.fetch("markets:network_#{network_id}:#{eth_market_id}:keywords", force: refresh) do
-      title_keywords = TextRazorService.new.get_entities(title).sort_by { |e| e['confidenceScore'] }.reverse
+      title_keywords = TextRazorService.new.get_entities(title).sort_by do |e|
+        # prioritizing custom dictionary
+        e['customEntityId'].present? ? 99 : e['confidenceScore']
+      end.reverse
       title_keywords.select! do |entity|
-        entity['confidenceScore'] >= 1
+        entity['customEntityId'].present? || entity['confidenceScore'] >= 1
       end
 
       return [category, subcategory] if title_keywords.count == 0
