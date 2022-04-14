@@ -22,7 +22,11 @@ class BannerbearService
         {
           name: "category",
           text: "#{market.category} / *#{market.subcategory}*"
-        }
+        },
+        {
+          name: "chain_image",
+          image_url: Rails.application.config_for(:ethereum)[:"network_#{market.network_id}"][:image_url]
+        },
       ]
     }
 
