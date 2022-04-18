@@ -12,5 +12,18 @@ module Api
 
       render json: stats, status: :ok
     end
+
+    def daily
+      if params[:from].blank? && params[:to].blank?
+        # only fetching cached stats without params
+        stats = Rails.cache.fetch("api:stats_daily", expires_in: 24.hours) do
+          StatsService.new.get_stats_daily
+        end
+      else
+        stats = StatsService.new.get_stats_daily(from: params[:from].to_i, to: params[:to].to_i)
+      end
+
+      render json: stats, status: :ok
+    end
   end
 end

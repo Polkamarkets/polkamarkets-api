@@ -32,11 +32,13 @@ Rails.application.routes.draw do
     end
 
     resources :articles, only: [:index]
-    resources :stats, only: [:index]
     resources :whitelist, only: [:show]
     resources :achievements, only: [:index, :show]
 
     get 'achievement_tokens/:network/:id', to: 'achievement_tokens#show'
+
+    get 'stats', to: 'stats#index'
+    get 'stats_daily', to: 'stats#daily'
 
     if !Rails.env.production?
       post 'webhooks/faucet' => "webhooks#faucet"
