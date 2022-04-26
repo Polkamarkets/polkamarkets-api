@@ -139,7 +139,7 @@ class StatsService
 
       # grouping actions by intervals
       actions_by_timeframe = actions.group_by do |action|
-        Time.at(action[:timestamp]).utc.public_send("beginning_of_#{TIMEFRAMES[timeframe]}").to_i
+        timestamp_at(action[:timestamp], timeframe)
       end
 
       # fetching rate and fee values to avoid multiple API calls
@@ -159,7 +159,7 @@ class StatsService
 
           {
             timestamp: timestamp,
-            markets_created: create_market_actions.select { |action| action[:timestamp].between?(timestamp, timestamp + 1.day.to_i) }.count,
+            markets_created: create_market_actions.select { |action| timestamp_at(action[:timestamp], timeframe) == timestamp }.count,
             volume: volume_by_tx_action['buy'] + volume_by_tx_action['sell'],
             volume_eur: (volume_by_tx_action['buy'] + volume_by_tx_action['sell']) * rate,
             tvl_volume: volume_by_tx_action['buy'] - volume_by_tx_action['sell'],
@@ -204,7 +204,7 @@ class StatsService
 
       # grouping actions by intervals
       actions_by_timeframe = actions.group_by do |action|
-        Time.at(action[:timestamp]).utc.public_send("beginning_of_#{TIMEFRAMES[timeframe]}").to_i
+        timestamp_at(action[:timestamp], timeframe)
       end
 
       [
@@ -220,7 +220,7 @@ class StatsService
 
           {
             timestamp: timestamp,
-            markets_created: create_market_actions.select { |action| action[:timestamp].between?(timestamp, timestamp + 1.day.to_i) }.count,
+            markets_created: create_market_actions.select { |action| timestamp_at(action[:timestamp], timeframe) == timestamp }.count,
             volume_eur: volume_by_tx_action['buy'] + volume_by_tx_action['sell'],
             tvl_volume_eur: volume_by_tx_action['buy'] - volume_by_tx_action['sell'],
             liquidity_eur: volume_by_tx_action['add_liquidity'] + volume_by_tx_action['remove_liquidity'],
@@ -262,6 +262,10 @@ class StatsService
       TokenRatesService::NETWORK_TOKENS.map { |_n, token| token } + ['polkamarkets'],
       'eur'
     )
+  end
+
+  def timestamp_at(timestamp, timeframe)
+    Time.at(timestamp).utc.public_send("beginning_of_#{TIMEFRAMES[timeframe]}").to_i
   end
 
   private
