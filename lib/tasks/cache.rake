@@ -14,8 +14,8 @@ namespace :cache do
     stats_1d = StatsService.new.get_stats_by_timeframe(timeframe: '1d', refresh: true)
     Rails.cache.write("api:stats:1d", stats_1d, expires_in: 24.hours)
     stats_1w = StatsService.new.get_stats_by_timeframe(timeframe: '1w', refresh: true)
-    Rails.cache.write("api:stats:1w", stats_1d, expires_in: 24.hours)
+    Rails.cache.write("api:stats:1w", stats_1w, expires_in: 24.hours)
     stats_1m = StatsService.new.get_stats_by_timeframe(timeframe: '1m', refresh: true)
-    Rails.cache.write("api:stats:1m", stats_1d, expires_in: 24.hours)
+    Rails.cache.write("api:stats:1m", stats_1m, expires_in: 24.hours)
   end
 end
