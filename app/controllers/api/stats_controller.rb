@@ -12,5 +12,15 @@ module Api
 
       render json: stats, status: :ok
     end
+
+    def by_timeframe
+      stats = StatsService.new.get_stats_by_timeframe(
+        from: params[:from],
+        to: params[:to],
+        timeframe: params[:timeframe]
+      )
+
+      render json: stats, status: :ok
+    end
   end
 end
