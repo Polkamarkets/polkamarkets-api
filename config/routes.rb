@@ -37,8 +37,11 @@ Rails.application.routes.draw do
 
     get 'achievement_tokens/:network/:id', to: 'achievement_tokens#show'
 
-    get 'stats', to: 'stats#index'
-    get 'stats_daily', to: 'stats#daily'
+    resources :stats, only: [:index] do
+      collection do
+        get ':timeframe', to: 'stats#by_timeframe'
+      end
+    end
 
     if !Rails.env.production?
       post 'webhooks/faucet' => "webhooks#faucet"
