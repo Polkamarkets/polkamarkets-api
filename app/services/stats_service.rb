@@ -8,6 +8,12 @@ class StatsService
     'remove_liquidity',
   ].freeze
 
+  TIMEFRAMES = {
+    '1d' => 'day',
+    '1w' => 'week',
+    '1m' => 'month'
+  }.freeze
+
   def initialize
     # ethereum networks - markets are monitored within the api
     ethereum_networks = network_ids.map do |network_id|
@@ -102,7 +108,9 @@ class StatsService
     stats
   end
 
-  def get_stats_daily(from: nil, to: nil)
+  def get_stats_daily(timeframe: '1m', from: nil, to: nil)
+    raise "Invalid timeframe: #{timeframe}" unless TIMEFRAMES.key?(timeframe)
+
     stats = {}
     all_actions = []
 
@@ -129,8 +137,10 @@ class StatsService
           (!to || action[:timestamp] <= to)
       end
 
-      # grouping actions by day intervals
-      actions_by_day = actions.group_by { |action| Time.at(action[:timestamp]).utc.beginning_of_day.to_i }
+      # grouping actions by intervals
+      actions_by_timeframe = actions.group_by do |action|
+        Time.at(action[:timestamp]).utc.public_send("beginning_of_#{TIMEFRAMES[timeframe]}").to_i
+      end
 
       # fetching rate and fee values to avoid multiple API calls
       rate = rate(network_id)
@@ -138,12 +148,12 @@ class StatsService
 
       [
         network_id,
-        actions_by_day.map do |timestamp, day_actions|
+        actions_by_timeframe.map do |timestamp, timeframe_actions|
           # summing actions values by tx_action
           volume_by_tx_action = TX_ACTIONS.to_h do |action|
             [
               action,
-              day_actions.select { |a| a[:action] == action }.sum { |a| a[:value] }
+              timeframe_actions.select { |a| a[:action] == action }.sum { |a| a[:value] }
             ]
           end
 
@@ -160,8 +170,8 @@ class StatsService
             tvl_liquidity_eur: (volume_by_tx_action['add_liquidity'] - volume_by_tx_action['remove_liquidity']) * rate,
             fees: (volume_by_tx_action['buy'] + volume_by_tx_action['sell']) * fee,
             fees_eur: (volume_by_tx_action['buy'] + volume_by_tx_action['sell']) * fee * rate,
-            users: day_actions.map { |a| a[:address] }.uniq.count,
-            transactions: day_actions.count
+            users: timeframe_actions.map { |a| a[:address] }.uniq.count,
+            transactions: timeframe_actions.count
           }
         end
       ]
@@ -192,17 +202,19 @@ class StatsService
           (!to || action[:timestamp] <= to)
       end
 
-      # grouping actions by day intervals
-      actions_by_day = actions.group_by { |action| Time.at(action[:timestamp]).utc.beginning_of_day.to_i }
+      # grouping actions by intervals
+      actions_by_timeframe = actions.group_by do |action|
+        Time.at(action[:timestamp]).utc.public_send("beginning_of_#{TIMEFRAMES[timeframe]}").to_i
+      end
 
       [
         category,
-        actions_by_day.map do |timestamp, day_actions|
+        actions_by_timeframe.map do |timestamp, timeframe_actions|
           # summing actions values by tx_action
           volume_by_tx_action = TX_ACTIONS.to_h do |action|
             [
               action,
-              day_actions.select { |v| v[:action] == action }.group_by { |v| v[:network_id] }.map { |network_id, v| v.sum { |v| v[:value] * rate(network_id) } }.sum
+              timeframe_actions.select { |v| v[:action] == action }.group_by { |v| v[:network_id] }.map { |network_id, v| v.sum { |v| v[:value] * rate(network_id) } }.sum
             ]
           end
 
@@ -213,24 +225,24 @@ class StatsService
             tvl_volume_eur: volume_by_tx_action['buy'] - volume_by_tx_action['sell'],
             liquidity_eur: volume_by_tx_action['add_liquidity'] + volume_by_tx_action['remove_liquidity'],
             tvl_liquidity_eur: volume_by_tx_action['add_liquidity'] - volume_by_tx_action['remove_liquidity'],
-            users: day_actions.map { |a| a[:address] }.uniq.count,
-            transactions: day_actions.count
+            users: timeframe_actions.map { |a| a[:address] }.uniq.count,
+            transactions: timeframe_actions.count
           }
         end
       ]
     end
 
-    stats[:total] = stats[:networks].values.flatten.group_by { |v| v[:timestamp] }.map do |timestamp, day_stats|
+    stats[:total] = stats[:networks].values.flatten.group_by { |v| v[:timestamp] }.map do |timestamp, timeframe_stats|
       {
         timestamp: timestamp,
-        markets_created: day_stats.sum { |v| v[:markets_created] },
-        volume_eur: day_stats.sum { |v| v[:volume_eur] },
-        tvl_volume_eur: day_stats.sum { |v| v[:tvl_volume_eur] },
-        liquidity_eur: day_stats.sum { |v| v[:liquidity_eur] },
-        tvl_liquidity_eur: day_stats.sum { |v| v[:tvl_liquidity_eur] },
-        fees_eur: day_stats.sum { |v| v[:fees_eur] },
-        users: day_stats.sum { |v| v[:users] },
-        transactions: day_stats.sum { |v| v[:transactions] }
+        markets_created: timeframe_stats.sum { |v| v[:markets_created] },
+        volume_eur: timeframe_stats.sum { |v| v[:volume_eur] },
+        tvl_volume_eur: timeframe_stats.sum { |v| v[:tvl_volume_eur] },
+        liquidity_eur: timeframe_stats.sum { |v| v[:liquidity_eur] },
+        tvl_liquidity_eur: timeframe_stats.sum { |v| v[:tvl_liquidity_eur] },
+        fees_eur: timeframe_stats.sum { |v| v[:fees_eur] },
+        users: timeframe_stats.sum { |v| v[:users] },
+        transactions: timeframe_stats.sum { |v| v[:transactions] }
       }
     end
 
