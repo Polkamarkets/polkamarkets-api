@@ -143,6 +143,12 @@ class Market < ApplicationRecord
     liquidity * TokenRatesService.new.get_network_rate(network_id, 'eur')
   end
 
+  def balance
+    return nil if eth_data.blank?
+
+    eth_data[:balance]
+  end
+
   def shares
     return nil if eth_data.blank?
 
@@ -153,6 +159,12 @@ class Market < ApplicationRecord
     return nil if eth_data.blank?
 
     eth_data[:voided]
+  end
+
+  def tax
+    return 0 if !resolved? || voided || market.resolved_outcome.closing_price <= 0.5
+
+    (market.liquidity - market.resolved_outcome.shares) / (market.resolved_outcome.shares_total - market.resolved_outcome.shares)
   end
 
   def liquidity_price

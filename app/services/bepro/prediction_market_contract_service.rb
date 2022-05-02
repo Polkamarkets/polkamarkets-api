@@ -89,6 +89,7 @@ module Bepro
         state: STATES_MAPPING[market_data[0].to_i],
         expires_at: Time.at(market_data[1].to_i).to_datetime,
         liquidity: from_big_number_to_float(market_data[2]),
+        balance: from_big_number_to_float(market_data[3]),
         fee: from_big_number_to_float(market_alt_data[0]),
         shares: from_big_number_to_float(market_data[4]),
         resolved_outcome_id: market_data[5].to_i,
@@ -110,6 +111,7 @@ module Bepro
           title: '', # TODO remove; deprecated
           price: from_big_number_to_float(outcome_data[0]),
           shares: from_big_number_to_float(outcome_data[1]),
+          shares_total: from_big_number_to_float(outcome_data[2]),
         }
       end
     end

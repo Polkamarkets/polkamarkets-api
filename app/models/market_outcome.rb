@@ -62,6 +62,12 @@ class MarketOutcome < ApplicationRecord
     end
   end
 
+  def closing_price
+    return nil if market.open?
+
+    market.outcome_prices('1h')[eth_market_id].last[:value]
+  end
+
   def price
     return nil if eth_data.blank?
 
@@ -72,5 +78,11 @@ class MarketOutcome < ApplicationRecord
     return nil if eth_data.blank?
 
     eth_data[:shares]
+  end
+
+  def shares_total
+    return nil if eth_data.blank?
+
+    eth_data[:shares_total]
   end
 end
