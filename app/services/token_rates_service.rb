@@ -15,7 +15,7 @@ class TokenRatesService
     end
 
     JSON.parse(response.body.to_s).map do |token, rate|
-      [token.to_sym, rate['eur']]
+      [token.to_sym, rate[currency]]
     end.to_h
   end
 end
