@@ -28,8 +28,9 @@ class Market < ApplicationRecord
   def self.create_from_eth_market_id!(network_id, eth_market_id)
     raise "Market #{eth_market_id} is already created" if Market.where(network_id: network_id, eth_market_id: eth_market_id).exists?
 
+    # TODO improve cache_ttl call, temporary solution
     eth_data =
-      Rails.cache.fetch("markets:network_#{network_id}:#{eth_market_id}", expires_in: cache_ttl, force: true) do
+      Rails.cache.fetch("markets:network_#{network_id}:#{eth_market_id}", expires_in: Market.new.cache_ttl, force: true) do
         Bepro::PredictionMarketContractService.new(network_id: network_id).get_market(eth_market_id)
       end
 
