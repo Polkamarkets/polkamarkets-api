@@ -136,6 +136,12 @@ class Market < ApplicationRecord
     eth_data[:liquidity]
   end
 
+  def liquidity_eur
+    return nil if eth_data.blank?
+
+    liquidity * TokenRatesService.new.get_network_rate(network_id, 'eur')
+  end
+
   def shares
     return nil if eth_data.blank?
 
@@ -214,6 +220,10 @@ class Market < ApplicationRecord
     action_events
       .select { |a| ['buy', 'sell'].include?(a[:action]) }
       .sum { |a| a[:value] }
+  end
+
+  def volume_eur
+    volume * TokenRatesService.new.get_network_rate(network_id, 'eur')
   end
 
   def keywords(refresh: false)
