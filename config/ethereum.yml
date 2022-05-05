@@ -16,6 +16,7 @@ default: &default
     market_list_url: <%= ENV['ETHEREUM_MARKET_LIST_URL'] %>
     network_ids: <%= ENV["ETHEREUM_NETWORK_IDS"].to_s.split(',') %>
     stats_network_ids: <%= ENV["STATS_NETWORK_IDS"].to_s.split(',') %>
+    cache_ttl_seconds: <%= ENV["ETHEREUM_CACHE_TTL"] %>
 
 production:
   <<: *default

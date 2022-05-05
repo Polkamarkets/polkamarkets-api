@@ -15,7 +15,17 @@ class TokenRatesService
     end
 
     JSON.parse(response.body.to_s).map do |token, rate|
-      [token.to_sym, rate['eur']]
+      [token.to_sym, rate[currency]]
     end.to_h
+  end
+
+  def get_network_rate(network_id, currency)
+    token = NETWORK_TOKENS[network_id.to_i]
+
+    return 0 if token.blank?
+
+    Rails.cache.fetch("rates:#{token}:#{currency}", expires_in: 1.hour) do
+      get_rates([token], currency).values.first
+    end
   end
 end
