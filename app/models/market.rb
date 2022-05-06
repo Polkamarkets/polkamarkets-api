@@ -294,8 +294,6 @@ class Market < ApplicationRecord
     "#{Rails.application.config_for(:polkamarkets).web_url}/markets/#{slug}"
   end
 
-  private
-
   def cache_ttl
     @_cache_ttl ||= Rails.application.config_for(:ethereum).cache_ttl_seconds || 24.hours
   end
