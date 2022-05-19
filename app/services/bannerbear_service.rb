@@ -34,7 +34,7 @@ class BannerbearService
     create_image(modifications)
   end
 
-  def create_achivement_token_image(achievement_token)
+  def create_achievement_token_image(achievement_token)
     modifications = {
       template: Rails.application.config_for(:bannerbear).achievements_template_id,
       modifications: [
