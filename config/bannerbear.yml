@@ -4,6 +4,28 @@ default: &default
   template_version: <%= ENV['BANNERBEAR_TEMPLATE_VERSION'] %>
   achievements_template_id: <%= ENV['BANNERBEAR_ACHIEVEMENTS_TEMPLATE_ID'] %>
   achievements_template_version: <%= ENV['BANNERBEAR_ACHIEVEMENTS_TEMPLATE_VERSION'] %>
+  categories:
+    crypto:
+      background_image: "https://dl.dropboxusercontent.com/s/7vgumw1m26lty4x/1209.jpg?dl=0"
+      category_color: "rgba(65, 83, 201, 0.7)"
+      category_color_2: "rgba(65, 83, 201, 1)"
+    sports:
+      background_image: "https://dl.dropboxusercontent.com/s/d64tr15q92gzgdo/1207.jpg?dl=0"
+      category_color: "rgba(176, 94, 51, 0.7)"
+      category_color_2: "rgba(176, 94, 51, 1)"
+    gaming:
+      background_image: "https://dl.dropboxusercontent.com/s/xywl2pzedm1a1p0/1208.jpg?dl=0"
+      category_color: "rgba(165, 71, 176, 0.7)"
+      category_color_2: "rgba(165, 71, 176, 1)"
+    politics:
+      background_image: "https://dl.dropboxusercontent.com/s/t9la48w2x1s2qga/1210.jpg?dl=0"
+      category_color: "rgba(26, 137, 73, 0.7)"
+      category_color_2: "rgba(26, 137, 73, 1)"
+    other:
+      background_image: "https://dl.dropboxusercontent.com/s/du16milvx7h428k/1213.jpg?dl=0"
+      category_color: "rgba(165, 71, 176, 0.7)"
+      category_color_2: "rgba(165, 71, 176, 1)"
+
 
 production:
   <<: *default
