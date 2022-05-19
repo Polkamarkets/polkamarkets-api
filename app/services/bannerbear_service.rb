@@ -1,8 +1,14 @@
 class BannerbearService
+  include NetworkHelper
+
   def create_banner_image(market)
     modifications = {
       template: Rails.application.config_for(:bannerbear).template_id,
       modifications: [
+        {
+          name: "background_image",
+          image_url: Rails.application.config_for(:bannerbear).categories.dig(market.category.to_sym, :background_image)
+        },
         {
           name: "title",
           text: market.title
@@ -21,11 +27,17 @@ class BannerbearService
         },
         {
           name: "category",
-          text: "#{market.category} / *#{market.subcategory}*"
+          text: "#{market.category} / *#{market.subcategory}*",
+          color: Rails.application.config_for(:bannerbear).categories.dig(market.category.to_sym, :category_color),
+          color_2: Rails.application.config_for(:bannerbear).categories.dig(market.category.to_sym, :category_color_2),
         },
         {
           name: "chain_image",
           image_url: Rails.application.config_for(:ethereum)[:"network_#{market.network_id}"][:image_url]
+        },
+        {
+          name: "chain_title",
+          text: "available on *#{network_name(market.network_id)}*"
         },
       ],
       template_version: Rails.application.config_for(:bannerbear).template_version
