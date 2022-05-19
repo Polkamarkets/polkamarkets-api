@@ -27,7 +27,8 @@ class BannerbearService
           name: "chain_image",
           image_url: Rails.application.config_for(:ethereum)[:"network_#{market.network_id}"][:image_url]
         },
-      ]
+      ],
+      template_version: Rails.application.config_for(:bannerbear).template_version
     }
 
     create_image(modifications)
@@ -49,7 +50,8 @@ class BannerbearService
           name: "chain_image",
           image_url: Rails.application.config_for(:ethereum)[:"network_#{achievement_token.network_id}"][:image_url]
         }
-      ]
+      ],
+      template_version: Rails.application.config_for(:bannerbear).achievements_template_version
     }
 
     create_image(modifications)

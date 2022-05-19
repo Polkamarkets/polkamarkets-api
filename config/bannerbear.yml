@@ -1,7 +1,9 @@
 default: &default
   api_key: <%= ENV['BANNERBEAR_API_KEY'] %>
   template_id: <%= ENV['BANNERBEAR_TEMPLATE_ID'] %>
+  template_version: <%= ENV['BANNERBEAR_TEMPLATE_VERSION'] %>
   achievements_template_id: <%= ENV['BANNERBEAR_ACHIEVEMENTS_TEMPLATE_ID'] %>
+  achievements_template_version: <%= ENV['BANNERBEAR_ACHIEVEMENTS_TEMPLATE_VERSION'] %>
 
 production:
   <<: *default
