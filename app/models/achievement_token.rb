@@ -42,7 +42,7 @@ class AchievementToken < ApplicationRecord
   end
 
   def update_image
-    token_image_url = BannerbearService.new.create_achivement_token_image(self)
+    token_image_url = BannerbearService.new.create_achievement_token_image(self)
     self.update(image_url: token_image_url)
   end
 
