@@ -22,7 +22,6 @@ namespace :cache do
   desc "refreshes cache of network actions"
   task :refresh_actions, [:symbol] => :environment do |task, args|
     Rails.application.config_for(:ethereum).network_ids.map do |network_id|
-      puts network_id
       actions = Bepro::PredictionMarketContractService.new(network_id: network_id).get_action_events
       Rails.cache.write("api:actions:#{network_id}", actions, expires_in: 24.hours)
 
