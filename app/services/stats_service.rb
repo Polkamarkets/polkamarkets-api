@@ -258,7 +258,7 @@ class StatsService
     stats_by_timeframe
   end
 
-  def get_leaderboard(timeframe: '1d', refresh: true)
+  def get_leaderboard(timeframe:, refresh: false)
     raise "Invalid timeframe: #{timeframe}" unless TIMEFRAMES.key?(timeframe)
 
     from = timestamp_at(Time.now.to_i, timeframe)
@@ -266,9 +266,7 @@ class StatsService
 
     leaderboard =
       Rails.cache.fetch("api:leaderboard:#{timeframe}", expires_in: 24.hours, force: refresh) do
-        stats = {}
-
-        stats[:networks] = networks.to_h do |network|
+        networks.to_h do |network|
           network_id = network[:network_id]
           actions = network_actions(network_id)
           market_ids = actions.map { |action| action[:market_id] }.uniq
@@ -299,7 +297,7 @@ class StatsService
           fee = network[:bepro_pm].get_fee
 
           [
-            network_id,
+            network_id.to_i,
             actions_by_user.map do |user, user_actions|
               # summing actions values by tx_action
               volume_by_tx_action = TX_ACTIONS.to_h do |action|
@@ -313,21 +311,15 @@ class StatsService
                 user: user,
                 markets_created: create_market_actions.select { |action| action[:address] == user }.count,
                 volume: volume_by_tx_action['buy'] + volume_by_tx_action['sell'],
-                volume_eur: (volume_by_tx_action['buy'] + volume_by_tx_action['sell']) * rate,
                 tvl_volume: volume_by_tx_action['buy'] - volume_by_tx_action['sell'],
-                tvl_volume_eur: (volume_by_tx_action['buy'] - volume_by_tx_action['sell']) * rate,
                 liquidity: volume_by_tx_action['add_liquidity'] + volume_by_tx_action['remove_liquidity'],
-                liquidity_eur: (volume_by_tx_action['add_liquidity'] + volume_by_tx_action['remove_liquidity']) * rate,
                 tvl_liquidity: volume_by_tx_action['add_liquidity'] - volume_by_tx_action['remove_liquidity'],
-                tvl_liquidity_eur: (volume_by_tx_action['add_liquidity'] - volume_by_tx_action['remove_liquidity']) * rate,
                 claim_winnings_count: user_actions.select { |a| a[:action] == 'claim_winnings' }.count,
                 transactions: user_actions.count
               }
-            end.sort_by { |user| -user[:volume_eur] }
+            end
           ]
         end
-
-        stats
       end
   end
 
