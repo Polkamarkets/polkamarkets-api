@@ -1,11 +1,13 @@
 class LeaderboardService
+  include NetworkHelper
+
   attr_accessor :actions
 
   def initialize
     @actions = network_ids.map do |network_id|
       [
         network_id,
-        Bepro::PredictionMarketContractService.new(network_id: network_id).get_action_events
+        network_actions(network_id)
       ]
     end.to_h
 
