@@ -1,4 +1,6 @@
 class StatsService
+  include NetworkHelper
+
   attr_accessor :networks, :categories
 
   TX_ACTIONS = [
@@ -47,8 +49,8 @@ class StatsService
     # TODO: TVL chart
     stats = networks.map do |network|
       network_id = network[:network_id]
-      actions = network[:bepro_pm].get_action_events
-      bonds = network[:bepro_realitio].get_bond_events
+      actions = network_actions(network_id)
+      bonds = network_bonds(network_id)
       market_ids = actions.map { |action| action[:market_id] }.uniq
 
       create_market_actions = market_ids.map do |market_id|
@@ -118,7 +120,7 @@ class StatsService
 
         stats[:networks] = networks.to_h do |network|
           network_id = network[:network_id]
-          actions = network[:bepro_pm].get_action_events
+          actions = network_actions(network_id)
           # used for category filtering
           all_actions.concat(actions.map { |action| action.merge(network_id: network_id) })
           market_ids = actions.map { |action| action[:market_id] }.uniq
@@ -254,6 +256,79 @@ class StatsService
     end
 
     stats_by_timeframe
+  end
+
+  def get_leaderboard(timeframe: '1d', refresh: true)
+    raise "Invalid timeframe: #{timeframe}" unless TIMEFRAMES.key?(timeframe)
+
+    from = timestamp_at(Time.now.to_i, timeframe)
+    to = from + 1.send(TIMEFRAMES[timeframe])
+
+    leaderboard =
+      Rails.cache.fetch("api:leaderboard:#{timeframe}", expires_in: 24.hours, force: refresh) do
+        stats = {}
+
+        stats[:networks] = networks.to_h do |network|
+          network_id = network[:network_id]
+          actions = network_actions(network_id)
+          market_ids = actions.map { |action| action[:market_id] }.uniq
+
+          create_market_actions = market_ids.map do |market_id|
+            # first action represents market creation
+            action = actions.find { |action| action[:market_id] == market_id }
+          end
+
+          # filtering by timestamps, if provided
+          actions.select! do |action|
+            (!from || action[:timestamp] >= from) &&
+              (!to || action[:timestamp] <= to)
+          end
+
+          create_market_actions.select! do |action|
+            (!from || action[:timestamp] >= from) &&
+              (!to || action[:timestamp] <= to)
+          end
+
+          # grouping actions by intervals
+          actions_by_user = actions.group_by do |action|
+            action[:address]
+          end
+
+          # fetching rate and fee values to avoid multiple API calls
+          rate = rate(network_id)
+          fee = network[:bepro_pm].get_fee
+
+          [
+            network_id,
+            actions_by_user.map do |user, user_actions|
+              # summing actions values by tx_action
+              volume_by_tx_action = TX_ACTIONS.to_h do |action|
+                [
+                  action,
+                  user_actions.select { |a| a[:action] == action }.sum { |a| a[:value] }
+                ]
+              end
+
+              {
+                user: user,
+                markets_created: create_market_actions.select { |action| action[:address] == user }.count,
+                volume: volume_by_tx_action['buy'] + volume_by_tx_action['sell'],
+                volume_eur: (volume_by_tx_action['buy'] + volume_by_tx_action['sell']) * rate,
+                tvl_volume: volume_by_tx_action['buy'] - volume_by_tx_action['sell'],
+                tvl_volume_eur: (volume_by_tx_action['buy'] - volume_by_tx_action['sell']) * rate,
+                liquidity: volume_by_tx_action['add_liquidity'] + volume_by_tx_action['remove_liquidity'],
+                liquidity_eur: (volume_by_tx_action['add_liquidity'] + volume_by_tx_action['remove_liquidity']) * rate,
+                tvl_liquidity: volume_by_tx_action['add_liquidity'] - volume_by_tx_action['remove_liquidity'],
+                tvl_liquidity_eur: (volume_by_tx_action['add_liquidity'] - volume_by_tx_action['remove_liquidity']) * rate,
+                claim_winnings_count: user_actions.select { |a| a[:action] == 'claim_winnings' }.count,
+                transactions: user_actions.count
+              }
+            end.sort_by { |user| -user[:volume_eur] }
+          ]
+        end
+
+        stats
+      end
   end
 
   def rate(network_id)
