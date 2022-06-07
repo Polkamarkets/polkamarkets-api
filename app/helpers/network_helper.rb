@@ -4,4 +4,16 @@ module NetworkHelper
     network = Rails.application.config_for(:networks).find { |name, id| id == network_id }
     network ? network.first.to_s.capitalize : 'Unknown'
   end
+
+  def network_actions(network_id)
+    Rails.cache.fetch("api:actions:#{network_id}", expires_in: 24.hours) do
+      Bepro::PredictionMarketContractService.new(network_id: network_id).get_action_events
+    end
+  end
+
+  def network_bonds(network_id)
+    Rails.cache.fetch("api:bonds:#{network_id}", expires_in: 24.hours) do
+      Bepro::RealitioErc20ContractService.new(network_id: network_id).get_bond_events
+    end
+  end
 end

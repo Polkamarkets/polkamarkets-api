@@ -18,4 +18,15 @@ namespace :cache do
     stats_1m = StatsService.new.get_stats_by_timeframe(timeframe: '1m', refresh: true)
     Rails.cache.write("api:stats:1m", stats_1m, expires_in: 24.hours)
   end
+
+  desc "refreshes cache of network actions"
+  task :refresh_actions, [:symbol] => :environment do |task, args|
+    Rails.application.config_for(:ethereum).network_ids.map do |network_id|
+      actions = Bepro::PredictionMarketContractService.new(network_id: network_id).get_action_events
+      Rails.cache.write("api:actions:#{network_id}", actions, expires_in: 24.hours)
+
+      bonds = Bepro::RealitioErc20ContractService.new(network_id: network_id).get_bond_events
+      Rails.cache.write("api:bonds:#{network_id}", bonds, expires_in: 24.hours)
+    end
+  end
 end

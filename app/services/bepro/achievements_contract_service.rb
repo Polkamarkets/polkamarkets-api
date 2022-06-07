@@ -5,8 +5,14 @@ module Bepro
     def initialize(network_id: nil, api_url: nil, contract_address: nil)
       super(
         contract_name: 'achievements',
-        contract_address: contract_address || Rails.application.config_for(:ethereum)[:"network_#{network_id}"][:achievements_contract_address],
-        api_url: api_url || Rails.application.config_for(:ethereum)[:"network_#{network_id}"][:bepro_api_url]
+        contract_address:
+          contract_address ||
+            Rails.application.config_for(:ethereum).dig(:"network_#{network_id}", :achievements_contract_address) ||
+            Rails.application.config_for(:ethereum).dig(:"stats_network_#{network_id}", :achievements_contract_address),
+        api_url:
+          api_url ||
+            Rails.application.config_for(:ethereum).dig(:"network_#{network_id}", :bepro_api_url) ||
+            Rails.application.config_for(:ethereum).dig(:"stats_network_#{network_id}", :bepro_api_url),
       )
     end
 
@@ -61,6 +67,21 @@ module Bepro
 
     def get_achievement_token_index
       return call(method: 'tokenIndex').to_i
+    end
+
+    def get_achievement_token_users
+      events = get_events(event_name: 'Transfer')
+      # filtering by last occurence of token transfer (current holder)
+      events.select!.with_index do |event, i|
+        i == events.rindex { |e| e['returnValues']['tokenId'] == event['returnValues']['tokenId'] }
+      end
+
+      events.map do |event|
+        {
+          id: event['returnValues']['tokenId'],
+          user: event['returnValues']['to'],
+        }
+      end
     end
   end
 end
