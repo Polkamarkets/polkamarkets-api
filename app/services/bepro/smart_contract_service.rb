@@ -50,5 +50,18 @@ module Bepro
 
       JSON.parse(response.body.to_s)
     end
+
+    def refresh_events(event_name:, filter: {})
+      uri = api_url + "/events?contract=#{contract_name}&address=#{contract_address}&eventName=#{event_name}"
+      uri << "&filter=#{filter.to_json}" if filter.present?
+
+      response = HTTP.post(uri)
+
+      unless response.status.success?
+        raise "BeproService #{response.status} :: #{response.body.to_s}; uri: #{uri}"
+      end
+
+      true
+    end
   end
 end

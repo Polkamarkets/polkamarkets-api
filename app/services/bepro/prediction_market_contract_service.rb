@@ -211,6 +211,16 @@ module Bepro
       end
     end
 
+    def refresh_action_events(market_id: nil, address: nil)
+      events = refresh_events(
+        event_name: 'MarketActionTx',
+        filter: {
+          marketId: market_id.to_s,
+          user: address,
+        }
+      )
+    end
+
     def get_market_resolved_at(market_id)
       # args: (address) user, (uint) marketId,
       args = [nil, market_id]
