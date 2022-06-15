@@ -256,7 +256,13 @@ class Market < ApplicationRecord
       # only fetching news if market is not resolved
       return [] if resolved?
 
-      GnewsService.new.get_latest_news(keywords)
+      begin
+        GnewsService.new.get_latest_news(keywords)
+      rescue => exception
+        # service should be non-blocking, reporting to sentry and returning empty array
+        Sentry.capture_exception(exception)
+        []
+      end
     end
   end
 
