@@ -253,8 +253,8 @@ class Market < ApplicationRecord
     return [] if eth_market_id.blank?
 
     Rails.cache.fetch("markets:network_#{network_id}:#{eth_market_id}:news", force: refresh) do
-      # only fetching news if market is not resolved
-      return [] if resolved?
+      # only fetching news if market is not resolved or expired over 7 days ago
+      return [] if resolved? || expires_at < 7.days.ago
 
       begin
         GnewsService.new.get_latest_news(keywords)
