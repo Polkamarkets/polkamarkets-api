@@ -96,6 +96,12 @@ class Market < ApplicationRecord
     eth_data[:expires_at]
   end
 
+  def resolution_source
+    return nil if eth_data.blank?
+
+    eth_data[:resolution_source]
+  end
+
   def state
     return nil if eth_data.blank?
 

@@ -12,6 +12,7 @@ class MarketSerializer < ActiveModel::Serializer
     :verified,
     :category,
     :subcategory,
+    :resolution_source,
     :image_url,
     :liquidity,
     :liquidity_eur,
