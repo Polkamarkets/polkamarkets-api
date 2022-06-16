@@ -259,6 +259,9 @@ class Market < ApplicationRecord
       begin
         GnewsService.new.get_latest_news(keywords)
       rescue => exception
+        # 429 http status requests should be raised and retried
+        raise exception if exception.message.include?('429')
+
         # service should be non-blocking, reporting to sentry and returning empty array
         Sentry.capture_exception(exception)
         []
