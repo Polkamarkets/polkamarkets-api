@@ -311,7 +311,7 @@ class StatsService
               {
                 user: user,
                 markets_created: create_market_actions.select { |action| action[:address] == user }.count,
-                volume: volume_by_tx_action['buy'] + volume_by_tx_action['sell'],
+                volume: volume_by_tx_action['buy'] + volume_by_tx_action['sell'] + volume_by_tx_action['add_liquidity'] + volume_by_tx_action['remove_liquidity'],
                 tvl_volume: volume_by_tx_action['buy'] - volume_by_tx_action['sell'],
                 liquidity: volume_by_tx_action['add_liquidity'] + volume_by_tx_action['remove_liquidity'],
                 tvl_liquidity: volume_by_tx_action['add_liquidity'] - volume_by_tx_action['remove_liquidity'],
