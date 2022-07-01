@@ -343,7 +343,7 @@ class StatsService
     return 0 if TIMEFRAMES[timeframe] == 'all-time'
 
     # weekly timeframe starts on Fridays due to the rewarding system
-    args = TIMEFRAMES[timeframe] == 'weekly' ? [:friday] : []
+    args = TIMEFRAMES[timeframe] == 'week' ? [:friday] : []
 
     date = Time.at(timestamp).utc.public_send("beginning_of_#{TIMEFRAMES[timeframe]}", *args).to_i
   end
@@ -352,7 +352,7 @@ class StatsService
     return Time.now.to_i if TIMEFRAMES[timeframe] == 'all-time'
 
     # weekly timeframe starts on Fridays due to the rewarding system
-    args = TIMEFRAMES[timeframe] == 'weekly' ? [:friday] : []
+    args = TIMEFRAMES[timeframe] == 'week' ? [:friday] : []
 
     date = Time.at(timestamp).utc.public_send("end_of_#{TIMEFRAMES[timeframe]}", *args).to_i
   end
