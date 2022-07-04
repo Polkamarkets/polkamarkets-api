@@ -1,22 +1,24 @@
 class EnsService
-  def get_ens_domain(address)
-    uri = ens_etherscan_url + address
+  def get_ens_domain(address:, refresh: false)
+    Rails.cache.fetch("ens:#{address.downcase}", force: refresh) do
+      uri = ens_etherscan_url + address
 
-    response = HTTP.get(uri)
+      response = HTTP.get(uri)
 
-    unless response.status.success?
-      raise "EnsService #{response.status} :: #{response.body.to_s}"
+      unless response.status.success?
+        raise "EnsService #{response.status} :: #{response.body.to_s}"
+      end
+
+      html = Nokogiri::HTML(response.body.to_s)
+
+      domains = html
+        .search('.mb-5-alt')
+        .search('a')
+        .select { |a| a.values.any? { |v| v.include?('enslookup-search') } }
+        .map { |v| v.text }
+
+      domains.first
     end
-
-    html = Nokogiri::HTML(response.body.to_s)
-
-    domains = html
-      .search('.mb-5-alt')
-      .search('a')
-      .select { |a| a.values.any? { |v| v.include?('enslookup-search') } }
-      .map { |v| v.text }
-
-    domains.first
   end
 
   def ens_etherscan_url
