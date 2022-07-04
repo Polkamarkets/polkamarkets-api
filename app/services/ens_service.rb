@@ -21,6 +21,11 @@ class EnsService
     end
   end
 
+  def cached_ens_domain(address:)
+    # only performing a read from cache, not fetching it in case it's not present
+    Rails.cache.read("ens:#{address.downcase}")
+  end
+
   def ens_etherscan_url
     @_ens_etherscan_url ||= 'https://etherscan.io/enslookup-search?search='
   end
