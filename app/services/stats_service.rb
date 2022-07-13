@@ -310,6 +310,7 @@ class StatsService
 
               {
                 user: user,
+                ens: EnsService.new.cached_ens_domain(address: user),
                 markets_created: create_market_actions.select { |action| action[:address] == user }.count,
                 volume: volume_by_tx_action['buy'] + volume_by_tx_action['sell'] + volume_by_tx_action['add_liquidity'] + volume_by_tx_action['remove_liquidity'],
                 tvl_volume: volume_by_tx_action['buy'] - volume_by_tx_action['sell'],
