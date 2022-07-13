@@ -2,3 +2,4 @@ en:
   market:
     discord:
       market_created: "New market created in %{network} 👀\n\n**%{title}**\n\n%{url}"
+      market_expiring: "Market expiring soon in %{network} ⏳\n\n**%{title}**\n\n%{url}"

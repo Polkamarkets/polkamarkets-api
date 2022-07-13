@@ -14,6 +14,23 @@ namespace :markets do
     end
   end
 
+  task :check_expiring_markets, [:symbol] => :environment do |task, args|
+    # fetching markets expiring in the next 24 hours
+    markets = Market.where(
+      'expires_at > ? AND expires_at < ?',
+      Time.now,
+      Time.now + 24.hours
+    )
+
+    # posting a message on discord
+    markets.each do |market|
+      # ignores job if market already posted
+      next if Rails.cache.read("discord:market_expiring:#{market.network_id}:#{market.eth_market_id}")
+
+      Discord::PublishMarketExpiringWorker.perform_async(market.id)
+    end
+  end
+
   desc "refreshes eth cache of markets"
   task :refresh_cache, [:symbol] => :environment do |task, args|
     Market.all.each { |m| m.refresh_cache! }
