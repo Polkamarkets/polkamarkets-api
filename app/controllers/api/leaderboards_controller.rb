@@ -8,6 +8,12 @@ module Api
       render json: leaderboard, status: :ok
     end
 
+    def show
+      user_leaderboard = get_user_leaderboard(params[:network_id], params[:id])
+
+      render json: user_leaderboard, status: :ok
+    end
+
     private
 
     def get_leaderboard(network_id)
@@ -41,7 +47,18 @@ module Api
     def get_user_leaderboard(network_id, user)
       leaderboard = get_leaderboard(params[:network_id])
 
-      user_leaderboard = leaderboard.select { |user| user[:user].downcase == user.downcase }
+      user_leaderboard = leaderboard.find { |l| l[:user].downcase == user.downcase }
+
+      # adding the rank per parameter to the user leaderboard
+      rank = {
+        markets_created: leaderboard.sort_by { |user| -user[:markets_created] }.index(user_leaderboard) + 1,
+        volume: leaderboard.sort_by { |user| -user[:volume] }.index(user_leaderboard) + 1,
+        tvl_volume: leaderboard.sort_by { |user| -user[:tvl_volume] }.index(user_leaderboard) + 1,
+        tvl_liquidity: leaderboard.sort_by { |user| -user[:tvl_liquidity] }.index(user_leaderboard) + 1,
+        claim_winnings_count: leaderboard.sort_by { |user| -user[:claim_winnings_count] }.index(user_leaderboard) + 1,
+      }
+
+      user_leaderboard[:rank] = rank
 
       user_leaderboard
     end
