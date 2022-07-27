@@ -49,6 +49,8 @@ module Api
 
       user_leaderboard = leaderboard.find { |l| l[:user].downcase == user.downcase }
 
+      return user_not_found(user) if user_leaderboard.blank?
+
       # adding the rank per parameter to the user leaderboard
       rank = {
         markets_created: leaderboard.sort_by { |user| -user[:markets_created] }.index(user_leaderboard) + 1,
@@ -66,6 +68,28 @@ module Api
     def validate_params
       raise "timeframe parameter is required" if params[:timeframe].blank?
       raise "network_id parameter is required" if params[:network_id].blank?
+    end
+
+    def user_not_found(user)
+      {
+        user: user,
+        ens: nil,
+        markets_created: 0,
+        volume: 0,
+        tvl_volume: 0,
+        liquidity: 0,
+        tvl_liquidity: 0,
+        claim_winnings_count: 0,
+        transactions: 0,
+        achievements: [ ],
+        rank: {
+          markets_created: 0,
+          volume: 0,
+          tvl_volume: 0,
+          tvl_liquidity: 0,
+          claim_winnings_count: 0
+        }
+      }
     end
   end
 end
