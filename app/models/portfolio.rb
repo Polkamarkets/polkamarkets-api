@@ -68,8 +68,16 @@ class Portfolio < ApplicationRecord
     value
   end
 
+  def first_position_at
+    action_events.select { |event| event[:action] == 'buy' }.min_by { |event| event[:timestamp] }&.dig(:timestamp)
+  end
+
   def open_positions
     holdings.count
+  end
+
+  def won_positions
+    action_events.select { |event| event[:action] == 'claim_winnings' }.count
   end
 
   def liquidity_provided

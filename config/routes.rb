@@ -34,7 +34,8 @@ Rails.application.routes.draw do
     resources :articles, only: [:index]
     resources :whitelist, only: [:show]
     resources :achievements, only: [:index, :show]
-    resource  :leaderboard, only: [:show]
+    get 'leaderboard' => 'leaderboards#index' # legacy route
+    resources :leaderboards, only: [:index, :show]
 
     get 'achievement_tokens/:network/:id', to: 'achievement_tokens#show'
 
