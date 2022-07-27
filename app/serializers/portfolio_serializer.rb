@@ -6,9 +6,11 @@ class PortfolioSerializer < ActiveModel::Serializer
     :holdings_performance,
     :holdings_chart,
     :open_positions,
+    :won_positions,
     :closed_markets_profit,
     :liquidity_provided,
-    :liquidity_fees_earned
+    :liquidity_fees_earned,
+    :first_position_at
   )
 
   def address
