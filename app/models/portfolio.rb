@@ -306,5 +306,6 @@ class Portfolio < ApplicationRecord
     # triggering a refresh for all cached ethereum data
     Cache::PortfolioActionEventsWorker.perform_async(id)
     Cache::PortfolioLiquidityFeesWorker.perform_async(id)
+    Cache::PortfolioFeedWorker.perform_async(id)
   end
 end
