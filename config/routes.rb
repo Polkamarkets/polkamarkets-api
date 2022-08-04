@@ -28,6 +28,7 @@ Rails.application.routes.draw do
     resources :portfolios, only: [:show] do
       member do
         post :reload
+        get :feed
       end
     end
 
