@@ -88,6 +88,10 @@ class Portfolio < ApplicationRecord
     action_events.select { |event| event[:action] == 'claim_winnings' }.count
   end
 
+  def total_positions
+    action_events.select { |event| event[:action] == 'buy' }.count
+  end
+
   def liquidity_provided
     holdings.sum { |holding| holding[:liquidity_shares] }
   end
