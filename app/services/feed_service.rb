@@ -40,7 +40,7 @@ class FeedService
     filtered_actions.map do |action|
       market = markets.find { |m| m.eth_market_id == action[:market_id] }
       outcome = market.outcomes.find { |o| o.eth_market_id == action[:outcome_id] } if action[:action] == 'buy' || action[:action] == 'sell'
-      # for optimization purposes, determining if add_liquidity action is a create_market action by timestamp proximity
+      # determining if add_liquidity action is a create_market action by tx_id
       if action[:action] == 'add_liquidity' && create_event_actions.any? { |e| e['transactionHash'] == action[:tx_id] }
         action[:action] = 'create_market'
       end
