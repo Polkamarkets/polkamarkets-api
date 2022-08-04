@@ -1,15 +1,19 @@
 namespace :portfolios do
   desc "refreshes eth cache of portfolios"
-  task :refresh_cache, [:symbol] => :environment do |task, args|
+  task :refresh_cache, [:days] => :environment do |task, args|
     Rails.application.config_for(:ethereum).network_ids.each do |network_id|
       bepro = Bepro::PredictionMarketContractService.new(network_id: network_id)
+      days = args[:days].present? ? args[:days].to_i : 30
 
       # fetching unique users
       actions = bepro.get_action_events
-      # filtering by actions from the last day
-      actions.select! { |a| a[:timestamp] > (DateTime.now - 1.day).to_i }
+      # filtering by actions from the last X days
+      actions.select! { |a| a[:timestamp] > (DateTime.now - days.days).to_i }
       eth_addresses = actions.map { |a| a[:address].downcase }.uniq
-      Portfolio.where(eth_address: eth_addresses, network_id: network_id).each { |p| p.refresh_cache! }
+      eth_addresses.each do |eth_address|
+        portfolio = Portfolio.find_or_create_by!(eth_address: eth_address.downcase, network_id: network_id)
+        portfolio.refresh_cache!
+      end
     end
   end
 

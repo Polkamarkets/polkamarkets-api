@@ -209,6 +209,7 @@ module Bepro
           shares: from_big_number_to_float(event['returnValues']['shares']),
           value: from_big_number_to_float(event['returnValues']['value']),
           timestamp: event['returnValues']['timestamp'].to_i,
+          tx_id: event['transactionHash']
         }
       end
     end
