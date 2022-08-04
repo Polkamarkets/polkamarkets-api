@@ -9,7 +9,7 @@ class FeedService
     'claim_winnings'
   ].freeze
 
-  def initialize(user, network_id)
+  def initialize(user:, network_id:)
     @user = user
     @network_id = network_id
   end
@@ -33,23 +33,21 @@ class FeedService
   end
 
   def serialized_actions(refresh: false)
-    Rails.cache.fetch("portfolios:network_#{network_id}:#{user}:feed", expires_in: 24.hours, force: refresh) do
-      filtered_actions.map do |action|
-        market = markets.find { |m| m.eth_market_id == action[:market_id] }
-        outcome = market.outcomes.find { |o| o.eth_market_id == action[:outcome_id] } if action[:action] == 'buy' || action[:action] == 'sell'
+    filtered_actions.map do |action|
+      market = markets.find { |m| m.eth_market_id == action[:market_id] }
+      outcome = market.outcomes.find { |o| o.eth_market_id == action[:outcome_id] } if action[:action] == 'buy' || action[:action] == 'sell'
 
-        {
-          user: action[:address],
-          action: action[:action],
-          market_title: market.title,
-          market_slug: market.slug,
-          outcome_title: outcome&.title,
-          image_url: market.image_url,
-          shares: action[:shares],
-          value: action[:value],
-          timestamp: action[:timestamp]
-        }
-      end
+      {
+        user: action[:address],
+        action: action[:action],
+        market_title: market.title,
+        market_slug: market.slug,
+        outcome_title: outcome&.title,
+        image_url: market.image_url,
+        shares: action[:shares],
+        value: action[:value],
+        timestamp: action[:timestamp]
+      }
     end
   end
 end
