@@ -36,15 +36,17 @@ class Portfolio < ApplicationRecord
     action_events.map { |event| event[:market_id] }.uniq.sort.reverse
   end
 
-  def holdings(refresh: false)
-    return @holdings if @holdings.present? && !refresh
+  def holdings
+    return [] if holdings_timeline.empty?
 
-    @holdings ||=
-      Rails.cache.fetch("portfolios:network_#{network_id}:#{eth_address}:holdings", expires_in: 24.hours, force: refresh) do
-        portfolio_market_ids.map do |market_id|
-          Bepro::PredictionMarketContractService.new(network_id: network_id).get_user_market_shares(market_id, eth_address)
-        end
-      end
+    holdings_timeline.last[:holdings].map do |market_id, holding|
+      {
+        market_id: market_id,
+        address: eth_address,
+        outcome_shares: holding[:outcome_shares],
+        liquidity_shares: holding[:liquidity_shares],
+      }
+    end
   end
 
   # profit/loss from resolved events
@@ -303,7 +305,6 @@ class Portfolio < ApplicationRecord
 
     # triggering a refresh for all cached ethereum data
     Cache::PortfolioActionEventsWorker.perform_async(id)
-    Cache::PortfolioHoldingsWorker.perform_async(id)
     Cache::PortfolioLiquidityFeesWorker.perform_async(id)
   end
 end
