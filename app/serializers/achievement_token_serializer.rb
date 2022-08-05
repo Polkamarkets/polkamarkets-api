@@ -2,6 +2,8 @@ class AchievementTokenSerializer < ActiveModel::Serializer
   attributes(
     :id,
     :name,
+    :description,
+    :token_count,
     :image,
   )
   attribute :get_attributes, key: :attributes

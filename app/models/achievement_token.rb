@@ -50,6 +50,14 @@ class AchievementToken < ApplicationRecord
     "#{achievement.title} ##{get_rank}"
   end
 
+  def description
+    achievement.description
+  end
+
+  def token_count
+    achievement.token_count
+  end
+
   def attributes
     [
       {
