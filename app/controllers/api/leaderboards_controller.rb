@@ -27,13 +27,15 @@ module Api
       if achievements_service.contract_address.present?
         # adding achievements to leaderboard data
         achievement_token_users = achievements_service.get_achievement_token_users
+        achievement_tokens = AchievementToken
+          .includes(:achievement)
+          .where(network_id: network_id, eth_id: achievement_token_users.map { |token| token[:id] })
 
         leaderboard.each do |user|
-          achievement_tokens = AchievementToken.where(
-            network_id: network_id,
-            eth_id: achievement_token_users.select { |token| token[:user] == user[:user] }.map { |token| token[:id] }
-          )
-          user[:achievements] = achievement_tokens.map { |token| AchievementTokenSerializer.new(token).as_json }
+          achievement_token_ids = achievement_token_users.select { |token| token[:user] == user[:user] }.map { |token| token[:id].to_i }
+          user[:achievements] = achievement_tokens
+            .select { |token| achievement_token_ids.include?(token.eth_id) }
+            .map { |token| AchievementTokenSerializer.new(token).as_json }
         end
       else
         leaderboard.each do |user|
