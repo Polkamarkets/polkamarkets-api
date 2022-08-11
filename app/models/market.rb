@@ -287,10 +287,14 @@ class Market < ApplicationRecord
   end
 
   def image_url
-    # TODO: remove this column, temporary for transition
-    return self['image_url'] if image.blank?
+    return Rails.application.routes.url_helpers.rails_blob_url(image) if image.present?
 
-    Rails.application.routes.url_helpers.rails_blob_url(image)
+    return if self['image_url'].blank?
+
+    # TODO: save image_hash only and concatenate with ipfs hosting provider
+    image_hash = self['image_url'].split('/').last
+
+    IpfsService.image_url_from_hash(image_hash)
   end
 
   def update_banner_image
