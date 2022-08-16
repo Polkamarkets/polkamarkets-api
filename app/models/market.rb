@@ -287,7 +287,7 @@ class Market < ApplicationRecord
   end
 
   def image_url
-    return Rails.application.routes.url_helpers.rails_blob_url(image) if image.present?
+    # return Rails.application.routes.url_helpers.rails_blob_url(image) if image.present?
 
     return if self['image_url'].blank?
 
