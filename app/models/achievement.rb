@@ -43,7 +43,12 @@ class Achievement < ApplicationRecord
   end
 
   def image_url
-    self['image_url'] || DEFAULT_IMAGE_URL
+    return DEFAULT_IMAGE_URL if self['image_url'].blank?
+
+    # TODO: save image_hash only and concatenate with ipfs hosting provider
+    image_hash = self['image_url'].split('/').last
+
+    IpfsService.image_url_from_hash(image_hash)
   end
 
   def eth_data(refresh: false)
