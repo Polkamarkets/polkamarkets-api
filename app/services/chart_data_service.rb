@@ -1,8 +1,9 @@
 class ChartDataService
   attr_accessor :items_arr, :item_key
 
+  DEFAULT_TIMEFRAME = '7d'
+
   TIMEFRAMES = {
-    "1h" => 1.hours,
     "24h" => 24.hours,
     "7d" => 7.days,
     "30d" => 30.days,
@@ -77,12 +78,10 @@ class ChartDataService
 
   def self.step_for(timeframe)
     case timeframe
-    when '1h' # 12 candles
-      5.minutes
     when '24h' # 24 candles
       1.hour
-    when '7d' # 28 candles
-      6.hours
+    when '7d' # 14 candles
+      12.hours
     when '30d' # 30 candles
       1.day
     when 'all'
@@ -95,19 +94,12 @@ class ChartDataService
   def self.previous_datetime_for(timeframe)
     # TODO: double check timezones issue
     case timeframe
-    when '1h'
-      datetime = DateTime.now.beginning_of_minute
-      # making sure minute is a multiple of 5
-      until datetime.minute % 5 == 0 do
-        datetime = datetime - 1.minute
-      end
-      datetime
     when '24h'
       datetime = DateTime.now.beginning_of_hour
     when '7d'
       datetime = DateTime.now.beginning_of_hour
-      # making sure hour is a multiple of 6
-      until datetime.hour % 6 == 0 do
+      # making sure hour is a multiple of 12
+      until datetime.hour % 12 == 0 do
         datetime = datetime - 1.hour
       end
       datetime
