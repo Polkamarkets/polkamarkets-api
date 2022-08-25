@@ -19,10 +19,10 @@ class MarketOutcome < ApplicationRecord
     @eth_data = market_eth_data[:outcomes].find { |outcome| outcome[:id].to_s == eth_market_id.to_s }
   end
 
-  def price_charts(refresh: false)
+  def price_charts(refresh: false, simplified: false)
     return nil if eth_market_id.blank? || market.eth_market_id.blank?
 
-    timeframes = ChartDataService::TIMEFRAMES.keys
+    timeframes = simplified ? [ChartDataService::DEFAULT_TIMEFRAME] : ChartDataService::TIMEFRAMES.keys
 
     timeframes.map do |timeframe|
       expires_at = ChartDataService.next_datetime_for(timeframe)
@@ -66,6 +66,12 @@ class MarketOutcome < ApplicationRecord
     return nil if eth_data.blank?
 
     eth_data[:price]
+  end
+
+  def price_change_24h
+    return 0.0 if price_charts.blank?
+
+    price_charts.find { |chart| chart[:timeframe] == '24h' }[:change_percent]
   end
 
   def shares

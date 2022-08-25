@@ -23,14 +23,14 @@ module Api
         end
       end
 
-      render json: markets, status: :ok
+      render json: markets, scope: { simplified_price_charts: true }, status: :ok
     end
 
     def show
       # finding items by eth market id
       market = Market.find_by_slug_or_eth_market_id(params[:id], params[:network_id])
 
-      render json: market, status: :ok
+      render json: market, scope: { show_price_charts: true }, status: :ok
     end
 
     def create
