@@ -4,7 +4,8 @@ class MarketOutcomeSerializer < ActiveModel::Serializer
     :market_id,
     :title,
     :shares,
-    :price
+    :price,
+    :price_change_24h
   )
 
   attribute :price_charts, if: :show_price_charts?
