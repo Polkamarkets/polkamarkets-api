@@ -68,6 +68,12 @@ class MarketOutcome < ApplicationRecord
     eth_data[:price]
   end
 
+  def price_change_24h
+    return 0.0 if price_charts.blank?
+
+    price_charts.find { |chart| chart[:timeframe] == '24h' }[:change_percent]
+  end
+
   def shares
     return nil if eth_data.blank?
 
