@@ -31,7 +31,7 @@ class MarketOutcomeSerializer < ActiveModel::Serializer
       simplified_price_charts? && !object.market.resolved?
   end
 
-  def simplified_price_charts? 
+  def simplified_price_charts?
     !!scope&.dig(:simplified_price_charts)
   end
 end
