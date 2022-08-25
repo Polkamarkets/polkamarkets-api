@@ -68,10 +68,15 @@ class MarketOutcome < ApplicationRecord
     eth_data[:price]
   end
 
-  def price_change_24h
-    return 0.0 if price_charts.blank?
-
-    price_charts.find { |chart| chart[:timeframe] == '24h' }[:change_percent]
+  def price_change_24h(refresh: false)
+    Rails.cache.fetch(
+      "markets:network_#{market.network_id}:#{market.eth_market_id}:outcomes:#{eth_market_id}:price_change_24h",
+      expires_in: market.cache_ttl,
+      force: refresh
+    ) do
+      pc = price_charts
+      pc.blank? ? 0.0 : pc.find { |chart| chart[:timeframe] == '24h' }[:change_percent]
+    end
   end
 
   def shares
