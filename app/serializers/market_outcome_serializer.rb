@@ -1,4 +1,6 @@
 class MarketOutcomeSerializer < ActiveModel::Serializer
+  cache expires_in: 24.hours
+
   attributes(
     :id,
     :market_id,
