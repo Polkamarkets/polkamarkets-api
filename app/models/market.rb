@@ -273,6 +273,9 @@ class Market < ApplicationRecord
     # disabling cache delete for now
     # $redis_store.keys("markets:#{eth_market_id}*").each { |key| $redis_store.del key }
 
+    # deleting from active serializer cache
+    $redis_store.keys("markets/#{id}*").each { |key| $redis_store.del key }
+
     # triggering a refresh for all cached ethereum data
     Cache::MarketEthDataWorker.perform_async(id)
     Cache::MarketOutcomePricesWorker.perform_async(id)
