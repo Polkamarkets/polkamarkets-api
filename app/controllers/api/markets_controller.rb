@@ -23,7 +23,7 @@ module Api
         end
       end
 
-      render json: markets, scope: { simplified_price_charts: true }, status: :ok
+      render json: markets, scope: { show_price_charts: true }, status: :ok
     end
 
     def show
