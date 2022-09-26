@@ -29,7 +29,7 @@ direnv allow
 bundle install
 rails db:create
 rails db:migrate
-rails eth:sync_db # syncs data from smart contract to local database
+rails markets:check_new_markets # syncs data from smart contract to local database
 ```
 
 ### 3. Running the app
