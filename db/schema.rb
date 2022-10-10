@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2022_06_13_195224) do
+ActiveRecord::Schema.define(version: 2022_10_10_174812) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -99,7 +99,15 @@ ActiveRecord::Schema.define(version: 2022_06_13_195224) do
     t.index ["eth_address", "network_id"], name: "index_portfolios_on_eth_address_and_network_id", unique: true
   end
 
+  create_table "votes", force: :cascade do |t|
+    t.integer "upvotes", default: 0
+    t.integer "downvotes", default: 0
+    t.bigint "market_id", null: false
+    t.index ["market_id"], name: "index_votes_on_market_id", unique: true
+  end
+
   add_foreign_key "achievement_tokens", "achievements"
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "market_outcomes", "markets"
+  add_foreign_key "votes", "markets"
 end
