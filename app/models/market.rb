@@ -8,8 +8,6 @@ class Market < ApplicationRecord
 
   has_many :outcomes, -> { order('eth_market_id ASC, created_at ASC') }, class_name: "MarketOutcome", dependent: :destroy, inverse_of: :market
 
-  has_one :vote
-
   has_one_attached :image
 
   validates :outcomes, length: { minimum: 2, maximum: 2 } # currently supporting only binary markets

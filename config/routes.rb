@@ -23,7 +23,6 @@ Rails.application.routes.draw do
       member do
         post :reload
       end
-      post 'votes/reload', action: :reload, controller: :votes
     end
 
     resources :portfolios, only: [:show] do
