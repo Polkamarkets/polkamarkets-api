@@ -1,7 +1,5 @@
 module Bepro
   class VotingContractService < SmartContractService
-    include BigNumberHelper
-
     def initialize(network_id: nil, api_url: nil, contract_address: nil)
       super(
         contract_name: 'voting',
