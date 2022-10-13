@@ -14,7 +14,10 @@ module Bepro
       )
     end
 
-    def get_vote(market_id)
+    def get_votes(market_id)
+      # if contract is not deployed, returning 0 data structure as default
+      return { upvotes: 0, downvotes: 0 } unless contract_address
+
       vote_data = call(method: 'getItemVotes', args: market_id)
 
       {

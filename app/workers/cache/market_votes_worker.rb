@@ -1,10 +1,10 @@
-class Cache::MarketVoteWorker
+class Cache::MarketVotesWorker
   include Sidekiq::Worker
 
   def perform(market_id)
     market = Market.find(market_id)
     return if market.blank?
 
-    market.vote(refresh: true)
+    market.votes(refresh: true)
   end
 end
