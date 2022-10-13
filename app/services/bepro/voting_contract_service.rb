@@ -16,13 +16,13 @@ module Bepro
 
     def get_votes(market_id)
       # if contract is not deployed, returning 0 data structure as default
-      return { upvotes: 0, downvotes: 0 } if contract_address.blank?
+      return { up: 0, down: 0 } if contract_address.blank?
 
       vote_data = call(method: 'getItemVotes', args: market_id)
 
       {
-        upvotes: vote_data[0].to_i,
-        downvotes: vote_data[1].to_i
+        up: vote_data[0].to_i,
+        down: vote_data[1].to_i
       }
     end
   end
