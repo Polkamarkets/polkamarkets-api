@@ -21,8 +21,8 @@ module Bepro
       vote_data = call(method: 'getItemVotes', args: market_id)
 
       {
-        upvotes: vote_data[0],
-        downvotes: vote_data[1]
+        upvotes: vote_data[0].to_i,
+        downvotes: vote_data[1].to_i
       }
     end
   end
