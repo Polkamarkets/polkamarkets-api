@@ -286,6 +286,7 @@ class Market < ApplicationRecord
     Cache::MarketPricesWorker.perform_async(id)
     Cache::MarketLiquidityPricesWorker.perform_async(id)
     Cache::MarketQuestionDataWorker.perform_async(id)
+    Cache::MarketVotesWorker.perform_async(id)
   end
 
   def refresh_news!
@@ -312,6 +313,13 @@ class Market < ApplicationRecord
   def question_data(refresh: false)
     Rails.cache.fetch("markets:network_#{network_id}:#{eth_market_id}:question", expires_in: cache_ttl, force: refresh) do
       Bepro::RealitioErc20ContractService.new(network_id: network_id).get_question(question_id)
+    end
+  end
+
+  # vote data
+  def votes(refresh: false)
+    Rails.cache.fetch("markets:network_#{network_id}:#{eth_market_id}:votes", expires_in: cache_ttl, force: refresh) do
+      Bepro::VotingContractService.new(network_id: network_id).get_votes(eth_market_id)
     end
   end
 

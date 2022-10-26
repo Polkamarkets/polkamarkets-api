@@ -4,7 +4,8 @@ module Bepro
       'predictionMarket',
       'erc20',
       'realitio',
-      'achievements'
+      'achievements',
+      'voting'
     ].freeze
 
     attr_accessor :contract_name, :contract_address, :api_url
