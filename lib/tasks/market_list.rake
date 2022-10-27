@@ -6,6 +6,11 @@ namespace :market_list do
     Rails.application.config_for(:ethereum).network_ids.each do |network_id|
       market_ids = Market.where(eth_market_id: market_list.market_ids(network_id.to_i)).pluck(:id)
       market_ids += Market.where(slug: market_list.market_slugs(network_id.to_i)).pluck(:id)
+      # fetching all markets with a positive delta of votes
+      market_ids += Market.where(network_id: network_id).select do |market|
+        market.votes_delta >= Rails.application.config_for(:ethereum).voting_delta
+      end.pluck(:id)
+
       market_ids.uniq!
 
       Market.where(network_id: network_id).where(id: market_ids).update_all(verified: true)
