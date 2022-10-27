@@ -323,6 +323,10 @@ class Market < ApplicationRecord
     end
   end
 
+  def votes_delta
+    votes[:up] - votes[:down]
+  end
+
   def polkamarkets_web_url
     "#{Rails.application.config_for(:polkamarkets).web_url}/markets/#{slug}"
   end
