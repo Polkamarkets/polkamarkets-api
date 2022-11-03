@@ -57,8 +57,8 @@ class Market < ApplicationRecord
     MarketBannerWorker.perform_async(market.id)
 
     # triggering workers to upgrade cache data
-    market.refresh_cache!
-    market.refresh_news!
+    market.refresh_cache!(queue: 'critical')
+    market.refresh_news!(queue: 'critical')
 
     # triggering discord bot 5 minutes later (so it allows banner image to be updated)
     Discord::PublishMarketCreatedWorker.perform_in(5.minutes, market.id)
@@ -269,28 +269,20 @@ class Market < ApplicationRecord
     end
   end
 
-  def refresh_cache!
-    # disabling cache delete for now
-    # $redis_store.keys("markets:#{eth_market_id}*").each { |key| $redis_store.del key }
-
-    # deleting from active serializer cache
-    $redis_store.keys("markets/#{id}*").each { |key| $redis_store.del key }
-    outcomes.each do |outcome|
-      $redis_store.keys("market_outcomes/#{outcome.id}*").each { |key| $redis_store.del key }
-    end
-
+  def refresh_cache!(queue: 'default')
     # triggering a refresh for all cached ethereum data
-    Cache::MarketEthDataWorker.perform_async(id)
-    Cache::MarketOutcomePricesWorker.perform_async(id)
-    Cache::MarketActionEventsWorker.perform_async(id)
-    Cache::MarketPricesWorker.perform_async(id)
-    Cache::MarketLiquidityPricesWorker.perform_async(id)
-    Cache::MarketQuestionDataWorker.perform_async(id)
-    Cache::MarketVotesWorker.perform_async(id)
+    Cache::MarketCacheDeleteWorker.set(queue: queue).perform_async(id)
+    Cache::MarketEthDataWorker.set(queue: queue).perform_async(id)
+    Cache::MarketOutcomePricesWorker.set(queue: queue).perform_async(id)
+    Cache::MarketActionEventsWorker.set(queue: queue).perform_async(id)
+    Cache::MarketPricesWorker.set(queue: queue).perform_async(id)
+    Cache::MarketLiquidityPricesWorker.set(queue: queue).perform_async(id)
+    Cache::MarketQuestionDataWorker.set(queue: queue).perform_async(id)
+    Cache::MarketVotesWorker.set(queue: queue).perform_async(id)
   end
 
-  def refresh_news!
-    Cache::MarketNewsWorker.perform_async(id)
+  def refresh_news!(queue: 'default')
+    Cache::MarketNewsWorker.set(queue: queue).perform_async(id)
   end
 
   def image_url

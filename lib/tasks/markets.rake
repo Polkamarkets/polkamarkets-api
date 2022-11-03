@@ -33,11 +33,11 @@ namespace :markets do
 
   desc "refreshes eth cache of markets"
   task :refresh_cache, [:symbol] => :environment do |task, args|
-    Market.all.each { |m| m.refresh_cache! }
+    Market.all.each { |m| m.refresh_cache!(queue: 'low') }
   end
 
   desc "refreshes markets news"
   task :refresh_news, [:symbol] => :environment do |task, args|
-    Market.all.each { |m| m.refresh_news! }
+    Market.all.each { |m| m.refresh_news!(queue: 'low') }
   end
 end
