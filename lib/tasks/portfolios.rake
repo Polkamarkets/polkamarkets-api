@@ -12,7 +12,7 @@ namespace :portfolios do
       eth_addresses = actions.map { |a| a[:address].downcase }.uniq
       eth_addresses.each do |eth_address|
         portfolio = Portfolio.find_or_create_by!(eth_address: eth_address.downcase, network_id: network_id)
-        portfolio.refresh_cache!
+        portfolio.refresh_cache!(queue: 'low')
       end
     end
   end

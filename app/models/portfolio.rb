@@ -303,13 +303,13 @@ class Portfolio < ApplicationRecord
     holdings_timeline.select { |holding| holding[:timestamp] < timestamp }.max_by { |holding| holding[:timestamp] }
   end
 
-  def refresh_cache!
+  def refresh_cache!(queue: 'default')
     # disabling cache delete for now
     # $redis_store.keys("portfolios:#{eth_address}*").each { |key| $redis_store.del key }
 
     # triggering a refresh for all cached ethereum data
-    Cache::PortfolioActionEventsWorker.perform_async(id)
-    Cache::PortfolioLiquidityFeesWorker.perform_async(id)
-    Cache::PortfolioFeedWorker.perform_async(id)
+    Cache::PortfolioActionEventsWorker.set(queue: queue).perform_async(id)
+    Cache::PortfolioLiquidityFeesWorker.set(queue: queue).perform_async(id)
+    Cache::PortfolioFeedWorker.set(queue: queue).perform_async(id)
   end
 end

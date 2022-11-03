@@ -19,7 +19,7 @@ namespace :market_list do
 
       # triggering a cache refresh for all markets that have been verified
       Market.where(id: market_ids_to_verify).each do |market|
-        market.refresh_cache!
+        market.refresh_cache!(queue: 'critical')
       end
     end
   end
