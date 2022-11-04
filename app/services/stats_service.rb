@@ -271,6 +271,7 @@ class StatsService
           network_id = network[:network_id]
           actions = network_actions(network_id)
           bonds = network_bonds(network_id)
+          votes = network_votes(network_id)
           market_ids = actions.map { |action| action[:market_id] }.uniq
 
           create_market_actions = market_ids.map do |market_id|
@@ -294,9 +295,30 @@ class StatsService
               (!to || action[:timestamp] <= to)
           end
 
+          upvote_actions = votes.select do |action|
+            action[:action] == 'upvote' &&
+              (!from || action[:timestamp] >= from) &&
+              (!to || action[:timestamp] <= to)
+          end
+
+          downvote_actions = votes.select do |action|
+            action[:action] == 'downvote' &&
+              (!from || action[:timestamp] >= from) &&
+              (!to || action[:timestamp] <= to)
+          end
+
           # grouping actions by intervals
           actions_by_user = actions.group_by do |action|
             action[:address]
+          end
+
+          # adding any missing users from voting actions or bonds to the leaderboard
+          users = upvote_actions.map { |a| a[:user] } +
+            downvote_actions.map { |a| a[:user] } +
+            bonds.map { |a| a[:user] }
+
+          users.uniq.each do |user|
+            actions_by_user[user] ||= []
           end
 
           # fetching rate and fee values to avoid multiple API calls
@@ -325,7 +347,9 @@ class StatsService
                 tvl_liquidity: volume_by_tx_action['add_liquidity'] - volume_by_tx_action['remove_liquidity'],
                 bond_volume: bonds.select { |bond| bond[:user] == user }.sum { |bond| bond[:value] },
                 claim_winnings_count: user_actions.select { |a| a[:action] == 'claim_winnings' }.count,
-                transactions: user_actions.count
+                transactions: user_actions.count,
+                upvotes: upvote_actions.select { |action| action[:user] == user }.count,
+                downvotes: downvote_actions.select { |action| action[:user] == user }.count,
               }
             end
           ]
