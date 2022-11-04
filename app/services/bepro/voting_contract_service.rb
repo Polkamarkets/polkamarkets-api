@@ -1,5 +1,12 @@
 module Bepro
   class VotingContractService < SmartContractService
+    ACTIONS_MAPPING = {
+      0 => 'upvote',
+      1 => 'remove_upvote',
+      2 => 'downvote',
+      3 => 'remove_downvote',
+    }.freeze
+
     def initialize(network_id: nil, api_url: nil, contract_address: nil)
       super(
         contract_name: 'voting',
@@ -24,6 +31,28 @@ module Bepro
         up: vote_data[0].to_i,
         down: vote_data[1].to_i
       }
+    end
+
+    def get_voting_events(question_id: nil, user: nil)
+      # if contract is not deployed, returning [] as default
+      return [] if contract_address.blank?
+
+      events = get_events(
+        event_name: 'ItemVoteAction',
+        filter: {
+          question_id: question_id,
+          user: user,
+        }
+      )
+
+      events.map do |event|
+        {
+          user: event['returnValues']['user'],
+          item_id: event['returnValues']['itemId'],
+          action: ACTIONS_MAPPING[event['returnValues']['action'].to_i],
+          timestamp: event['returnValues']['timestamp'].to_i,
+        }
+      end
     end
   end
 end
