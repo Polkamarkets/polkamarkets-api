@@ -16,4 +16,10 @@ module NetworkHelper
       Bepro::RealitioErc20ContractService.new(network_id: network_id).get_bond_events
     end
   end
+
+  def network_votes(network_id)
+    Rails.cache.fetch("api:votes:#{network_id}", expires_in: 24.hours) do
+      Bepro::VotingContractService.new(network_id: network_id).get_voting_events
+    end
+  end
 end

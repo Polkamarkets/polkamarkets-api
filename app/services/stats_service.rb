@@ -17,6 +17,16 @@ class StatsService
     '1m' => 'month'
   }.freeze
 
+  LEADERBOARD_PARAMS = {
+    :volume => 3,
+    :tvl_volume => 3,
+    :tvl_liquidity => 3,
+    :verified_markets_created => 3,
+    :bond_volume => 5,
+    :upvotes => 10,
+    :downvotes => 10
+  }.freeze
+
   def initialize
     # ethereum networks - markets are monitored within the api
     ethereum_networks = network_ids.map do |network_id|
@@ -259,17 +269,19 @@ class StatsService
     stats_by_timeframe
   end
 
-  def get_leaderboard(timeframe:, refresh: false)
+  def get_leaderboard(timeframe:, refresh: false, timestamp: Time.now.to_i)
     raise "Invalid timeframe: #{timeframe}" unless TIMEFRAMES.key?(timeframe)
 
-    from = timestamp_from(Time.now.to_i, timeframe)
-    to = timestamp_to(Time.now.to_i, timeframe)
+    from = timestamp_from(timestamp, timeframe)
+    to = timestamp_to(timestamp, timeframe)
 
     leaderboard =
-      Rails.cache.fetch("api:leaderboard:#{timeframe}", expires_in: 24.hours, force: refresh) do
+      Rails.cache.fetch("api:leaderboard:#{timeframe}:#{from}:#{to}", expires_in: 24.hours, force: refresh) do
         networks.to_h do |network|
           network_id = network[:network_id]
           actions = network_actions(network_id)
+          bonds = network_bonds(network_id)
+          votes = network_votes(network_id)
           market_ids = actions.map { |action| action[:market_id] }.uniq
 
           create_market_actions = market_ids.map do |market_id|
@@ -283,14 +295,40 @@ class StatsService
               (!to || action[:timestamp] <= to)
           end
 
+          bonds.select! do |bond|
+            (!from || bond[:timestamp] >= from) &&
+              (!to || bond[:timestamp] <= to)
+          end
+
           create_market_actions.select! do |action|
             (!from || action[:timestamp] >= from) &&
+              (!to || action[:timestamp] <= to)
+          end
+
+          upvote_actions = votes.select do |action|
+            action[:action] == 'upvote' &&
+              (!from || action[:timestamp] >= from) &&
+              (!to || action[:timestamp] <= to)
+          end
+
+          downvote_actions = votes.select do |action|
+            action[:action] == 'downvote' &&
+              (!from || action[:timestamp] >= from) &&
               (!to || action[:timestamp] <= to)
           end
 
           # grouping actions by intervals
           actions_by_user = actions.group_by do |action|
             action[:address]
+          end
+
+          # adding any missing users from voting actions or bonds to the leaderboard
+          users = upvote_actions.map { |a| a[:user] } +
+            downvote_actions.map { |a| a[:user] } +
+            bonds.map { |a| a[:user] }
+
+          users.uniq.each do |user|
+            actions_by_user[user] ||= []
           end
 
           # fetching rate and fee values to avoid multiple API calls
@@ -312,12 +350,16 @@ class StatsService
                 user: user,
                 ens: EnsService.new.cached_ens_domain(address: user),
                 markets_created: create_market_actions.select { |action| action[:address] == user }.count,
+                verified_markets_created: create_market_actions.select { |action| action[:address] == user && network_verified_market_ids(network_id).include?(action[:market_id]) }.count,
                 volume: volume_by_tx_action['buy'] + volume_by_tx_action['sell'] + volume_by_tx_action['add_liquidity'] + volume_by_tx_action['remove_liquidity'],
                 tvl_volume: volume_by_tx_action['buy'] - volume_by_tx_action['sell'],
                 liquidity: volume_by_tx_action['add_liquidity'] + volume_by_tx_action['remove_liquidity'],
                 tvl_liquidity: volume_by_tx_action['add_liquidity'] - volume_by_tx_action['remove_liquidity'],
+                bond_volume: bonds.select { |bond| bond[:user] == user }.sum { |bond| bond[:value] },
                 claim_winnings_count: user_actions.select { |a| a[:action] == 'claim_winnings' }.count,
-                transactions: user_actions.count
+                transactions: user_actions.count,
+                upvotes: upvote_actions.select { |action| action[:user] == user }.count,
+                downvotes: downvote_actions.select { |action| action[:user] == user }.count,
               }
             end
           ]
@@ -364,6 +406,21 @@ class StatsService
     @_network_ids ||= Rails.application.config_for(:ethereum).network_ids
   end
 
+  def network_verified_market_ids(network_id)
+    return @network_verified_market_ids&.dig(network_id) if @network_verified_market_ids&.dig(network_id).present?
+
+    @network_verified_market_ids ||= {}
+
+    market_ids = Market.where(network_id: network_id).where(eth_market_id: market_list.market_ids(network_id.to_i)).pluck(:eth_market_id)
+    market_ids += Market.where(slug: market_list.market_slugs(network_id.to_i)).pluck(:eth_market_id)
+    # fetching all markets with a positive delta of votes
+    market_ids += Market.where(network_id: network_id).select do |market|
+      market.votes_delta >= Rails.application.config_for(:ethereum).voting_delta
+    end.pluck(:eth_market_id)
+
+    @network_verified_market_ids[network_id] = market_ids.uniq
+  end
+
   def stats_network_ids
     @_stats_network_ids ||= Rails.application.config_for(:ethereum).stats_network_ids
   end
@@ -374,5 +431,9 @@ class StatsService
 
   def markets_by_category
     @_markets_by_category ||= Market.all.group_by(&:category)
+  end
+
+  def market_list
+    @_market_list ||= MarketListService.new(Rails.application.config_for(:ethereum).market_list_url)
   end
 end
