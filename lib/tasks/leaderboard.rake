@@ -4,7 +4,7 @@ namespace :leaderboard do
     timeframe = args.to_a.present? ? args.to_a[0] : '1w'
     wallets = args.to_a[1..-1].to_a
 
-    timestamp = timeframe == 'at' ? Time.now.to_i : (Time.now - 2.send(StatsService::TIMEFRAMES[timeframe])).to_i
+    timestamp = timeframe == 'at' ? Time.now.to_i : (Time.now - 1.send(StatsService::TIMEFRAMES[timeframe])).to_i
 
     networks_leaderboard = StatsService.new.get_leaderboard(timeframe: timeframe, timestamp: timestamp)
     networks_leaderboard.each do |network_id, leaderboard|
