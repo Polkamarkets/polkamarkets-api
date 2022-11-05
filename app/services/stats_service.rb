@@ -17,6 +17,16 @@ class StatsService
     '1m' => 'month'
   }.freeze
 
+  LEADERBOARD_PARAMS = {
+    :volume => 3,
+    :tvl_volume => 3,
+    :tvl_liquidity => 3,
+    :verified_markets_created => 3,
+    :bond_volume => 5,
+    :upvotes => 10,
+    :downvotes => 10
+  }.freeze
+
   def initialize
     # ethereum networks - markets are monitored within the api
     ethereum_networks = network_ids.map do |network_id|
@@ -401,12 +411,12 @@ class StatsService
 
     @network_verified_market_ids ||= {}
 
-    market_ids = Market.where(network_id: network_id).where(eth_market_id: market_list.market_ids(network_id.to_i)).pluck(:id)
-    market_ids += Market.where(slug: market_list.market_slugs(network_id.to_i)).pluck(:id)
+    market_ids = Market.where(network_id: network_id).where(eth_market_id: market_list.market_ids(network_id.to_i)).pluck(:eth_market_id)
+    market_ids += Market.where(slug: market_list.market_slugs(network_id.to_i)).pluck(:eth_market_id)
     # fetching all markets with a positive delta of votes
     market_ids += Market.where(network_id: network_id).select do |market|
       market.votes_delta >= Rails.application.config_for(:ethereum).voting_delta
-    end.pluck(:id)
+    end.pluck(:eth_market_id)
 
     @network_verified_market_ids[network_id] = market_ids.uniq
   end
