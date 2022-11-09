@@ -21,7 +21,7 @@ module Bepro
 
     def initialize(network_id: nil, api_url: nil, contract_address: nil)
       super(
-        contract_name: 'predictionMarket',
+        contract_name: 'predictionMarketV2',
         contract_address:
           contract_address ||
             Rails.application.config_for(:ethereum).dig(:"network_#{network_id}", :prediction_market_contract_address) ||
