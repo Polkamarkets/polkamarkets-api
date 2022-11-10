@@ -153,14 +153,13 @@ class Portfolio < ApplicationRecord
     @holdings_timeline = []
 
     action_events.each do |action|
+      market = Market.find_by(eth_market_id: action[:market_id], network_id: network_id)
+
       # still no action performed in this market, initializing object
       if holdings[action[:market_id]].blank?
         holdings[action[:market_id]] = {
           liquidity_shares: 0,
-          outcome_shares: {
-            0 => 0,
-            1 => 0
-          }
+          outcome_shares: market.outcomes.map { |outcome| [outcome.eth_market_id, 0] }.to_h,
         }
       end
 
