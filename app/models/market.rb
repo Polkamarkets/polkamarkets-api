@@ -10,7 +10,7 @@ class Market < ApplicationRecord
 
   has_one_attached :image
 
-  validates :outcomes, length: { minimum: 2, maximum: 2 } # currently supporting only binary markets
+  validates :outcomes, length: { minimum: 2 } # currently supporting only binary markets
 
   accepts_nested_attributes_for :outcomes
 
