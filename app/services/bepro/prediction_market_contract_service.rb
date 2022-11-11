@@ -2,6 +2,8 @@ module Bepro
   class PredictionMarketContractService < SmartContractService
     include BigNumberHelper
 
+    attr_accessor :version
+
     ACTIONS_MAPPING = {
       0 => 'buy',
       1 => 'sell',
@@ -19,9 +21,11 @@ module Bepro
       2 => 'resolved',
     }
 
-    def initialize(network_id: nil, api_url: nil, contract_address: nil)
+    def initialize(network_id: nil, api_url: nil, contract_address: nil, version: 2)
+      @version = version
+
       super(
-        contract_name: 'predictionMarketV2',
+        contract_name: version == 2 ? 'predictionMarketV2' : 'predictionMarket',
         contract_address:
           contract_address ||
             Rails.application.config_for(:ethereum).dig(:"network_#{network_id}", :prediction_market_contract_address) ||
@@ -121,10 +125,13 @@ module Bepro
 
       {
         liquidity_price: from_big_number_to_float(market_prices[0]),
-        outcome_shares: {
-          0 => from_big_number_to_float(market_prices[1]),
-          1 => from_big_number_to_float(market_prices[2])
-        }
+        outcome_shares:
+          version == 2 ?
+            market_prices[1].each_with_index.map { |price, i| from_big_number_to_float(price) } :
+            {
+              0 => from_big_number_to_float(market_prices[1]),
+              1 => from_big_number_to_float(market_prices[2])
+            }
       }
     end
 
@@ -136,10 +143,13 @@ module Bepro
         market_id: market_id,
         address: address,
         liquidity_shares: from_big_number_to_float(user_data[0]),
-        outcome_shares: {
-          0 => from_big_number_to_float(user_data[1]),
-          1 => from_big_number_to_float(user_data[2])
-        }
+        outcome_shares:
+          version == 2 ?
+            user_data[1].each_with_index.map { |share, i| [i, from_big_number_to_float(share)] }.to_h :
+            {
+              0 => from_big_number_to_float(user_data[1]),
+              1 => from_big_number_to_float(user_data[2])
+            }
       }
     end
 
