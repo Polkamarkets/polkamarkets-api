@@ -39,17 +39,36 @@ module Bepro
       end
     end
 
-    def get_events(event_name:, filter: {})
-      uri = api_url + "/events?contract=#{contract_name}&address=#{contract_address}&eventName=#{event_name}"
-      uri << "&filter=#{filter.to_json}" if filter.present?
+    def get_events(event_name:, filter: {}, paginated: false)
+      base_uri = api_url + "/events?contract=#{contract_name}&address=#{contract_address}&eventName=#{event_name}"
+      base_uri << "&filter=#{filter.to_json}" if filter.present?
 
-      response = HTTP.get(uri)
+      per_page = 1000
+      page = 1
+      finished = false
+      events = []
 
-      unless response.status.success?
-        raise "BeproService #{response.status} :: #{response.body.to_s}; uri: #{uri}"
+      until finished do
+        uri = paginated ? base_uri + "&perPage=#{per_page}&page=#{page}" : base_uri
+
+        response = HTTP.get(uri)
+
+        unless response.status.success?
+          raise "BeproService #{response.status} :: #{response.body.to_s}; uri: #{uri}"
+        end
+
+        response_parsed = JSON.parse(response.body.to_s)
+        events += response_parsed
+
+        if paginated then
+          finished = response_parsed.count < per_page
+          page += 1
+        else
+          finished = true
+        end
       end
 
-      JSON.parse(response.body.to_s)
+      events
     end
 
     def refresh_events(event_name:, filter: {})
