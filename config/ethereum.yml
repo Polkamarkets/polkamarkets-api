@@ -6,6 +6,7 @@ default: &default
       realitio_contract_address: "<%= ENV["ETHEREUM_NETWORK_#{network_id}_REALITIO_ERC20_CONTRACT_ADDRESS"].to_s %>"
       achievements_contract_address: "<%= ENV["ETHEREUM_NETWORK_#{network_id}_ACHIEVEMENTS_CONTRACT_ADDRESS"].to_s %>"
       voting_contract_address: "<%= ENV["ETHEREUM_NETWORK_#{network_id}_VOTING_CONTRACT_ADDRESS"].to_s %>"
+      prediction_market_resolver_subgraph: "<%= ENV["ETHEREUM_NETWORK_#{network_id}_PREDICTION_MARKET_RESOLVER_SUBGRAPH"].to_s %>"
       image_url: "<%= ENV["ETHEREUM_NETWORK_#{network_id}_IMAGE_URL"].to_s %>"
   <% end %>
   <% ENV["STATS_NETWORK_IDS"].to_s.split(',') do |network_id| %>

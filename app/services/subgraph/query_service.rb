@@ -1,7 +1,7 @@
 module Subgraph
   class QueryService
     SUBGRAPHS = [
-      # TO ADD
+      'predictionMarketResolver'
     ].freeze
 
     attr_accessor :subgraph_url
