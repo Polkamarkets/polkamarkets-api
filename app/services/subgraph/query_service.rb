@@ -1,5 +1,5 @@
 module Subgraph
-  class SmartContractService
+  class QueryService
     SUBGRAPHS = [
       # TO ADD
     ].freeze
