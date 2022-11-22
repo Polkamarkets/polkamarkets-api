@@ -347,6 +347,8 @@ class StatsService
                 ]
               end
 
+              erc20_balance = network_erc20_balance(network_id, user)
+
               {
                 user: user,
                 ens: EnsService.new.cached_ens_domain(address: user),
@@ -367,6 +369,7 @@ class StatsService
                 transactions: user_actions.count,
                 upvotes: upvote_actions.select { |action| action[:user] == user }.count,
                 downvotes: downvote_actions.select { |action| action[:user] == user }.count,
+                erc20_balance: erc20_balance,
               }
             end
           ]

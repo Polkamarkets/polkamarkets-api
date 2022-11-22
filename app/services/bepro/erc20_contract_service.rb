@@ -17,6 +17,9 @@ module Bepro
     end
 
     def balance_of(user)
+      # if contract is not deployed, returning 0 as default
+      return 0 if contract_address.blank?
+
       from_big_number_to_float(call(method: 'balanceOf', args: user))
     end
   end

@@ -311,6 +311,12 @@ class Portfolio < ApplicationRecord
     holdings_timeline.select { |holding| holding[:timestamp] < timestamp }.max_by { |holding| holding[:timestamp] }
   end
 
+  def erc20_balance
+    Rails.cache.fetch("portfolios:network_#{network_id}:#{eth_address}:erc20_balance", expires_in: 24.hours, force: refresh) do
+      Bepro::Erc20ContractService.new(network_id: network_id).balance_of(eth_address)
+    end
+  end
+
   def refresh_cache!(queue: 'default')
     # disabling cache delete for now
     # $redis_store.keys("portfolios:#{eth_address}*").each { |key| $redis_store.del key }
