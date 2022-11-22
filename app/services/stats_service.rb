@@ -282,6 +282,7 @@ class StatsService
           actions = network_actions(network_id)
           bonds = network_bonds(network_id)
           votes = network_votes(network_id)
+          markets_resolved = subgraph_market_resolved_actions(network_id)
           market_ids = actions.map { |action| action[:market_id] }.uniq
 
           create_market_actions = market_ids.map do |market_id|
@@ -356,7 +357,13 @@ class StatsService
                 liquidity: volume_by_tx_action['add_liquidity'] + volume_by_tx_action['remove_liquidity'],
                 tvl_liquidity: volume_by_tx_action['add_liquidity'] - volume_by_tx_action['remove_liquidity'],
                 bond_volume: bonds.select { |bond| bond[:user] == user }.sum { |bond| bond[:value] },
-                claim_winnings_count: user_actions.select { |a| a[:action] == 'claim_winnings' }.count,
+                claim_winnings_count: user_actions
+                  .select { |action| action[:action] == 'buy' }
+                  .select do |action|
+                    markets_resolved.any? do |market|
+                      market[:market_id] == action[:market_id] && market[:outcome_id] == action[:outcome_id]
+                    end
+                  end.map { |market| market[:market_id] }.uniq.count,
                 transactions: user_actions.count,
                 upvotes: upvote_actions.select { |action| action[:user] == user }.count,
                 downvotes: downvote_actions.select { |action| action[:user] == user }.count,
