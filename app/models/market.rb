@@ -1,5 +1,7 @@
 class Market < ApplicationRecord
   include Immutable
+  include NetworkHelper
+
   extend FriendlyId
   friendly_id :title, use: :slugged
 
@@ -87,7 +89,7 @@ class Market < ApplicationRecord
   end
 
   def resolved?
-    closed? && eth_data[:state] == 'resolved'
+    closed? && state == 'resolved'
   end
 
   def expires_at
@@ -108,15 +110,21 @@ class Market < ApplicationRecord
     state = eth_data[:state]
 
     # market already closed, manually sending closed
-    return 'closed' if eth_data[:state] == 'open' && closed?
+    state = 'closed' if eth_data[:state] == 'open' && closed?
 
-    state
+    # using predictionMarketResolver subgraph to determine if market is resolved
+    markets_resolved = subgraph_market_resolved_actions(network_id)
+
+    markets_resolved.map { |m| m[:market_id] }.include?(eth_market_id) ? 'resolved' : state
   end
 
   def resolved_outcome_id
     return nil if eth_data.blank?
 
-    eth_data[:resolved_outcome_id]
+    return -1 if !resolved?
+
+    markets_resolved = subgraph_market_resolved_actions(network_id)
+    markets_resolved.find { |m| m[:market_id] == eth_market_id }[:outcome_id]
   end
 
   def question_id
@@ -166,10 +174,10 @@ class Market < ApplicationRecord
   end
 
   def resolved_at(refresh: false)
-    return -1 if eth_market_id.blank?
+    return -1 if !resolved?
 
     Rails.cache.fetch("markets:network_#{network_id}:#{eth_market_id}:resolved_at", expires_in: cache_ttl, force: refresh) do
-      Bepro::PredictionMarketContractService.new(network_id: network_id).get_market_resolved_at(eth_market_id)
+      subgraph_market_resolved_actions(network_id).find { |m| m[:market_id] == eth_market_id }[:timestamp]
     end
   end
 

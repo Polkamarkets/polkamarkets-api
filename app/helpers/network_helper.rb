@@ -22,4 +22,10 @@ module NetworkHelper
       Bepro::VotingContractService.new(network_id: network_id).get_voting_events
     end
   end
+
+  def subgraph_market_resolved_actions(network_id)
+    Rails.cache.fetch("api:market_resolved:#{network_id}", expires_in: 24.hours) do
+      Subgraph::PredictionMarketResolverService.new(network_id: network_id).get_markets_resolved
+    end
+  end
 end

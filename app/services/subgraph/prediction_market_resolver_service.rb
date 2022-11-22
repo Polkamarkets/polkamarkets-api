@@ -12,14 +12,15 @@ module Subgraph
     end
 
     def get_markets_resolved
-      query = "{ marketResolveds { marketId outcomeId } }"
+      query = "{ marketResolveds { marketId outcomeId timestamp } }"
 
       response = query(query: query)
 
       response['marketResolveds'].map do |market_resolved|
         {
           market_id: market_resolved['marketId'].to_i,
-          outcome_id: market_resolved['outcomeId'].to_i
+          outcome_id: market_resolved['outcomeId'].to_i,
+          timestamp: market_resolved['timestamp'].to_i
         }
       end
     end
