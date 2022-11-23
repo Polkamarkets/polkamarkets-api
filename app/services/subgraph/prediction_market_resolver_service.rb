@@ -16,6 +16,8 @@ module Subgraph
 
       response = query(query: query)
 
+      return [] if response.blank?
+
       response['marketResolveds'].map do |market_resolved|
         {
           market_id: market_resolved['marketId'].to_i,

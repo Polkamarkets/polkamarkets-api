@@ -14,6 +14,8 @@ module Subgraph
     end
 
     def query(query:)
+      return {} if subgraph_url.blank?
+
       response = HTTP.post(subgraph_url, json: { query: query })
 
       unless response.status.success?
