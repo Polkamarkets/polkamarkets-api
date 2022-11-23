@@ -282,7 +282,7 @@ class StatsService
           actions = network_actions(network_id)
           bonds = network_bonds(network_id)
           votes = network_votes(network_id)
-          markets_resolved = subgraph_market_resolved_actions(network_id)
+          markets_resolved = network_market_resolved_actions(network_id)
           market_ids = actions.map { |action| action[:market_id] }.uniq
 
           create_market_actions = market_ids.map do |market_id|

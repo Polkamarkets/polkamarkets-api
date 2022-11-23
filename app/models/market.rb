@@ -113,7 +113,7 @@ class Market < ApplicationRecord
     state = 'closed' if eth_data[:state] == 'open' && closed?
 
     # using predictionMarketResolver subgraph to determine if market is resolved
-    markets_resolved = subgraph_market_resolved_actions(network_id)
+    markets_resolved = network_market_resolved_actions(network_id)
 
     markets_resolved.map { |m| m[:market_id] }.include?(eth_market_id) ? 'resolved' : state
   end
@@ -123,7 +123,7 @@ class Market < ApplicationRecord
 
     return -1 if !resolved?
 
-    markets_resolved = subgraph_market_resolved_actions(network_id)
+    markets_resolved = network_market_resolved_actions(network_id)
     markets_resolved.find { |m| m[:market_id] == eth_market_id }[:outcome_id]
   end
 
@@ -177,7 +177,7 @@ class Market < ApplicationRecord
     return -1 if !resolved?
 
     Rails.cache.fetch("markets:network_#{network_id}:#{eth_market_id}:resolved_at", expires_in: cache_ttl, force: refresh) do
-      subgraph_market_resolved_actions(network_id).find { |m| m[:market_id] == eth_market_id }[:timestamp]
+      network_market_resolved_actions(network_id).find { |m| m[:market_id] == eth_market_id }[:timestamp]
     end
   end
 
