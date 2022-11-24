@@ -327,6 +327,16 @@ class Market < ApplicationRecord
     votes[:up] - votes[:down]
   end
 
+  def claims(refresh: false)
+    Rails.cache.fetch("markets:network_#{network_id}:#{eth_market_id}:claims", expires_in: cache_ttl, force: refresh) do
+      Subgraph::PredictionMarketResolverService.new(network_id: network_id).get_market_claims(eth_market_id)
+    end
+  end
+
+  def claims_count
+    claims.count
+  end
+
   def polkamarkets_web_url
     "#{Rails.application.config_for(:polkamarkets).web_url}/markets/#{slug}"
   end
