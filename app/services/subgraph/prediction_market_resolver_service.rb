@@ -12,7 +12,7 @@ module Subgraph
     end
 
     def get_markets_resolved
-      query = "{ marketResolveds { marketId outcomeId timestamp } }"
+      query = "{ marketResolveds(first:1000) { marketId outcomeId timestamp } }"
 
       response = query(query: query)
 
@@ -20,6 +20,23 @@ module Subgraph
 
       response['marketResolveds'].map do |market_resolved|
         {
+          market_id: market_resolved['marketId'].to_i,
+          outcome_id: market_resolved['outcomeId'].to_i,
+          timestamp: market_resolved['timestamp'].to_i
+        }
+      end
+    end
+
+    def get_market_claims(market_id)
+      query = "{ marketClaimeds(first: 1000, where: { marketId: #{market_id} }) { user marketId outcomeId } }"
+
+      response = query(query: query)
+
+      return [] if response.blank?
+
+      response['marketClaimeds'].map do |market_resolved|
+        {
+          user: market_resolved['user'],
           market_id: market_resolved['marketId'].to_i,
           outcome_id: market_resolved['outcomeId'].to_i,
           timestamp: market_resolved['timestamp'].to_i
