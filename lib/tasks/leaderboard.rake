@@ -100,7 +100,9 @@ namespace :leaderboard do
           .map { |address, actions| [address, [actions.map { |a| a[:market_id] }.uniq.count, actions.sum { |a| a[:shares] }]] }
           .sort_by { |address, (count, shares)| [-count, -shares] }
 
-      puts "Wild Baller: #{winning_actions_on_lowest_outcome_markets_by_user.first.first} - #{winning_actions_on_lowest_outcome_markets_by_user.first.last.first} markets, #{winning_actions_on_lowest_outcome_markets_by_user.first.last.last} shares"
+      if winning_actions_on_lowest_outcome_markets_by_user.present?
+        puts "Wild Baller: #{winning_actions_on_lowest_outcome_markets_by_user.first.first} - #{winning_actions_on_lowest_outcome_markets_by_user.first.last.first} markets, #{winning_actions_on_lowest_outcome_markets_by_user.first.last.last} shares"
+      end
 
       # filtering markets where highest outcome price is the winner
       highest_outcome_markets = markets.select do |market|
@@ -118,7 +120,9 @@ namespace :leaderboard do
           .map { |address, actions| [address, [actions.map { |a| a[:market_id] }.uniq.count, actions.sum { |a| a[:shares] }]] }
           .sort_by { |address, (count, shares)| [-count, -shares] }
 
-      puts "Bus Parker: #{winning_actions_on_highest_outcome_markets_by_user.first.first} - #{winning_actions_on_highest_outcome_markets_by_user.first.last.first} markets, #{winning_actions_on_highest_outcome_markets_by_user.first.last.last} shares"
+      if winning_actions_on_highest_outcome_markets_by_user.present?
+        puts "Bus Parker: #{winning_actions_on_highest_outcome_markets_by_user.first.first} - #{winning_actions_on_highest_outcome_markets_by_user.first.last.first} markets, #{winning_actions_on_highest_outcome_markets_by_user.first.last.last} shares"
+      end
     end
   end
 end
