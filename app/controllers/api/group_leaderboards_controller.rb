@@ -8,7 +8,6 @@ module Api
 
     def create
       @group_leaderboard = GroupLeaderboard.new(group_leaderboard_params)
-      binding.pry
 
       if @group_leaderboard.save
         render json: @group_leaderboard, status: :created
