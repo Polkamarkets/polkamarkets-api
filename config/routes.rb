@@ -37,7 +37,7 @@ Rails.application.routes.draw do
     resources :achievements, only: [:index, :show]
     get 'leaderboard' => 'leaderboards#index' # legacy route
     resources :leaderboards, only: [:index, :show]
-    resources :group_leaderboards, only: [:show, :create, :update]
+    resources :group_leaderboards, only: [:index, :show, :create, :update]
 
     get 'achievement_tokens/:network/:id', to: 'achievement_tokens#show'
 
