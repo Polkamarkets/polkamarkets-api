@@ -39,7 +39,9 @@ namespace :leaderboard do
 
       puts "#{network}\n"
 
-      markets = Market.where(network_id: network_id, expires_at: Time.at(start_timestamp)..Time.at(end_timestamp)).all
+      markets = Market
+        .includes(:outcomes)
+        .where(network_id: network_id, expires_at: Time.at(start_timestamp)..Time.at(end_timestamp)).all
 
       actions = Rails.cache.fetch("api:actions:#{network_id}", expires_in: 24.hours) do
         Bepro::PredictionMarketContractService.new(network_id: network_id).get_action_events
