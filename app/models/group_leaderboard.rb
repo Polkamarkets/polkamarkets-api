@@ -9,6 +9,10 @@ class GroupLeaderboard < ApplicationRecord
   validate :created_by_address_validation
   validate :users_addresses_validation
 
+  def as_json(options = nil)
+    super(methods: :image_url)
+  end
+
   def created_by_address_validation
     errors.add(:created_by, 'eth address is not valid') unless eth_address_valid?(created_by)
   end
@@ -17,5 +21,14 @@ class GroupLeaderboard < ApplicationRecord
     users.each do |user|
       errors.add(:users, 'eth address is not valid') unless eth_address_valid?(user)
     end
+  end
+
+  def image_hash
+    # TODO: add image_hash to group_leaderboard
+    'QmdRGv8odwsnafpz49ZayQNhmJzJTaT2kjXrrm6aBMJ1Qw'
+  end
+
+  def image_url
+    IpfsService.image_url_from_hash(image_hash)
   end
 end
