@@ -1,6 +1,6 @@
 module Api
   class GroupLeaderboardsController < BaseController
-    before_action :find_group_leaderboard, only: %i[show update]
+    before_action :find_group_leaderboard, only: %i[show update join]
 
     def index
       # requiring user param
@@ -25,6 +25,25 @@ module Api
 
     def show
       render json: @group_leaderboard, status: :ok
+    end
+
+    def join
+      # requiring user param
+      raise 'User param is required' if !params[:user]
+
+      # checking if user belongs to leaderboard already
+      if @group_leaderboard.users.map(&:downcase).include?(params[:user].downcase)
+        render json: { error: 'User already belongs to leaderboard' }, status: :unprocessable_entity
+        return
+      end
+
+      @group_leaderboard.users << params[:user]
+
+      if @group_leaderboard.save
+        render json: @group_leaderboard, status: :ok
+      else
+        render json: @group_leaderboard.errors, status: :unprocessable_entity
+      end
     end
 
     def create
