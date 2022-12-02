@@ -10,7 +10,7 @@ class GroupLeaderboard < ApplicationRecord
   validate :users_addresses_validation
 
   def as_json(options = nil)
-    super(methods: :image_url)
+    super(methods: :image_url, except: [:image_hash])
   end
 
   def created_by_address_validation
@@ -24,8 +24,7 @@ class GroupLeaderboard < ApplicationRecord
   end
 
   def image_hash
-    # TODO: add image_hash to group_leaderboard
-    'QmdRGv8odwsnafpz49ZayQNhmJzJTaT2kjXrrm6aBMJ1Qw'
+    self['image_hash'] || 'QmdRGv8odwsnafpz49ZayQNhmJzJTaT2kjXrrm6aBMJ1Qw'
   end
 
   def image_url

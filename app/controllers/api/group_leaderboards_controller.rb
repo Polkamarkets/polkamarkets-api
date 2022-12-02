@@ -67,7 +67,7 @@ module Api
     private
 
     def group_leaderboard_params
-      params.require(:group_leaderboard).permit(:title, :slug, :created_by, users: [])
+      params.require(:group_leaderboard).permit(:title, :slug, :created_by, :image_hash, users: [])
     end
 
     def find_group_leaderboard
