@@ -34,4 +34,28 @@ class GroupLeaderboard < ApplicationRecord
   def image_url
     IpfsService.image_url_from_hash(image_hash)
   end
+
+  def update_banner_image
+    banner_image_url = BannerbearService.new.create_group_leaderboard_banner_image(self)
+    self.update(banner_url: banner_image_url)
+  end
+
+  def network_id
+    # TODO add network id to group leaderboards
+    Rails.application.config_for(:ethereum).network_ids.first
+  end
+
+  def leaderboard_users
+    leaderboard = StatsService.new.get_leaderboard(timeframe: 'at')[network_id.to_i] || []
+
+    balances = users.map do |user|
+      {
+        address: user,
+        balance: leaderboard.find { |l| l[:user].downcase == user.downcase }&.dig(:erc20_balance) || 0
+      }
+    end
+
+    # sorting by balance
+    balances.sort_by { |user| -user[:balance] }
+  end
 end

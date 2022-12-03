@@ -69,6 +69,47 @@ class BannerbearService
     create_image(modifications)
   end
 
+  def create_group_leaderboard_banner_image(group_leaderboard)
+    modifications = {
+      template: Rails.application.config_for(:bannerbear).group_leaderboards_template_id,
+      modifications: [
+        {
+          name: "title",
+          text: group_leaderboard.title
+        },
+      ],
+      template_version: Rails.application.config_for(:bannerbear).group_leaderboards_template_version
+    }
+
+    users = group_leaderboard.leaderboard_users
+
+    # fetching leaderboard top 5 users and filling up the template
+    5.times do |i|
+      user = users[i]
+      modifications[:modifications] << {
+        name: "contribution_#{i + 1}",
+        text: user ? "*#{user[:address][0..3]}...#{user[:address][-4..-1]}*" : "**"
+      }
+      modifications[:modifications] << {
+        name: "balance_#{i + 1}",
+        text: user ? "*#{user[:balance].round(0)} $IFL*" : "**"
+      }
+      modifications[:modifications] << {
+        name: "rectangle_#{i + 1}",
+        opacity: user ? 1 : 0
+      }
+
+      if i <= 2
+        modifications[:modifications] << {
+          name: "avatar_#{i + 1}",
+          opacity: user ? 1 : 0
+        }
+      end
+    end
+
+    create_image(modifications)
+  end
+
   def create_image(modifications)
     uri = bannerbear_url + 'images'
 
