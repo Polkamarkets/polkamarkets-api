@@ -9,6 +9,10 @@ class GroupLeaderboard < ApplicationRecord
   validate :created_by_address_validation
   validate :users_addresses_validation
 
+  after_create do
+    GroupLeaderboardBannerWorker.perform_async(id)
+  end
+
   def as_json(options = nil)
     super(methods: :image_url, except: [:image_hash])
   end
