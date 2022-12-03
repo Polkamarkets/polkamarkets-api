@@ -27,16 +27,12 @@ class GroupLeaderboard < ApplicationRecord
     end
   end
 
-  def image_hash
-    self['image_hash'] || 'QmdRGv8odwsnafpz49ZayQNhmJzJTaT2kjXrrm6aBMJ1Qw'
-  end
-
   def banner_url
-    self['banner_url'] || 'https://dl.dropboxusercontent.com/s/oeb7vz4clmnjlv3/ifl-metadata-pic-clubs.png?dl=0'
+    self['banner_url'] || 'https://dl.dropboxusercontent.com/s/bzbwg8hpu52pp8y/ifl-metadata-pic-clubs-v2.png?dl=0'
   end
 
   def image_url
-    IpfsService.image_url_from_hash(image_hash)
+    image_hash.present? ? IpfsService.image_url_from_hash(image_hash) : nil
   end
 
   def update_banner_image
