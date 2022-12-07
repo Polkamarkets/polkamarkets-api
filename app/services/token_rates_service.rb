@@ -28,4 +28,30 @@ class TokenRatesService
       get_rates([token], currency).values.first
     end
   end
+
+  def get_token_rate_at(token, currency, timestamp)
+    rates = get_token_price_history(token, currency)
+
+    # converting timestamp to milliseconds
+    timestamp = timestamp.to_i * 1000
+
+    # fetching first rate right before timestamp
+    rate = rates.reverse.find { |r| r[0] <= timestamp }
+
+    rate[1] || rates.last[1]
+  end
+
+  def get_token_price_history(token, currency)
+    Rails.cache.fetch("rates:#{token}:#{currency}:history", expires_in: 1.hour) do
+      uri = "https://api.coingecko.com/api/v3/coins/#{token}/market_chart?vs_currency=#{currency}&interval=daily&days=max"
+
+      response = HTTP.get(uri)
+
+      unless response.status.success?
+        raise "TokenRatesService #{response.status} :: #{response.body.to_s}"
+      end
+
+      JSON.parse(response.body.to_s)['prices']
+    end
+  end
 end
