@@ -88,8 +88,9 @@ class StatsService
       markets_created = create_market_actions.count
       volume = actions.select { |v| ['buy', 'sell'].include?(v[:action]) }
       bonds_volume = bonds.sum { |bond| bond[:value] }
+      bonds_volume_eur = bonds.sum { |bond| bond[:value] * token_rate_at('polkamarkets', 'eur', bond[:timestamp]) }
       volume_total = volume.sum { |v| v[:value] }
-      volume_eur = volume.sum { |v| v[:value] * rate_at(network_id, 'eur', v[:timestamp]) }
+      volume_eur = volume.sum { |v| v[:value] * network_rate_at(network_id, 'eur', v[:timestamp]) }
       fee = network[:bepro_pm].get_fee
       fees_total = volume_total * fee
       fees_eur = volume_eur * fee
@@ -100,7 +101,7 @@ class StatsService
         {
           markets_created: markets_created,
           bond_volume: bonds_volume,
-          bond_volume_eur: bonds_volume * rates[:polkamarkets],
+          bond_volume_eur: bonds_volume_eur,
           volume: volume_total,
           volume_eur: volume_eur,
           fees: fees_total,
@@ -377,11 +378,15 @@ class StatsService
     rates[token.to_sym]
   end
 
-  def rate_at(network_id, currency, timestamp)
+  def network_rate_at(network_id, currency, timestamp)
     token = TokenRatesService::NETWORK_TOKENS[network_id.to_i]
 
     return 0 if token.blank?
 
+    token_rate_at(token, currency, timestamp)
+  end
+
+  def token_rate_at(token, currency, timestamp)
     TokenRatesService.new.get_token_rate_at(token, currency, timestamp)
   end
 
