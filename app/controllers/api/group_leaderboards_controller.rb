@@ -17,6 +17,7 @@ module Api
           title: group_leaderboard.title,
           slug: group_leaderboard.slug,
           admin: group_leaderboard.created_by.downcase == user,
+          image_url: group_leaderboard.image_url,
         }
       end
 
