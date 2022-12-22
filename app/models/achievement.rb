@@ -63,4 +63,8 @@ class Achievement < ApplicationRecord
   def token_count
     tokens.count
   end
+
+  def meta
+    eth_data[:meta]
+  end
 end

@@ -22,4 +22,10 @@ module NetworkHelper
       Bepro::VotingContractService.new(network_id: network_id).get_voting_events
     end
   end
+
+  def network_erc20_balance(network_id, address)
+    Rails.cache.fetch("api:erc20_balances:#{network_id}:#{address}", expires_in: 24.hours) do
+      Bepro::Erc20ContractService.new(network_id: network_id).balance_of(address)
+    end
+  end
 end

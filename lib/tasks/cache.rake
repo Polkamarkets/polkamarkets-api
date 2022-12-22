@@ -41,4 +41,19 @@ namespace :cache do
       Rails.cache.write("api:bonds:#{network_id}", bonds, expires_in: 24.hours)
     end
   end
+
+  desc "refreshes cache of erc20 balances"
+  task :refresh_erc20_balances, [:symbol] => :environment do |task, args|
+    Rails.application.config_for(:ethereum).network_ids.map do |network_id|
+      actions = Rails.cache.fetch("api:actions:#{network_id}", expires_in: 24.hours) do
+        Bepro::PredictionMarketContractService.new(network_id: network_id).get_action_events
+      end
+
+      addresses = actions.map { |action| action[:address] }.uniq
+      addresses.each do |address|
+        balance = Bepro::Erc20ContractService.new(network_id: network_id).balance_of(address)
+        Rails.cache.write("api:erc20_balances:#{network_id}:#{address}", balance, expires_in: 24.hours)
+      end
+    end
+  end
 end

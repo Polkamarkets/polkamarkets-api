@@ -6,6 +6,7 @@ default: &default
       realitio_contract_address: "<%= ENV["ETHEREUM_NETWORK_#{network_id}_REALITIO_ERC20_CONTRACT_ADDRESS"].to_s %>"
       achievements_contract_address: "<%= ENV["ETHEREUM_NETWORK_#{network_id}_ACHIEVEMENTS_CONTRACT_ADDRESS"].to_s %>"
       voting_contract_address: "<%= ENV["ETHEREUM_NETWORK_#{network_id}_VOTING_CONTRACT_ADDRESS"].to_s %>"
+      erc20_contract_address: "<%= ENV["ETHEREUM_NETWORK_#{network_id}_ERC20_CONTRACT_ADDRESS"].to_s %>"
       image_url: "<%= ENV["ETHEREUM_NETWORK_#{network_id}_IMAGE_URL"].to_s %>"
   <% end %>
   <% ENV["STATS_NETWORK_IDS"].to_s.split(',') do |network_id| %>
@@ -19,6 +20,7 @@ default: &default
     stats_network_ids: <%= ENV["STATS_NETWORK_IDS"].to_s.split(',') %>
     cache_ttl_seconds: <%= ENV["ETHEREUM_CACHE_TTL"] %>
     voting_delta: <%= ENV["ETHEREUM_VOTING_DELTA"] || 3 %>
+    blacklist: <%= ENV["ETHEREUM_BLACKLIST"].to_s.split(',') %>
 
 production:
   <<: *default

@@ -43,6 +43,9 @@ module Api
         end
       end
 
+      # removing blacklisted users from leaderboard
+      leaderboard.reject! { |l| l[:user].in?(Rails.application.config_for(:ethereum).blacklist) }
+
       leaderboard
     end
 

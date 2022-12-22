@@ -40,6 +40,7 @@ module Bepro
         title: event_data['title'],
         description: event_data['description'],
         image_hash: event_data['image'].split('/').last,
+        meta: event_data['meta'],
       }
     end
 
