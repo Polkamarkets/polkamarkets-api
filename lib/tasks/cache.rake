@@ -39,9 +39,6 @@ namespace :cache do
 
       bonds = Bepro::RealitioErc20ContractService.new(network_id: network_id).get_bond_events
       Rails.cache.write("api:bonds:#{network_id}", bonds, expires_in: 24.hours)
-
-      markets_resolved = Subgraph::PredictionMarketResolverService.new(network_id: network_id).get_markets_resolved
-      Rails.cache.write("api:market_resolved:#{network_id}", markets_resolved, expires_in: 24.hours)
     end
   end
 

@@ -85,16 +85,7 @@ class Portfolio < ApplicationRecord
   end
 
   def won_positions
-    # fetching holdings markets
-    market_ids = holdings.map { |holding| holding[:market_id] }.uniq
-
-    markets = Market.where(eth_market_id: market_ids, network_id: network_id).includes(:outcomes)
-    # filtering holdings by resolved by markets
-    markets = markets.to_a.select do |market|
-      holding = holdings.find { |holding| holding[:market_id] == market.eth_market_id }
-
-      market.resolved? && holding[:outcome_shares][market.resolved_outcome_id] > 0
-    end.count
+    action_events.select { |event| event[:action] == 'claim_winnings' }.count
   end
 
   def total_positions

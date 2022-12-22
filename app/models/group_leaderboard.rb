@@ -27,10 +27,6 @@ class GroupLeaderboard < ApplicationRecord
     end
   end
 
-  def banner_url
-    self['banner_url'] || 'https://dl.dropboxusercontent.com/s/bzbwg8hpu52pp8y/ifl-metadata-pic-clubs-v2.png?dl=0'
-  end
-
   def image_url
     image_hash.present? ? IpfsService.image_url_from_hash(image_hash) : nil
   end

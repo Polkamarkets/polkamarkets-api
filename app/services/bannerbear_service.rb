@@ -69,7 +69,7 @@ class BannerbearService
     create_image(modifications)
   end
 
-  def create_group_leaderboard_banner_image(group_leaderboard)
+  def create_group_leaderboard_banner_image(group_leaderboard, token_ticker = 'POLK')
     modifications = {
       template: Rails.application.config_for(:bannerbear).group_leaderboards_template_id,
       modifications: [
@@ -92,7 +92,7 @@ class BannerbearService
       }
       modifications[:modifications] << {
         name: "balance_#{i + 1}",
-        text: user ? "*#{user[:balance].round(0)} $IFL*" : "**"
+        text: user ? "*#{user[:balance].round(0)} $#{token_ticker}*" : "**"
       }
       modifications[:modifications] << {
         name: "rectangle_#{i + 1}",

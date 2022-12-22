@@ -1,7 +1,5 @@
 class Market < ApplicationRecord
   include Immutable
-  include NetworkHelper
-
   extend FriendlyId
   friendly_id :title, use: :slugged
 
@@ -89,7 +87,7 @@ class Market < ApplicationRecord
   end
 
   def resolved?
-    closed? && state == 'resolved'
+    closed? && eth_data[:state] == 'resolved'
   end
 
   def expires_at
@@ -110,21 +108,15 @@ class Market < ApplicationRecord
     state = eth_data[:state]
 
     # market already closed, manually sending closed
-    state = 'closed' if eth_data[:state] == 'open' && closed?
+    return 'closed' if eth_data[:state] == 'open' && closed?
 
-    # using predictionMarketResolver subgraph to determine if market is resolved
-    markets_resolved = network_market_resolved_actions(network_id)
-
-    markets_resolved.map { |m| m[:market_id] }.include?(eth_market_id) ? 'resolved' : state
+    state
   end
 
   def resolved_outcome_id
     return nil if eth_data.blank?
 
-    return -1 if !resolved?
-
-    markets_resolved = network_market_resolved_actions(network_id)
-    markets_resolved.find { |m| m[:market_id] == eth_market_id }[:outcome_id]
+    eth_data[:resolved_outcome_id]
   end
 
   def question_id
@@ -174,10 +166,10 @@ class Market < ApplicationRecord
   end
 
   def resolved_at(refresh: false)
-    return -1 if !resolved?
+    return -1 if eth_market_id.blank?
 
     Rails.cache.fetch("markets:network_#{network_id}:#{eth_market_id}:resolved_at", expires_in: cache_ttl, force: refresh) do
-      network_market_resolved_actions(network_id).find { |m| m[:market_id] == eth_market_id }[:timestamp]
+      Bepro::PredictionMarketContractService.new(network_id: network_id).get_market_resolved_at(eth_market_id)
     end
   end
 
@@ -325,16 +317,6 @@ class Market < ApplicationRecord
 
   def votes_delta
     votes[:up] - votes[:down]
-  end
-
-  def claims(refresh: false)
-    Rails.cache.fetch("markets:network_#{network_id}:#{eth_market_id}:claims", expires_in: cache_ttl, force: refresh) do
-      Subgraph::PredictionMarketResolverService.new(network_id: network_id).get_market_claims(eth_market_id)
-    end
-  end
-
-  def claims_count
-    claims.count
   end
 
   def polkamarkets_web_url

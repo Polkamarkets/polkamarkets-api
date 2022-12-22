@@ -42,11 +42,6 @@ module Api
     def reload
       # forcing cache refresh of market
       market = Market.find_by_slug_or_eth_market_id(params[:id])
-
-      # refreshing markets resolved data
-      markets_resolved = Subgraph::PredictionMarketResolverService.new(network_id: market.network_id).get_markets_resolved
-      Rails.cache.write("api:market_resolved:#{market.network_id}", markets_resolved, expires_in: 24.hours)
-
       market.refresh_cache!(queue: 'critical')
 
       render json: { status: 'ok' }, status: :ok
