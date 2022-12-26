@@ -18,13 +18,13 @@ class StatsService
   }.freeze
 
   LEADERBOARD_PARAMS = {
-    :volume => 3,
-    :tvl_volume => 3,
-    :tvl_liquidity => 3,
-    :verified_markets_created => 3,
-    :bond_volume => 5,
-    :upvotes => 10,
-    :downvotes => 10
+    :volume => { :amount => 3, :value => 250 },
+    :tvl_volume => { :amount => 3, :value => 500 },
+    :tvl_liquidity => { :amount => 3, :value => 500 },
+    :verified_markets_created => { :amount => 3, :value => 250 },
+    :bond_volume => { :amount => 5, :value => 100 },
+    :upvotes => { :amount => 10, :value => 50 },
+    :downvotes => { :amount => 10, :value => 50 }
   }.freeze
 
   def initialize

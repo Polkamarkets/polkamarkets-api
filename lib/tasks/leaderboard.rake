@@ -11,20 +11,25 @@ namespace :leaderboard do
       network = Rails.application.config_for(:networks).find { |name, id| id == network_id }
       network = network ? network.first.to_s.capitalize : 'Unknown'
 
-      puts "#{network}\n"
-
       # removing blacklisted wallets from leaderboard
       leaderboard.reject! { |user| wallets.include?(user[:user]) }
 
-      StatsService::LEADERBOARD_PARAMS.each do |param, count|
-        winners = leaderboard.sort_by { |user| -user[param] }.select { |user| user[param] > 0 }[0..count - 1]
+      rewards = Hash.new(0)
+
+      StatsService::LEADERBOARD_PARAMS.each do |param, specs|
+        winners = leaderboard.sort_by { |user| -user[param] }.select { |user| user[param] > 0 }[0..specs[:amount] - 1]
         next if winners.blank?
 
-        puts param
         winners.each_with_index do |winner, index|
-          puts "#{index + 1} - `#{winner[:user]}`"
+          puts "#{network};#{param};#{index + 1};#{winner[:user]};#{specs[:value]}\n"
+
+          rewards[winner[:user]] += specs[:value]
         end
-        puts "\n"
+      end
+
+      puts "\n#{network} Rewards\n"
+      rewards.each do |user, reward|
+        puts "#{user};#{reward}\n"
       end
     end
   end
