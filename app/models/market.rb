@@ -39,6 +39,7 @@ class Market < ApplicationRecord
 
     market = Market.new(
       title: eth_data[:title],
+      description: eth_data[:description],
       category: eth_data[:category],
       subcategory: eth_data[:subcategory],
       eth_market_id: eth_market_id,
