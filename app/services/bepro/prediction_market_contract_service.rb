@@ -77,7 +77,8 @@ module Bepro
       # decoding question from event. format from realitio
       # https://reality.eth.link/app/docs/html/contracts.html#how-questions-are-structured
       question = events[0]['returnValues']['question'].split("\u241f")
-      title = question[0]
+      title = question[0].split(';').first
+      description = question[0].split(';')[1..-1].join(';')
       category = question[2].split(';').first
       subcategory = question[2].split(';').second
       resolution_source = question[2].split(';')[2..-1].join(';')
@@ -88,6 +89,7 @@ module Bepro
       {
         id: market_id,
         title: title,
+        description: description,
         category: category,
         subcategory: subcategory,
         resolution_source: resolution_source.presence || nil,
