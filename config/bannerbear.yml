@@ -25,6 +25,8 @@ default: &default
       background_image: "https://dl.dropboxusercontent.com/s/du16milvx7h428k/1213.jpg?dl=0"
       category_color: "rgba(165, 71, 176, 0.7)"
       category_color_2: "rgba(165, 71, 176, 1)"
+  group_leaderboards_template_id: <%= ENV['BANNERBEAR_GROUP_LEADERBOARDS_TEMPLATE_ID'] %>
+  group_leaderboards_template_version: <%= ENV['BANNERBEAR_GROUP_LEADERBOARDS_TEMPLATE_VERSION'] %>
 
 
 production:

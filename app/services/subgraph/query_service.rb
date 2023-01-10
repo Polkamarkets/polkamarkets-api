@@ -1,7 +1,7 @@
 module Subgraph
   class QueryService
     SUBGRAPHS = [
-      # TO ADD
+      # TODO
     ].freeze
 
     attr_accessor :subgraph_url
@@ -14,6 +14,8 @@ module Subgraph
     end
 
     def query(query:)
+      return {} if subgraph_url.blank?
+
       response = HTTP.post(subgraph_url, json: { query: query })
 
       unless response.status.success?
