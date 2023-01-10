@@ -179,7 +179,7 @@ module Bepro
           events << {
             market_id: event['returnValues']['marketId'].to_i,
             outcome_id: i,
-            value: price,
+            price: price,
             timestamp: event['returnValues']['timestamp'].to_i,
           }
         end
