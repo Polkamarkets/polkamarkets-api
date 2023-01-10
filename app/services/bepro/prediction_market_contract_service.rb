@@ -167,21 +167,53 @@ module Bepro
       events.sum { |event| from_big_number_to_float(event['returnValues']['value']) }
     end
 
-    def get_price_events(market_id)
-      events = get_events(
-        event_name: 'MarketOutcomePrice',
-        filter: {
-          marketId: market_id.to_s,
-        }
-      )
+    def translate_market_outcome_shares_to_prices(shares_events)
+      # V2 events are shares only, prices have to be computed
+      events = []
 
-      events.map do |event|
-        {
-          market_id: event['returnValues']['marketId'].to_i,
-          outcome_id: event['returnValues']['outcomeId'].to_i,
-          price: from_big_number_to_float(event['returnValues']['value']),
-          timestamp: event['returnValues']['timestamp'].to_i,
-        }
+      shares_events.each do |event|
+        outcome_shares = event['returnValues']['outcomeShares'].map { |share| from_big_number_to_float(share) }
+        # outcome price = 1 / (sum(outcome shares / every outcome shares))
+        outcome_prices = outcome_shares.map { |share| 1 / (outcome_shares.sum { |s| share / s.to_f }) }
+        outcome_prices.each_with_index do |price, i|
+          events << {
+            market_id: event['returnValues']['marketId'].to_i,
+            outcome_id: i,
+            value: price,
+            timestamp: event['returnValues']['timestamp'].to_i,
+          }
+        end
+      end
+
+      events
+    end
+
+    def get_price_events(market_id)
+      if version == 2
+        events = get_events(
+          event_name: 'MarketOutcomeShares',
+          filter: {
+            marketId: market_id.to_s,
+          }
+        )
+
+        translate_market_outcome_shares_to_prices(events)
+      else
+        events = get_events(
+          event_name: 'MarketOutcomePrice',
+          filter: {
+            marketId: market_id.to_s,
+          }
+        )
+
+        events.map do |event|
+          {
+            market_id: event['returnValues']['marketId'].to_i,
+            outcome_id: event['returnValues']['outcomeId'].to_i,
+            price: from_big_number_to_float(event['returnValues']['value']),
+            timestamp: event['returnValues']['timestamp'].to_i,
+          }
+        end
       end
     end
 
