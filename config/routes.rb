@@ -36,7 +36,11 @@ Rails.application.routes.draw do
     resources :whitelist, only: [:show]
     resources :achievements, only: [:index, :show]
     get 'leaderboard' => 'leaderboards#index' # legacy route
-    resources :leaderboards, only: [:index, :show]
+    resources :leaderboards, only: [:index, :show] do
+      collection do
+        get 'winners', to: 'leaderboards#winners'
+      end
+    end
 
     get 'achievement_tokens/:network/:id', to: 'achievement_tokens#show'
 
