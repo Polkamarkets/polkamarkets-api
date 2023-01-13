@@ -15,7 +15,7 @@ module Api
     end
 
     def winners
-      wallets = params[:wallets].to_s.split(',').to_a.map(&:downcase)
+      blacklist = params[:blacklist].to_s.split(',').to_a.map(&:downcase)
       timeframe = params[:timeframe]
       network_id = params[:network_id].to_i
 
@@ -30,7 +30,7 @@ module Api
       winners = []
 
       # removing blacklisted wallets from leaderboard
-      leaderboard.reject! { |user| wallets.include?(user[:user].downcase) }
+      leaderboard.reject! { |user| blacklist.include?(user[:user].downcase) }
 
       rewards = Hash.new(0)
 
