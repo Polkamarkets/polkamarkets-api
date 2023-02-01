@@ -85,6 +85,7 @@ module Bepro
       outcome_titles = JSON.parse("[#{question[1]}]")
       outcomes.each_with_index { |outcome, i| outcome[:title] = outcome_titles[i] }
       image_hash = events[0]['returnValues']['image']
+      token_address = market_alt_data[3]
 
       {
         id: market_id,
@@ -102,7 +103,8 @@ module Bepro
         resolved_outcome_id: market_data[5].to_i,
         question_id: question_id,
         voided: is_market_voided,
-        outcomes: outcomes
+        outcomes: outcomes,
+        token_address: token_address,
       }
     end
 

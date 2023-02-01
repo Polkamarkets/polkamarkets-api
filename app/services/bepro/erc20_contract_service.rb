@@ -22,5 +22,14 @@ module Bepro
 
       from_big_number_to_float(call(method: 'balanceOf', args: user))
     end
+
+    def token_info
+      {
+        name: call(method: 'name'),
+        address: contract_address,
+        symbol: call(method: 'symbol'),
+        decimals: call(method: 'decimals'),
+      }
+    end
   end
 end

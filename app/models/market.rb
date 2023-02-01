@@ -320,6 +320,19 @@ class Market < ApplicationRecord
     votes[:up] - votes[:down]
   end
 
+  def token(refresh: false)
+    Rails.cache.fetch("markets:network_#{network_id}:#{eth_market_id}:token", expires_in: cache_ttl, force: refresh) do
+      token_address = eth_data[:token_address]
+      return if token_address.blank?
+
+      token = Bepro::Erc20ContractService.new(network_id: 5, contract_address: token_address).token_info
+      # TODO: configurable image urls
+      token.merge(
+        image_url: "https://dl.dropboxusercontent.com/s/zev7x0zcy0lu8x6/token.png?dl=0"
+      )
+    end
+  end
+
   def polkamarkets_web_url
     "#{Rails.application.config_for(:polkamarkets).web_url}/markets/#{slug}"
   end
