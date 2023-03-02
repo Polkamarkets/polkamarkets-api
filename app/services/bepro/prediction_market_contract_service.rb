@@ -301,5 +301,9 @@ module Bepro
         claim_winnings_total: actions.select { |v| v[:action] == 'claim_winnings' }.sum { |v| v[:value] }
       }
     end
+
+    def weth_address
+      call(method: 'WETH')
+    end
   end
 end
