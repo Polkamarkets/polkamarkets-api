@@ -28,4 +28,10 @@ module NetworkHelper
       Bepro::Erc20ContractService.new(network_id: network_id).balance_of(address)
     end
   end
+
+  def network_weth_address(network_id)
+    Rails.cache.fetch("api:weth_address:#{network_id}", expires_in: 24.hours) do
+      Bepro::PredictionMarketContractService.new(network_id: network_id).weth_address
+    end
+  end
 end
