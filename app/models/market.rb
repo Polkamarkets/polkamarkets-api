@@ -133,6 +133,18 @@ class Market < ApplicationRecord
     eth_data[:fee]
   end
 
+  def treasury_fee
+    return nil if eth_data.blank?
+
+    eth_data[:treasury_fee]
+  end
+
+  def treasury
+    return nil if eth_data.blank?
+
+    eth_data[:treasury]
+  end
+
   def resolved_outcome
     return unless resolved?
 

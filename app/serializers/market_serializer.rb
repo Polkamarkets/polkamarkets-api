@@ -10,6 +10,8 @@ class MarketSerializer < ActiveModel::Serializer
     :created_at,
     :expires_at,
     :fee,
+    :treasury_fee,
+    :treasury,
     :state,
     :verified,
     :category,

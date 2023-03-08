@@ -42,8 +42,8 @@ module Bepro
     end
 
     def get_fee
-      response = call(method: 'fee')
-      from_big_number_to_float(response.is_a?(Array) ? response.join.to_i : response.to_i)
+      # TODO: remove
+      0.02
     end
 
     def get_market_count
@@ -99,6 +99,8 @@ module Bepro
         expires_at: Time.at(market_data[1].to_i).to_datetime,
         liquidity: from_big_number_to_float(market_data[2]),
         fee: from_big_number_to_float(market_alt_data[0]),
+        treasury_fee: from_big_number_to_float(market_alt_data[4]),
+        treasury: market_alt_data[5],
         shares: from_big_number_to_float(market_data[4]),
         resolved_outcome_id: market_data[5].to_i,
         question_id: question_id,
