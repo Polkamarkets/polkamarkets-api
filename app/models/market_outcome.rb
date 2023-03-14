@@ -10,7 +10,7 @@ class MarketOutcome < ApplicationRecord
 
   IMMUTABLE_FIELDS = [:title]
 
-  def eth_data(refresh = false)
+  def eth_data(refresh: false)
     return nil if eth_market_id.blank? || market.eth_market_id.blank?
 
     return @eth_data if @eth_data.present? && !refresh
