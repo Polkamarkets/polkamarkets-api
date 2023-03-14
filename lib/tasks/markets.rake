@@ -9,7 +9,11 @@ namespace :markets do
       db_market_ids = Market.where(network_id: network_id).pluck(:eth_market_id)
 
       (eth_market_ids - db_market_ids).each do |market_id|
-        Market.create_from_eth_market_id!(network_id, market_id)
+        begin
+          Market.create_from_eth_market_id!(network_id, market_id)
+        rescue => e
+          Sentry.capture_exception(e)
+        end
       end
     end
   end
