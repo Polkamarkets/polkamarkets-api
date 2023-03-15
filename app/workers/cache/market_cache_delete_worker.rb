@@ -6,9 +6,9 @@ class Cache::MarketCacheDeleteWorker
     return if market.blank?
 
     # deleting from active serializer cache
-    $redis_store.keys("markets/#{market.id}*").each { |key| $redis_store.del key }
+    $redis_store.keys("markets/#{market.id}-*").each { |key| $redis_store.del key }
     market.outcomes.each do |outcome|
-      $redis_store.keys("market_outcomes/#{outcome.id}*").each { |key| $redis_store.del key }
+      $redis_store.keys("market_outcomes/#{outcome.id}-*").each { |key| $redis_store.del key }
     end
   end
 end
