@@ -42,8 +42,14 @@ class MarketOutcome < ApplicationRecord
 
       # changing value of last item for current price
       if price_chart.present?
+        # calculating next timestamp for current timeframe
+        next_timestamp = ChartDataService.next_datetime_for(timeframe, market.resolved? ? market.resolved_at : nil).to_i
+        # setting to now if next timestamp is in the future
+        next_timestamp = DateTime.now.to_i if next_timestamp > DateTime.now.to_i
+
         price_chart.last[:value] = price
-        price_chart.last[:timestamp] = DateTime.now.to_i if price_chart.present?
+        price_chart.last[:timestamp] = next_timestamp
+        price_chart.last[:date] = Time.at(next_timestamp)
         change_percent = (price - price_chart.first[:value]) / price_chart.first[:value]
       else
         price_chart = [{
