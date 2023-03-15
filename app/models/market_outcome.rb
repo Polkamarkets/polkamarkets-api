@@ -35,7 +35,7 @@ class MarketOutcome < ApplicationRecord
           expires_in: expires_in.seconds,
           force: refresh
         ) do
-          outcome_prices = market.outcome_prices(timeframe)
+          outcome_prices = market.outcome_prices(timeframe, end_at_resolved_at: true)
           # defaulting to [] if market is not in chain
           outcome_prices[eth_market_id] || []
         end

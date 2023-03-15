@@ -16,8 +16,8 @@ class ChartDataService
     @item_key = item_key
   end
 
-  def chart_data_for(timeframe)
-    timestamps = self.class.timestamps_for(timeframe, items_arr.last&.fetch(:timestamp))
+  def chart_data_for(timeframe, end_timestamp = nil)
+    timestamps = self.class.timestamps_for(timeframe, items_arr.last&.fetch(:timestamp), end_timestamp)
 
     values_at_timestamps(timestamps)
   end
@@ -27,9 +27,9 @@ class ChartDataService
     items_arr.find { |item| item[:timestamp] < timestamp }
   end
 
-  def self.timestamps_for(timeframe, ending_timestamp = nil)
+  def self.timestamps_for(timeframe, start_timestamp = nil, end_timestamp = nil)
     # returns previous datetime for each candle (last one corresponding to now)
-    now = DateTime.now.to_i
+    now = end_timestamp || DateTime.now.to_i
     initial_datetime = previous_datetime_for(timeframe)
 
     # adding now as last candle
@@ -40,8 +40,8 @@ class ChartDataService
     points = TIMEFRAMES[timeframe] / step
 
     # 'all' timeframe step / points can be recalculated
-    if timeframe == 'all' && ending_timestamp
-      step_days = ((now.to_i - ending_timestamp.to_i) / TIMEFRAMES[timeframe].to_f).ceil
+    if timeframe == 'all' && start_timestamp
+      step_days = ((now.to_i - start_timestamp.to_i) / TIMEFRAMES[timeframe].to_f).ceil
 
       step = step_days.days
     end

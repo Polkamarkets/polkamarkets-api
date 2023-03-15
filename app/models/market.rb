@@ -167,7 +167,7 @@ class Market < ApplicationRecord
   end
 
   def resolved_at(refresh: false)
-    return -1 if eth_market_id.blank?
+    return -1 if eth_market_id.blank? || !resolved?
 
     Rails.cache.fetch("markets:network_#{network_id}:#{eth_market_id}:resolved_at", expires_in: cache_ttl, force: refresh) do
       Bepro::PredictionMarketContractService.new(network_id: network_id).get_market_resolved_at(eth_market_id)
@@ -182,7 +182,7 @@ class Market < ApplicationRecord
     end
   end
 
-  def outcome_prices(timeframe, candles: 12, refresh: false)
+  def outcome_prices(timeframe, candles: 12, refresh: false, end_at_resolved_at: false)
     return {} if eth_market_id.blank?
 
     market_prices =
@@ -191,9 +191,12 @@ class Market < ApplicationRecord
       end
 
     market_prices.group_by { |price| price[:outcome_id] }.map do |outcome_id, prices|
+      # if market is resolved, we only want to show prices until it was resolved
+      end_timestamp = (resolved? && end_at_resolved_at) ? resolved_at : nil
+
       chart_data_service = ChartDataService.new(prices, :price)
       # returning in hash form
-      [outcome_id, chart_data_service.chart_data_for(timeframe)]
+      [outcome_id, chart_data_service.chart_data_for(timeframe, end_timestamp)]
     end.to_h
   end
 
