@@ -15,7 +15,7 @@ class MarketOutcome < ApplicationRecord
 
     return @eth_data if @eth_data.present? && !refresh
 
-    market_eth_data = market.eth_data(refresh)
+    market_eth_data = market.eth_data(refresh: refresh)
     @eth_data = market_eth_data[:outcomes].find { |outcome| outcome[:id].to_s == eth_market_id.to_s }
   end
 
