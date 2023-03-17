@@ -289,6 +289,19 @@ class Market < ApplicationRecord
     Cache::MarketVotesWorker.set(queue: queue).perform_async(id)
   end
 
+  def refresh_cache_sync!
+    Cache::MarketCacheDeleteWorker.new.perform(id)
+    Cache::MarketEthDataWorker.new.perform(id)
+    Cache::MarketOutcomePricesWorker.new.perform(id)
+    Cache::MarketActionEventsWorker.new.perform(id)
+    Cache::MarketPricesWorker.new.perform(id)
+    Cache::MarketLiquidityPricesWorker.new.perform(id)
+    Cache::MarketQuestionDataWorker.new.perform(id)
+    Cache::MarketVotesWorker.new.perform(id)
+
+    true
+  end
+
   def refresh_news!(queue: 'default')
     Cache::MarketNewsWorker.set(queue: queue).perform_async(id)
   end
