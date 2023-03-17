@@ -46,7 +46,14 @@ module Bepro
       response = HTTP.get(uri)
 
       unless response.status.success?
-        raise "BeproService #{response.status} :: #{response.body.to_s}; uri: #{uri}"
+        Sentry.with_scope do |scope|
+          scope.set_context("BeproService", {
+            status: response.status,
+            response: response.body.to_s,
+            uri: uri
+          })
+          raise "BeproService Error"
+        end
       end
 
       JSON.parse(response.body.to_s)
@@ -59,7 +66,14 @@ module Bepro
       response = HTTP.post(uri)
 
       unless response.status.success?
-        raise "BeproService #{response.status} :: #{response.body.to_s}; uri: #{uri}"
+        Sentry.with_scope do |scope|
+          scope.set_context("BeproService", {
+            status: response.status,
+            response: response.body.to_s,
+            uri: uri
+          })
+          raise "BeproService Error"
+        end
       end
 
       true
