@@ -44,4 +44,9 @@ namespace :markets do
   task :refresh_news, [:symbol] => :environment do |task, args|
     Market.all.each { |m| m.refresh_news!(queue: 'low') }
   end
+
+  desc "refreshes markets votes"
+  task :refresh_votes, [:symbol] => :environment do |task, args|
+    Market.all.each { |m| Cache::MarketVotesWorker.set(queue: 'low').perform_async(m.id) }
+  end
 end
