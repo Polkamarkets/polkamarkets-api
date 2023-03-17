@@ -27,12 +27,12 @@ class MarketOutcome < ApplicationRecord
     timeframes.map do |timeframe|
       expires_at = ChartDataService.next_datetime_for(timeframe)
       # caching chart until next candlestick
-      expires_in = expires_at.to_i - DateTime.now.to_i
+      expires_in = market.should_refresh_cache? ? (expires_at.to_i - DateTime.now.to_i).seconds : nil
 
       price_chart =
         Rails.cache.fetch(
           "markets:network_#{market.network_id}:#{market.eth_market_id}:outcomes:#{eth_market_id}:chart:#{timeframe}",
-          expires_in: expires_in.seconds,
+          expires_in: expires_in,
           force: refresh
         ) do
           outcome_prices = market.outcome_prices(timeframe, end_at_resolved_at: true)
@@ -77,7 +77,6 @@ class MarketOutcome < ApplicationRecord
   def price_change_24h(refresh: false)
     Rails.cache.fetch(
       "markets:network_#{market.network_id}:#{market.eth_market_id}:outcomes:#{eth_market_id}:price_change_24h",
-      expires_in: market.cache_ttl,
       force: refresh
     ) do
       pc = price_charts
