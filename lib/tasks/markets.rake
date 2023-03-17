@@ -9,7 +9,11 @@ namespace :markets do
       db_market_ids = Market.where(network_id: network_id).pluck(:eth_market_id)
 
       (eth_market_ids - db_market_ids).each do |market_id|
-        Market.create_from_eth_market_id!(network_id, market_id)
+        begin
+          Market.create_from_eth_market_id!(network_id, market_id)
+        rescue => e
+          Sentry.capture_exception(e)
+        end
       end
     end
   end
@@ -33,11 +37,16 @@ namespace :markets do
 
   desc "refreshes eth cache of markets"
   task :refresh_cache, [:symbol] => :environment do |task, args|
-    Market.all.each { |m| m.refresh_cache!(queue: 'low') }
+    Market.all.each { |m| m.refresh_cache!(queue: 'low') if m.should_refresh_cache? }
   end
 
   desc "refreshes markets news"
   task :refresh_news, [:symbol] => :environment do |task, args|
     Market.all.each { |m| m.refresh_news!(queue: 'low') }
+  end
+
+  desc "refreshes markets votes"
+  task :refresh_votes, [:symbol] => :environment do |task, args|
+    Market.all.each { |m| Cache::MarketVotesWorker.set(queue: 'low').perform_async(m.id) }
   end
 end

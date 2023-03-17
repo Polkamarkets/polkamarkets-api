@@ -1,6 +1,6 @@
 module Api
   class LeaderboardsController < BaseController
-    before_action :validate_params, only: [:index, :show]
+    before_action :validate_params, only: [:index, :show, :winners]
 
     def index
       leaderboard = get_leaderboard(params[:network_id])
@@ -12,6 +12,51 @@ module Api
       user_leaderboard = get_user_leaderboard(params[:network_id], params[:id])
 
       render json: user_leaderboard, status: :ok
+    end
+
+    def winners
+      blacklist = params[:blacklist].to_s.split(',').to_a.map(&:downcase)
+      timeframe = params[:timeframe]
+      network_id = params[:network_id].to_i
+
+      timestamp = timeframe == 'at' ? Time.now.to_i : (Time.now - 1.send(StatsService::TIMEFRAMES[timeframe])).to_i
+
+      leaderboards = StatsService.new.get_leaderboard(timeframe: params[:timeframe], timestamp: timestamp)
+      leaderboard = leaderboards[network_id.to_i] || []
+
+      network = Rails.application.config_for(:networks).find { |name, id| id == network_id }
+      network = network ? network.first.to_s.capitalize : 'Unknown'
+
+      winners = []
+
+      # removing blacklisted wallets from leaderboard
+      leaderboard.reject! { |user| blacklist.include?(user[:user].downcase) }
+
+      rewards = Hash.new(0)
+
+      StatsService::LEADERBOARD_PARAMS.each do |param, specs|
+        rows = leaderboard.sort_by { |user| -user[param] }.select { |user| user[param] > 0 }[0..specs[:amount] - 1]
+        next if rows.blank?
+
+        rows.each_with_index do |winner, index|
+          winners.push(
+            {
+              network: network,
+              category: param,
+              position: index + 1,
+              address: winner[:user],
+              reward: specs[:value]
+            }
+          )
+
+          rewards[winner[:user]] += specs[:value]
+        end
+      end
+
+      # mapping rewards to array
+      rewards = rewards.map { |user, reward| { address: user, reward: reward } }
+
+      render json: { winners: winners, rewards: rewards }, status: :ok
     end
 
     private

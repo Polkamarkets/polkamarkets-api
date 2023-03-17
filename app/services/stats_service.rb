@@ -18,13 +18,13 @@ class StatsService
   }.freeze
 
   LEADERBOARD_PARAMS = {
-    :volume => 3,
-    :tvl_volume => 3,
-    :tvl_liquidity => 3,
-    :verified_markets_created => 3,
-    :bond_volume => 5,
-    :upvotes => 10,
-    :downvotes => 10
+    :volume => { :amount => 3, :value => 250 },
+    :tvl_volume => { :amount => 3, :value => 500 },
+    :tvl_liquidity => { :amount => 3, :value => 500 },
+    :verified_markets_created => { :amount => 3, :value => 250 },
+    :bond_volume => { :amount => 5, :value => 100 },
+    :upvotes => { :amount => 10, :value => 50 },
+    :downvotes => { :amount => 10, :value => 50 }
   }.freeze
 
   def initialize
@@ -88,9 +88,12 @@ class StatsService
       markets_created = create_market_actions.count
       volume = actions.select { |v| ['buy', 'sell'].include?(v[:action]) }
       bonds_volume = bonds.sum { |bond| bond[:value] }
-      volume_movr = volume.sum { |v| v[:value] }
+      bonds_volume_eur = bonds.sum { |bond| bond[:value] * token_rate_at('polkamarkets', 'eur', bond[:timestamp]) }
+      volume_total = volume.sum { |v| v[:value] }
+      volume_eur = volume.sum { |v| v[:value] * network_rate_at(network_id, 'eur', v[:timestamp]) }
       fee = network[:bepro_pm].get_fee
-      fees_movr = volume.sum { |v| v[:value] } * fee
+      fees_total = volume_total * fee
+      fees_eur = volume_eur * fee
       users = actions.map { |a| a[:address] }.uniq.count
 
       [
@@ -98,11 +101,11 @@ class StatsService
         {
           markets_created: markets_created,
           bond_volume: bonds_volume,
-          bond_volume_eur: bonds_volume * rates[:polkamarkets],
-          volume: volume_movr,
-          volume_eur: volume_movr * rate(network_id),
-          fees: fees_movr,
-          fees_eur: fees_movr * rate(network_id),
+          bond_volume_eur: bonds_volume_eur,
+          volume: volume_total,
+          volume_eur: volume_eur,
+          fees: fees_total,
+          fees_eur: fees_eur,
           users: users,
           transactions: actions.count
         }
@@ -373,6 +376,18 @@ class StatsService
     return 0 if token.blank?
 
     rates[token.to_sym]
+  end
+
+  def network_rate_at(network_id, currency, timestamp)
+    token = TokenRatesService::NETWORK_TOKENS[network_id.to_i]
+
+    return 0 if token.blank?
+
+    token_rate_at(token, currency, timestamp)
+  end
+
+  def token_rate_at(token, currency, timestamp)
+    TokenRatesService.new.get_token_rate_at(token, currency, timestamp)
   end
 
   def rates

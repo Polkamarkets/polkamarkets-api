@@ -10,12 +10,12 @@ class MarketOutcome < ApplicationRecord
 
   IMMUTABLE_FIELDS = [:title]
 
-  def eth_data(refresh = false)
+  def eth_data(refresh: false)
     return nil if eth_market_id.blank? || market.eth_market_id.blank?
 
     return @eth_data if @eth_data.present? && !refresh
 
-    market_eth_data = market.eth_data(refresh)
+    market_eth_data = market.eth_data(refresh: refresh)
     @eth_data = market_eth_data[:outcomes].find { |outcome| outcome[:id].to_s == eth_market_id.to_s }
   end
 
@@ -27,23 +27,29 @@ class MarketOutcome < ApplicationRecord
     timeframes.map do |timeframe|
       expires_at = ChartDataService.next_datetime_for(timeframe)
       # caching chart until next candlestick
-      expires_in = expires_at.to_i - DateTime.now.to_i
+      expires_in = market.should_refresh_cache? ? (expires_at.to_i - DateTime.now.to_i).seconds : nil
 
       price_chart =
         Rails.cache.fetch(
           "markets:network_#{market.network_id}:#{market.eth_market_id}:outcomes:#{eth_market_id}:chart:#{timeframe}",
-          expires_in: expires_in.seconds,
+          expires_in: expires_in,
           force: refresh
         ) do
-          outcome_prices = market.outcome_prices(timeframe)
+          outcome_prices = market.outcome_prices(timeframe, end_at_resolved_at: true)
           # defaulting to [] if market is not in chain
           outcome_prices[eth_market_id] || []
         end
 
       # changing value of last item for current price
       if price_chart.present?
+        # calculating next timestamp for current timeframe
+        next_timestamp = ChartDataService.next_datetime_for(timeframe, market.resolved? ? market.resolved_at : nil).to_i
+        # setting to now if next timestamp is in the future
+        next_timestamp = DateTime.now.to_i if next_timestamp > DateTime.now.to_i
+
         price_chart.last[:value] = price
-        price_chart.last[:timestamp] = DateTime.now.to_i if price_chart.present?
+        price_chart.last[:timestamp] = next_timestamp
+        price_chart.last[:date] = Time.at(next_timestamp)
         change_percent = (price - price_chart.first[:value]) / price_chart.first[:value]
       else
         price_chart = [{
@@ -71,7 +77,6 @@ class MarketOutcome < ApplicationRecord
   def price_change_24h(refresh: false)
     Rails.cache.fetch(
       "markets:network_#{market.network_id}:#{market.eth_market_id}:outcomes:#{eth_market_id}:price_change_24h",
-      expires_in: market.cache_ttl,
       force: refresh
     ) do
       pc = price_charts
