@@ -37,11 +37,16 @@ namespace :markets do
 
   desc "refreshes eth cache of markets"
   task :refresh_cache, [:symbol] => :environment do |task, args|
-    Market.all.each { |m| m.refresh_cache!(queue: 'low') }
+    Market.all.each { |m| m.refresh_cache!(queue: 'low') if m.should_refresh_cache? }
   end
 
   desc "refreshes markets news"
   task :refresh_news, [:symbol] => :environment do |task, args|
     Market.all.each { |m| m.refresh_news!(queue: 'low') }
+  end
+
+  desc "refreshes markets votes"
+  task :refresh_votes, [:symbol] => :environment do |task, args|
+    Market.all.each { |m| Cache::MarketVotesWorker.set(queue: 'low').perform_async(m.id) }
   end
 end

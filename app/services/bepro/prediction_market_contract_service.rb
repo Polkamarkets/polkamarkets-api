@@ -217,7 +217,7 @@ module Bepro
     end
 
     def refresh_action_events(market_id: nil, address: nil)
-      events = refresh_events(
+      refresh_events(
         event_name: 'MarketActionTx',
         filter: {
           marketId: market_id.to_s,

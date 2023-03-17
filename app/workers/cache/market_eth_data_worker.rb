@@ -5,7 +5,7 @@ class Cache::MarketEthDataWorker
     market = Market.find_by(id: market_id)
     return if market.blank?
 
-    market.eth_data(true)
+    market.eth_data(refresh: true)
     market.resolved_at(refresh: true)
   end
 end

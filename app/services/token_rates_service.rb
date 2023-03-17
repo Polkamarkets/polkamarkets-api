@@ -24,7 +24,7 @@ class TokenRatesService
 
     return 0 if token.blank?
 
-    Rails.cache.fetch("rates:#{token}:#{currency}", expires_in: 1.hour) do
+    Rails.cache.fetch("rates:#{token}:#{currency}", expires_in: 24.hours) do
       get_rates([token], currency).values.first
     end
   end
@@ -42,7 +42,7 @@ class TokenRatesService
   end
 
   def get_token_price_history(token, currency)
-    Rails.cache.fetch("rates:#{token}:#{currency}:history", expires_in: 1.hour) do
+    Rails.cache.fetch("rates:#{token}:#{currency}:history", expires_in: 24.hours) do
       uri = "https://api.coingecko.com/api/v3/coins/#{token}/market_chart?vs_currency=#{currency}&interval=daily&days=max"
 
       response = HTTP.get(uri)
