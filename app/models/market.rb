@@ -29,7 +29,7 @@ class Market < ApplicationRecord
     raise "Market #{eth_market_id} is already created" if Market.where(network_id: network_id, eth_market_id: eth_market_id).exists?
 
     eth_data =
-      Rails.cache.fetch("markets:network_#{network_id}:#{eth_market_id}", force: true) do
+      Rails.cache.fetch("markets:network_#{network_id}:#{eth_market_id}:data", force: true) do
         Bepro::PredictionMarketContractService.new(network_id: network_id).get_market(eth_market_id)
       end
 
@@ -71,7 +71,7 @@ class Market < ApplicationRecord
 
     return @eth_data if @eth_data.present? && !refresh
 
-    Rails.cache.fetch("markets:network_#{network_id}:#{eth_market_id}", force: refresh) do
+    Rails.cache.fetch("markets:network_#{network_id}:#{eth_market_id}:data", force: refresh) do
       @eth_data = Bepro::PredictionMarketContractService.new(network_id: network_id).get_market(eth_market_id)
     end
   end
@@ -277,9 +277,14 @@ class Market < ApplicationRecord
     !(resolved? && resolved_at < 1.day.ago.to_i)
   end
 
+  def destroy_cache!
+    Cache::MarketCacheSerializerDeleteWorker.new.perform(id)
+    Cache::MarketCacheEthDeleteWorker.new.perform(id)
+  end
+
   def refresh_cache!(queue: 'default')
-    # triggering a refresh for all cached ethereum data
-    Cache::MarketCacheDeleteWorker.set(queue: queue).perform_async(id)
+    # triggering a refresh for all serialized data
+    Cache::MarketCacheSerializerDeleteWorker.set(queue: queue).perform_async(id)
     Cache::MarketEthDataWorker.set(queue: queue).perform_async(id)
     Cache::MarketOutcomePricesWorker.set(queue: queue).perform_async(id)
     Cache::MarketActionEventsWorker.set(queue: queue).perform_async(id)
@@ -290,7 +295,7 @@ class Market < ApplicationRecord
   end
 
   def refresh_cache_sync!
-    Cache::MarketCacheDeleteWorker.new.perform(id)
+    Cache::MarketCacheSerializerDeleteWorker.new.perform(id)
     Cache::MarketEthDataWorker.new.perform(id)
     Cache::MarketOutcomePricesWorker.new.perform(id)
     Cache::MarketActionEventsWorker.new.perform(id)

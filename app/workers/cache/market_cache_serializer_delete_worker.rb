@@ -1,4 +1,4 @@
-class Cache::MarketCacheDeleteWorker
+class Cache::MarketCacheSerializerDeleteWorker
   include Sidekiq::Worker
 
   def perform(market_id)

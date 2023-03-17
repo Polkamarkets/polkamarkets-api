@@ -42,6 +42,8 @@ module Api
     def reload
       # forcing cache refresh of market
       market = Market.find_by_slug_or_eth_market_id(params[:id])
+      # cleaning up total market cache
+      market.destroy_cache!
       market.refresh_cache!(queue: 'critical')
 
       render json: { status: 'ok' }, status: :ok
