@@ -26,16 +26,33 @@ module Bepro
       uri = api_url + "/call?contract=#{contract_name}&address=#{contract_address}&method=#{method}"
       uri << "&args=#{args}" if args.present?
 
-      response = HTTP.get(uri)
+      Sentry.with_scope do |scope|
+        scope.set_tags(
+          uri: uri
+        )
+        begin
+          response = HTTP.get(uri)
 
-      unless response.status.success?
-        raise "BeproService #{response.status} :: #{response.body.to_s}; uri: #{uri}"
-      end
+          unless response.status.success?
+            scope.set_tags(
+              status: response.status,
+              error: response.body.to_s
+            )
+            raise "BeproService :: Call Error"
+          end
+        rescue => e
+          scope.set_tags(
+            error: e.message
+          )
+          raise "BeproService :: Call Error"
+        end
 
-      begin
-        JSON.parse(response.body.to_s)
-      rescue => e
-        response.body.to_s
+        begin
+          JSON.parse(response.body.to_s)
+        rescue => e
+          # not a JSON response, return the raw response
+          response.body.to_s
+        end
       end
     end
 
@@ -43,40 +60,60 @@ module Bepro
       uri = api_url + "/events?contract=#{contract_name}&address=#{contract_address}&eventName=#{event_name}"
       uri << "&filter=#{filter.to_json}" if filter.present?
 
-      response = HTTP.get(uri)
+      Sentry.with_scope do |scope|
+        scope.set_tags(
+          uri: uri
+        )
 
-      unless response.status.success?
-        Sentry.with_scope do |scope|
-          scope.set_context("BeproService", {
-            status: response.status,
-            response: response.body.to_s,
-            uri: uri
-          })
-          raise "BeproService Error"
+        begin
+          response = HTTP.get(uri)
+
+          unless response.status.success?
+            scope.set_tags(
+              status: response.status,
+              error: response.body.to_s
+            )
+            raise "BeproService :: Events Error"
+          end
+
+          JSON.parse(response.body.to_s)
+        rescue => e
+          scope.set_tags(
+            error: e.message
+          )
+          raise "BeproService :: Events Error"
         end
       end
-
-      JSON.parse(response.body.to_s)
     end
 
     def refresh_events(event_name:, filter: {})
       uri = api_url + "/events?contract=#{contract_name}&address=#{contract_address}&eventName=#{event_name}"
       uri << "&filter=#{filter.to_json}" if filter.present?
 
-      response = HTTP.post(uri)
+      Sentry.with_scope do |scope|
+        scope.set_tags(
+          uri: uri
+        )
 
-      unless response.status.success?
-        Sentry.with_scope do |scope|
-          scope.set_context("BeproService", {
-            status: response.status,
-            response: response.body.to_s,
-            uri: uri
-          })
-          raise "BeproService Error"
+        begin
+          response = HTTP.post(uri)
+
+          unless response.status.success?
+            scope.set_tags(
+              status: response.status,
+              error: response.body.to_s
+            )
+            raise "BeproService :: Events Error"
+          end
+
+          JSON.parse(response.body.to_s)
+        rescue => e
+          scope.set_tags(
+            error: e.message
+          )
+          raise "BeproService :: Events Error"
         end
       end
-
-      true
     end
   end
 end
