@@ -4,7 +4,7 @@ default: &default
       "0xb4fbf271143f4fbf7b91a5ded31805e42b2208d6": "ethereum"
       "0xd9983addca0e51400c50cba7658847ac3a42f026": "polkamarkets"
     "137":
-      "0x0d500b1d8e8ef31e21c99d1db9a6444d3adf1270": "matic" # wrapped matic pointing to matic token
+      "0x0d500b1d8e8ef31e21c99d1db9a6444d3adf1270": "matic-network" # wrapped matic pointing to matic token
       "0x2791bca1f2de4661ed88a30c99a7a9449aa84174": "usd-coin"
       "0xc2132d05d31c914a87c6611c10748aeb04b58e8f": "tether"
       "0x7ceb23fd6bc0add59e62ac25578270cff1b9f619": "ethereum"
@@ -26,7 +26,7 @@ default: &default
       "0x639a647fbe20b6c8ac19e48e2de44ea792c62c5c": "ethereum"
       "0x8b29344f368b5fa35595325903fe0eaab70c8e1f": "polkamarkets"
     "80001":
-      "0x9c3c9283d3e44854697cd22d3faa240cfb032889": "matic" # wrapped matic pointing to matic token
+      "0x9c3c9283d3e44854697cd22d3faa240cfb032889": "matic-network" # wrapped matic pointing to matic token
       "0x935f82d011ee37e8870c435417ac58407a9863f7": "polkamarkets"
 
 production:
