@@ -29,6 +29,19 @@ class TokenRatesService
     end
   end
 
+  def get_token_rate(address, network_id, currency)
+    network_tokens = Rails.application.config_for(:tokens)['networks'].dig(network_id.to_s.to_sym) || {}
+
+    # case insensitive search by key
+    token = network_tokens.find { |k, v| k.to_s.downcase == address.to_s.downcase }
+
+    return 0 if token.blank?
+
+    Rails.cache.fetch("rates:#{token.last}:#{currency}", expires_in: 24.hours) do
+      get_rates([token.last], currency).values.first
+    end
+  end
+
   def get_token_rate_at(token, currency, timestamp)
     rates = get_token_price_history(token, currency)
 
