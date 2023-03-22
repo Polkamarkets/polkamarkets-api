@@ -359,7 +359,7 @@ class Market < ApplicationRecord
   end
 
   def token(refresh: false)
-    Rails.cache.fetch("markets:network_#{network_id}:#{eth_market_id}:token", expires_in: cache_ttl, force: refresh) do
+    Rails.cache.fetch("markets:network_#{network_id}:#{eth_market_id}:token", force: refresh) do
       token_address = eth_data[:token_address]
       return if token_address.blank?
 
