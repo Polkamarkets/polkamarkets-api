@@ -36,12 +36,15 @@ Rails.application.routes.draw do
     resources :whitelist, only: [:show]
     resources :achievements, only: [:index, :show]
     get 'leaderboard' => 'leaderboards#index' # legacy route
-    resources :group_leaderboards, only: [:index, :show, :create, :update] do
-      member do
-        post :join
     resources :leaderboards, only: [:index, :show] do
       collection do
         get 'winners', to: 'leaderboards#winners'
+      end
+    end
+
+    resources :group_leaderboards, only: [:index, :show, :create, :update] do
+      member do
+        post :join
       end
     end
 
