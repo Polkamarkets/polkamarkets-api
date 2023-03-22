@@ -159,7 +159,7 @@ class Market < ApplicationRecord
   def liquidity_eur
     return nil if eth_data.blank?
 
-    liquidity * TokenRatesService.new.get_network_rate(network_id, 'eur')
+    liquidity * TokenRatesService.new.get_token_rate(token[:address], network_id, 'eur')
   end
 
   def shares
@@ -246,7 +246,10 @@ class Market < ApplicationRecord
   end
 
   def volume_eur
-    volume * TokenRatesService.new.get_network_rate(network_id, 'eur')
+    # no need to fetch token value if volume is 0
+    return 0 if volume == 0
+
+    volume * TokenRatesService.new.get_token_rate(token[:address], network_id, 'eur')
   end
 
   def keywords(refresh: false)
