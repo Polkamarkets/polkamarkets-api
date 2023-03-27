@@ -68,7 +68,7 @@ class Portfolio < ApplicationRecord
       market.outcomes.each do |outcome|
         if holding[:outcome_shares][outcome.eth_market_id] > 0
           multiplicator = outcome.eth_market_id == market.resolved_outcome_id ? 1 : -1
-          value += multiplicator * holding[:outcome_shares][outcome.eth_market_id]
+          value += multiplicator * holding[:outcome_shares][outcome.eth_market_id] * market.token_rate
         end
       end
     end
@@ -119,13 +119,13 @@ class Portfolio < ApplicationRecord
 
       # calculating liquidity value
       if holding[:liquidity_shares] > 0
-        value += holding[:liquidity_shares] * market.liquidity_price
+        value += holding[:liquidity_shares] * market.liquidity_price * market.token_rate
       end
 
       # calculating holding value
       market.outcomes.each do |outcome|
         if holding[:outcome_shares][outcome.eth_market_id] > 0
-          value += holding[:outcome_shares][outcome.eth_market_id] * outcome.price
+          value += holding[:outcome_shares][outcome.eth_market_id] * outcome.price * market.token_rate
         end
       end
     end
@@ -276,7 +276,7 @@ class Portfolio < ApplicationRecord
           # calculating liquidity value
           if holdings[:liquidity_shares] > 0 && !market.resolved?
             price_item = liquidity_charts[market_id].select { |point| point[:timestamp] <= timestamp }&.last
-            value += holdings[:liquidity_shares] * (price_item&.fetch(:value) || 0)
+            value += holdings[:liquidity_shares] * (price_item&.fetch(:value) || 0) * market.token_rate_at(timestamp)
           end
 
           # calculating holdings value
@@ -284,7 +284,7 @@ class Portfolio < ApplicationRecord
           outcome_ids.each do |outcome_id|
             if holdings[:outcome_shares][outcome_id] > 0
               price_item = market_charts[market_id][outcome_id].select { |point| point[:timestamp] <= timestamp }&.last
-              value += holdings[:outcome_shares][outcome_id] * (price_item&.fetch(:value) || 0)
+              value += holdings[:outcome_shares][outcome_id] * (price_item&.fetch(:value) || 0) * market.token_rate_at(timestamp)
             end
           end
         end
