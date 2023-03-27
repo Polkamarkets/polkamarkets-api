@@ -167,8 +167,6 @@ module Bepro
           action: 6
         }
       )
-
-      events.sum { |event| from_big_number_to_float(event['returnValues']['value']) }
     end
 
     def translate_market_outcome_shares_to_prices(shares_events)
