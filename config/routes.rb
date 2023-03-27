@@ -13,9 +13,6 @@ Rails.application.routes.draw do
         ActiveSupport::SecurityUtils.secure_compare(::Digest::SHA256.hexdigest(password), ::Digest::SHA256.hexdigest(ENV["ADMIN_PASSWORD"]))
     end if !Rails.env.development?
     mount Sidekiq::Web, at: "/sidekiq"
-
-    get 'stats' => "stats#index"
-    get 'leaderboard' => "stats#leaderboard"
   end
 
   scope :module => 'api' do
