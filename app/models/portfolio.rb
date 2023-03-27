@@ -116,17 +116,15 @@ class Portfolio < ApplicationRecord
       Rails.cache.fetch("portfolios:network_#{network_id}:#{eth_address}:liquidity_fees", expires_in: 24.hours, force: refresh) do
         events = Bepro::PredictionMarketContractService.new(network_id: network_id).get_user_liquidity_fees_earned(eth_address)
 
-        market_ids = fees_earned_events.map { |event| event['returnValues']['marketId'] }.uniq
+        market_ids = events.map { |event| event[:market_id] }.uniq
         markets = Market.where(eth_market_id: market_ids, network_id: network_id)
 
         events.sum do |event|
-          shares = from_big_number_to_float(event['returnValues']['value'])
-
-          market = markets.find { |market| market.eth_market_id == event['returnValues']['marketId'] }
+          market = markets.find { |market| market.eth_market_id == event[:market_id] }
 
           return 0 unless market.present?
 
-          shares * market.token_rate
+          event[:value] * market.token_rate
         end
       end
   end

@@ -167,6 +167,14 @@ module Bepro
           action: 6
         }
       )
+
+      events.map do |event|
+        {
+          market_id: event['returnValues']['marketId'].to_i,
+          value: from_big_number_to_float(event['returnValues']['value']),
+          timestamp: event['returnValues']['timestamp'].to_i,
+        }
+      end
     end
 
     def translate_market_outcome_shares_to_prices(shares_events)
