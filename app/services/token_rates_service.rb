@@ -24,21 +24,28 @@ class TokenRatesService
 
     return 0 if token.blank?
 
-    Rails.cache.fetch("rates:#{token}:#{currency}", expires_in: 24.hours) do
-      get_rates([token], currency).values.first
-    end
+    get_token_rate(token, currency)
   end
 
-  def get_token_rate(address, network_id, currency)
-    network_tokens = Rails.application.config_for(:tokens)['networks'].dig(network_id.to_s.to_sym) || {}
-
-    # case insensitive search by key
-    token = network_tokens.find { |k, v| k.to_s.downcase == address.to_s.downcase }
+  def get_token_rate_from_address(address, network_id, currency)
+    token = find_token(address, network_id)
 
     return 0 if token.blank?
 
-    Rails.cache.fetch("rates:#{token.last}:#{currency}", expires_in: 24.hours) do
-      get_rates([token.last], currency).values.first
+    get_token_rate(token, currency)
+  end
+
+  def get_token_rate_from_address_at(address, network_id, currency, timestamp)
+    token = find_token(address, network_id)
+
+    return 0 if token.blank?
+
+    get_token_rate_at(token, currency, timestamp)
+  end
+
+  def get_token_rate(token, currency)
+    Rails.cache.fetch("rates:#{token}:#{currency}", expires_in: 24.hours) do
+      get_rates([token], currency).values.first
     end
   end
 
@@ -66,5 +73,16 @@ class TokenRatesService
 
       JSON.parse(response.body.to_s)['prices']
     end
+  end
+
+  private
+
+  def find_token(address, network_id)
+    network_tokens = Rails.application.config_for(:tokens)['networks'].dig(network_id.to_s.to_sym) || {}
+
+    # case insensitive search by key
+    token_obj = network_tokens.find { |k, v| k.to_s.downcase == address.to_s.downcase }
+
+    token_obj ? token_obj.last : nil
   end
 end

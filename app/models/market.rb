@@ -253,7 +253,11 @@ class Market < ApplicationRecord
   end
 
   def token_rate
-    TokenRatesService.new.get_token_rate(token[:address], network_id, 'eur')
+    TokenRatesService.new.get_token_rate_from_address(token[:address], network_id, 'eur')
+  end
+
+  def token_rate_at(timestamp)
+    TokenRatesService.new.get_token_rate_from_address_at(token[:address], network_id, 'eur', timestamp)
   end
 
   def keywords(refresh: false)
