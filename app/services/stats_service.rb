@@ -91,9 +91,6 @@ class StatsService
       bonds_volume_eur = bonds.sum { |bond| bond[:value] * token_rate_at('polkamarkets', 'eur', bond[:timestamp]) }
       volume_total = volume.sum { |v| v[:value] }
       volume_eur = volume.sum { |v| v[:value] * network_rate_at(network_id, 'eur', v[:timestamp]) }
-      fee = network[:bepro_pm].get_fee
-      fees_total = volume_total * fee
-      fees_eur = volume_eur * fee
       users = actions.map { |a| a[:address] }.uniq.count
 
       [
@@ -104,8 +101,6 @@ class StatsService
           bond_volume_eur: bonds_volume_eur,
           volume: volume_total,
           volume_eur: volume_eur,
-          fees: fees_total,
-          fees_eur: fees_eur,
           users: users,
           transactions: actions.count
         }
@@ -116,7 +111,6 @@ class StatsService
       markets_created: stats.values.sum { |v| v[:markets_created] },
       bond_volume_eur: stats.values.sum { |v| v[:bond_volume_eur] },
       volume_eur: stats.values.sum { |v| v[:volume_eur] },
-      fees_eur: stats.values.sum { |v| v[:fees_eur] },
       users: stats.values.sum { |v| v[:users] },
       transactions: stats.values.sum { |v| v[:transactions] }
     }
@@ -151,7 +145,6 @@ class StatsService
 
           # fetching rate and fee values to avoid multiple API calls
           rate = rate(network_id)
-          fee = network[:bepro_pm].get_fee
 
           [
             network_id,
@@ -175,8 +168,6 @@ class StatsService
                 liquidity_eur: (volume_by_tx_action['add_liquidity'] + volume_by_tx_action['remove_liquidity']) * rate,
                 tvl_liquidity: volume_by_tx_action['add_liquidity'] - volume_by_tx_action['remove_liquidity'],
                 tvl_liquidity_eur: (volume_by_tx_action['add_liquidity'] - volume_by_tx_action['remove_liquidity']) * rate,
-                fees: (volume_by_tx_action['buy'] + volume_by_tx_action['sell']) * fee,
-                fees_eur: (volume_by_tx_action['buy'] + volume_by_tx_action['sell']) * fee * rate,
                 users: timeframe_actions.map { |a| a[:address] }.uniq.count,
                 transactions: timeframe_actions.count
               }
@@ -236,7 +227,6 @@ class StatsService
             tvl_volume_eur: timeframe_stats.sum { |v| v[:tvl_volume_eur] },
             liquidity_eur: timeframe_stats.sum { |v| v[:liquidity_eur] },
             tvl_liquidity_eur: timeframe_stats.sum { |v| v[:tvl_liquidity_eur] },
-            fees_eur: timeframe_stats.sum { |v| v[:fees_eur] },
             users: timeframe_stats.sum { |v| v[:users] },
             transactions: timeframe_stats.sum { |v| v[:transactions] }
           }
@@ -336,7 +326,6 @@ class StatsService
 
           # fetching rate and fee values to avoid multiple API calls
           rate = rate(network_id)
-          fee = network[:bepro_pm].get_fee
 
           [
             network_id.to_i,
