@@ -68,7 +68,7 @@ class Portfolio < ApplicationRecord
       market.outcomes.each do |outcome|
         if holding[:outcome_shares][outcome.eth_market_id] > 0
           multiplicator = outcome.eth_market_id == market.resolved_outcome_id ? 1 : -1
-          value += multiplicator * holding[:outcome_shares][outcome.eth_market_id]
+          value += multiplicator * holding[:outcome_shares][outcome.eth_market_id] * market.token_rate
         end
       end
     end
@@ -93,7 +93,20 @@ class Portfolio < ApplicationRecord
   end
 
   def liquidity_provided
-    holdings.sum { |holding| holding[:liquidity_shares] }
+    market_ids = holdings
+      .select { |holding| holding[:liquidity_shares] > 0 }
+      .map { |holding| holding[:market_id] }
+      .uniq
+    markets = Market.where(eth_market_id: market_ids, network_id: network_id)
+
+
+    holdings.sum do |holding|
+      market = markets.find { |market| market.eth_market_id == holding[:market_id] }
+
+      return 0 unless market.present?
+
+      holding[:liquidity_shares] * market.liquidity_price * market.token_rate
+    end
   end
 
   def liquidity_fees_earned(refresh: false)
@@ -101,7 +114,18 @@ class Portfolio < ApplicationRecord
 
     @liquidity_fees_earned ||=
       Rails.cache.fetch("portfolios:network_#{network_id}:#{eth_address}:liquidity_fees", expires_in: 24.hours, force: refresh) do
-        Bepro::PredictionMarketContractService.new(network_id: network_id).get_user_liquidity_fees_earned(eth_address)
+        events = Bepro::PredictionMarketContractService.new(network_id: network_id).get_user_liquidity_fees_earned(eth_address)
+
+        market_ids = events.map { |event| event[:market_id] }.uniq
+        markets = Market.where(eth_market_id: market_ids, network_id: network_id)
+
+        events.sum do |event|
+          market = markets.find { |market| market.eth_market_id == event[:market_id] }
+
+          return 0 unless market.present?
+
+          event[:value] * market.token_rate
+        end
       end
   end
 
@@ -119,13 +143,13 @@ class Portfolio < ApplicationRecord
 
       # calculating liquidity value
       if holding[:liquidity_shares] > 0
-        value += holding[:liquidity_shares] * market.liquidity_price
+        value += holding[:liquidity_shares] * market.liquidity_price * market.token_rate
       end
 
       # calculating holding value
       market.outcomes.each do |outcome|
         if holding[:outcome_shares][outcome.eth_market_id] > 0
-          value += holding[:outcome_shares][outcome.eth_market_id] * outcome.price
+          value += holding[:outcome_shares][outcome.eth_market_id] * outcome.price * market.token_rate
         end
       end
     end
@@ -276,7 +300,7 @@ class Portfolio < ApplicationRecord
           # calculating liquidity value
           if holdings[:liquidity_shares] > 0 && !market.resolved?
             price_item = liquidity_charts[market_id].select { |point| point[:timestamp] <= timestamp }&.last
-            value += holdings[:liquidity_shares] * (price_item&.fetch(:value) || 0)
+            value += holdings[:liquidity_shares] * (price_item&.fetch(:value) || 0) * market.token_rate_at(timestamp)
           end
 
           # calculating holdings value
@@ -284,7 +308,7 @@ class Portfolio < ApplicationRecord
           outcome_ids.each do |outcome_id|
             if holdings[:outcome_shares][outcome_id] > 0
               price_item = market_charts[market_id][outcome_id].select { |point| point[:timestamp] <= timestamp }&.last
-              value += holdings[:outcome_shares][outcome_id] * (price_item&.fetch(:value) || 0)
+              value += holdings[:outcome_shares][outcome_id] * (price_item&.fetch(:value) || 0) * market.token_rate_at(timestamp)
             end
           end
         end
