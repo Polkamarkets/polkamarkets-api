@@ -125,18 +125,18 @@ module Api
         user: user,
         ens: nil,
         markets_created: 0,
-        volume: 0,
-        tvl_volume: 0,
-        liquidity: 0,
-        tvl_liquidity: 0,
+        volume_eur: 0,
+        tvl_volume_eur: 0,
+        liquidity_eur: 0,
+        tvl_liquidity_eur: 0,
         claim_winnings_count: 0,
         transactions: 0,
         achievements: [ ],
         rank: {
           markets_created: 0,
-          volume: 0,
-          tvl_volume: 0,
-          tvl_liquidity: 0,
+          volume_eur: 0,
+          tvl_volume_eur: 0,
+          tvl_liquidity_eur: 0,
           claim_winnings_count: 0
         }
       }
