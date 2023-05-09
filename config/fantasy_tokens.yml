@@ -1,0 +1,15 @@
+default: &default
+  networks:
+    "1284":
+      "0xfb0e6023be6ce4ee03fa20382507afeafec56e28": "ifl"
+    "80001":
+      "0x3cd5c7f47c0933267aed07a115c8e5a3d0a30f22": "damat"
+
+production:
+  <<: *default
+
+staging:
+  <<: *default
+
+development:
+  <<: *default
