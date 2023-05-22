@@ -9,11 +9,12 @@ module Bepro
       'voting'
     ].freeze
 
-    attr_accessor :contract_name, :contract_address, :api_url
+    attr_accessor :contract_name, :contract_address, :api_url, :network_id
 
-    def initialize(api_url:, contract_name:, contract_address:)
+    def initialize(network_id:, api_url:, contract_name:, contract_address:)
       raise "Smart contract #{contract_name} not defined" unless SMART_CONTRACTS.include?(contract_name)
 
+      @network_id = network_id
       @contract_name = contract_name
       @contract_address = contract_address
       @api_url = api_url

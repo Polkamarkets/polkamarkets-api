@@ -42,10 +42,12 @@ class StatsService
       {
         network_id: network_id,
         bepro_pm: Bepro::PredictionMarketContractService.new(
+          network_id: network_id,
           contract_address: Rails.application.config_for(:ethereum)[:"stats_network_#{network_id}"][:prediction_market_contract_address],
           api_url: Rails.application.config_for(:ethereum)[:"stats_network_#{network_id}"][:bepro_api_url]
         ),
         bepro_realitio: Bepro::RealitioErc20ContractService.new(
+          network_id: network_id,
           contract_address: Rails.application.config_for(:ethereum)[:"stats_network_#{network_id}"][:realitio_contract_address],
           api_url: Rails.application.config_for(:ethereum)[:"stats_network_#{network_id}"][:bepro_api_url]
         )
