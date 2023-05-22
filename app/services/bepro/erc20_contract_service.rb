@@ -4,6 +4,7 @@ module Bepro
 
     def initialize(network_id: nil, api_url: nil, contract_address: nil)
       super(
+        network_id: network_id,
         contract_name: 'erc20',
         contract_address:
           contract_address ||

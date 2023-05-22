@@ -25,6 +25,7 @@ module Bepro
       @version = version
 
       super(
+        network_id: network_id,
         contract_name: version == 2 ? 'predictionMarketV2' : 'predictionMarket',
         contract_address:
           contract_address ||
