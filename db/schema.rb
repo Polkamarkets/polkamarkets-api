@@ -131,6 +131,16 @@ ActiveRecord::Schema.define(version: 2023_05_31_094256) do
     t.index ["slug"], name: "index_tournaments_on_slug", unique: true
   end
 
+  create_table "users", force: :cascade do |t|
+    t.string "email", default: "", null: false
+    t.string "login_public_key"
+    t.string "username"
+    t.string "wallet_address"
+    t.string "login_type"
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+  end
+
   add_foreign_key "achievement_tokens", "achievements"
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "market_outcomes", "markets"
