@@ -32,6 +32,8 @@ Rails.application.routes.draw do
       end
     end
 
+    put 'users' => 'users#update'
+
     resources :articles, only: [:index]
     resources :whitelist, only: [:show]
     resources :achievements, only: [:index, :show]
