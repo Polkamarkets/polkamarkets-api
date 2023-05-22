@@ -1,6 +1,7 @@
 module Bepro
   class RealitioErc20ContractService < SmartContractService
     include BigNumberHelper
+    include NetworkHelper
 
     def initialize(network_id: nil, api_url: nil, contract_address: nil)
       super(
@@ -17,6 +18,10 @@ module Bepro
       )
     end
 
+    def token
+      call(method: 'token')
+    end
+
     def get_question(question_id)
       question_data = call(method: 'questions', args: question_id)
       question_is_finalized = call(method: 'isFinalized', args: question_id)
@@ -26,7 +31,7 @@ module Bepro
 
       {
         id: question_id,
-        bond: from_big_number_to_float(question_data[9]),
+        bond: from_big_number_to_float(question_data[9], network_realitio_decimals(network_id)),
         best_answer: best_answer,
         is_finalized: question_is_finalized,
         is_claimed: question_is_claimed,
@@ -48,7 +53,7 @@ module Bepro
           user: event['returnValues']['user'],
           question_id: event['returnValues']['question_id'],
           answer: event['returnValues']['answer'],
-          value: from_big_number_to_float(event['returnValues']['bond']),
+          value: from_big_number_to_float(event['returnValues']['bond'], network_realitio_decimals(network_id)),
           timestamp: event['returnValues']['ts'].to_i,
         }
       end

@@ -21,7 +21,11 @@ module Bepro
       # if contract is not deployed, returning 0 as default
       return 0 if contract_address.blank?
 
-      from_big_number_to_float(call(method: 'balanceOf', args: user))
+      from_big_number_to_float(call(method: 'balanceOf', args: user), decimals)
+    end
+
+    def decimals
+      call(method: 'decimals')
     end
 
     def token_info
@@ -29,7 +33,7 @@ module Bepro
         name: call(method: 'name'),
         address: contract_address,
         symbol: call(method: 'symbol'),
-        decimals: call(method: 'decimals'),
+        decimals: decimals,
       }
     end
   end

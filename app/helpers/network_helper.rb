@@ -34,4 +34,22 @@ module NetworkHelper
       Bepro::PredictionMarketContractService.new(network_id: network_id).weth_address
     end
   end
+
+  def network_market_erc20_decimals(network_id, market_id)
+    Rails.cache.fetch("api:erc20_decimals:#{network_id}:#{market_id}") do
+      market_alt_data =
+        Bepro::PredictionMarketContractService.new(network_id: network_id)
+          .call(method: 'getMarketAltData', args: market_id)
+      token_address = market_alt_data[3]
+
+      Bepro::Erc20ContractService.new(network_id: network_id, contract_address: token_address).decimals
+    end
+  end
+
+  def network_realitio_decimals(network_id)
+    Rails.cache.fetch("api:realitio_decimals:#{network_id}") do
+      token_address = Bepro::RealitioErc20ContractService.new(network_id: network_id).token
+      Bepro::Erc20ContractService.new(network_id: network_id, contract_address: token_address).decimals
+    end
+  end
 end
