@@ -1,9 +1,6 @@
 module Api
   class PortfoliosController < BaseController
     def show
-      # TODO: remove - adding sleep for testing purposes
-      sleep 5
-
       portfolio = Portfolio.find_or_create_by!(eth_address: address, network_id: params[:network_id])
 
       render json: portfolio, status: :ok
