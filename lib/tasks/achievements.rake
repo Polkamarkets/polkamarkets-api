@@ -8,7 +8,11 @@ namespace :achievements do
       db_achievement_ids = Achievement.where(network_id: network_id).pluck(:eth_id)
 
       (achievement_ids - db_achievement_ids).each do |achievement_id|
-        Achievement.create_from_eth_id!(network_id, achievement_id)
+        begin
+          Achievement.create_from_eth_id!(network_id, achievement_id)
+        rescue => e
+          puts "Error creating achievement #{achievement_id} for network #{network_id}: #{e.message}"
+        end
       end
     end
   end

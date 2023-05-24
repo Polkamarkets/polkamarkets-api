@@ -1,6 +1,9 @@
 module Bepro
   class PredictionMarketContractService < SmartContractService
     include BigNumberHelper
+    include NetworkHelper
+
+    attr_accessor :version
 
     ACTIONS_MAPPING = {
       0 => 'buy',
@@ -19,9 +22,12 @@ module Bepro
       2 => 'resolved',
     }
 
-    def initialize(network_id: nil, api_url: nil, contract_address: nil)
+    def initialize(network_id: nil, api_url: nil, contract_address: nil, version: 2)
+      @version = version
+
       super(
-        contract_name: 'predictionMarket',
+        network_id: network_id,
+        contract_name: version == 2 ? 'predictionMarketV2' : 'predictionMarket',
         contract_address:
           contract_address ||
             Rails.application.config_for(:ethereum).dig(:"network_#{network_id}", :prediction_market_contract_address) ||
@@ -38,8 +44,8 @@ module Bepro
     end
 
     def get_fee
-      response = call(method: 'fee')
-      from_big_number_to_float(response.is_a?(Array) ? response.join.to_i : response.to_i)
+      # TODO: remove
+      0.02
     end
 
     def get_market_count
@@ -77,10 +83,11 @@ module Bepro
       description = question[0].split(';')[1..-1].join(';')
       category = question[2].split(';').first
       subcategory = question[2].split(';').second
-      resolution_source = question[2].split(';')[2..-1].join(';')
+      resolution_source = question[2].split(';')[2..-1].join(';') if question[2].split(';')[2..-1].present?
       outcome_titles = JSON.parse("[#{question[1]}]")
       outcomes.each_with_index { |outcome, i| outcome[:title] = outcome_titles[i] }
       image_hash = events[0]['returnValues']['image']
+      token_address = market_alt_data[3]
 
       {
         id: market_id,
@@ -92,13 +99,16 @@ module Bepro
         image_hash: image_hash,
         state: STATES_MAPPING[market_data[0].to_i],
         expires_at: Time.at(market_data[1].to_i).to_datetime,
-        liquidity: from_big_number_to_float(market_data[2]),
+        liquidity: from_big_number_to_float(market_data[2], network_market_erc20_decimals(network_id, market_id)),
         fee: from_big_number_to_float(market_alt_data[0]),
-        shares: from_big_number_to_float(market_data[4]),
+        treasury_fee: from_big_number_to_float(market_alt_data[4]),
+        treasury: market_alt_data[5],
+        shares: from_big_number_to_float(market_data[4], network_market_erc20_decimals(network_id, market_id)),
         resolved_outcome_id: market_data[5].to_i,
         question_id: question_id,
         voided: is_market_voided,
-        outcomes: outcomes
+        outcomes: outcomes,
+        token_address: token_address,
       }
     end
 
@@ -113,7 +123,7 @@ module Bepro
           id: outcome_id.to_i,
           title: '', # TODO remove; deprecated
           price: from_big_number_to_float(outcome_data[0]),
-          shares: from_big_number_to_float(outcome_data[1]),
+          shares: from_big_number_to_float(outcome_data[1], network_market_erc20_decimals(network_id, market_id)),
         }
       end
     end
@@ -123,10 +133,13 @@ module Bepro
 
       {
         liquidity_price: from_big_number_to_float(market_prices[0]),
-        outcome_shares: {
-          0 => from_big_number_to_float(market_prices[1]),
-          1 => from_big_number_to_float(market_prices[2])
-        }
+        outcome_shares:
+          version == 2 ?
+            market_prices[1].each_with_index.map { |price, i| from_big_number_to_float(price) } :
+            {
+              0 => from_big_number_to_float(market_prices[1]),
+              1 => from_big_number_to_float(market_prices[2])
+            }
       }
     end
 
@@ -137,11 +150,16 @@ module Bepro
       {
         market_id: market_id,
         address: address,
-        liquidity_shares: from_big_number_to_float(user_data[0]),
-        outcome_shares: {
-          0 => from_big_number_to_float(user_data[1]),
-          1 => from_big_number_to_float(user_data[2])
-        }
+        liquidity_shares: from_big_number_to_float(user_data[0], network_market_erc20_decimals(network_id, market_id)),
+        outcome_shares:
+          version == 2 ?
+            user_data[1].each_with_index.map do |share, i|
+              [i, from_big_number_to_float(share, network_market_erc20_decimals(network_id, market_id))]
+            end.to_h :
+            {
+              0 => from_big_number_to_float(user_data[1], network_market_erc20_decimals(network_id, market_id)),
+              1 => from_big_number_to_float(user_data[2], network_market_erc20_decimals(network_id, market_id))
+            }
       }
     end
 
@@ -154,24 +172,67 @@ module Bepro
         }
       )
 
-      events.sum { |event| from_big_number_to_float(event['returnValues']['value']) }
-    end
-
-    def get_price_events(market_id)
-      events = get_events(
-        event_name: 'MarketOutcomePrice',
-        filter: {
-          marketId: market_id.to_s,
-        }
-      )
-
       events.map do |event|
         {
           market_id: event['returnValues']['marketId'].to_i,
-          outcome_id: event['returnValues']['outcomeId'].to_i,
-          price: from_big_number_to_float(event['returnValues']['value']),
+          value: from_big_number_to_float(
+            event['returnValues']['value'],
+            network_market_erc20_decimals(network_id, market_id)
+          ),
           timestamp: event['returnValues']['timestamp'].to_i,
         }
+      end
+    end
+
+    def translate_market_outcome_shares_to_prices(shares_events, market_id)
+      # V2 events are shares only, prices have to be computed
+      events = []
+
+      shares_events.each do |event|
+        outcome_shares = event['returnValues']['outcomeShares'].map do |share|
+          from_big_number_to_float(share, network_market_erc20_decimals(network_id, market_id))
+        end
+        # outcome price = 1 / (sum(outcome shares / every outcome shares))
+        outcome_prices = outcome_shares.map { |share| 1 / (outcome_shares.sum { |s| share / s.to_f }) }
+        outcome_prices.each_with_index do |price, i|
+          events << {
+            market_id: event['returnValues']['marketId'].to_i,
+            outcome_id: i,
+            price: price,
+            timestamp: event['returnValues']['timestamp'].to_i,
+          }
+        end
+      end
+
+      events
+    end
+
+    def get_price_events(market_id)
+      if version == 2
+        events = get_events(
+          event_name: 'MarketOutcomeShares',
+          filter: {
+            marketId: market_id.to_s,
+          }
+        )
+
+        translate_market_outcome_shares_to_prices(events, market_id)
+      else
+        events = get_events(
+          event_name: 'MarketOutcomePrice',
+          filter: {
+            marketId: market_id.to_s,
+          }
+        )
+
+        events.map do |event|
+          {
+            market_id: event['returnValues']['marketId'].to_i,
+            outcome_id: event['returnValues']['outcomeId'].to_i,
+            price: from_big_number_to_float(event['returnValues']['value']),
+            timestamp: event['returnValues']['timestamp'].to_i,
+          }
+        end
       end
     end
 
@@ -186,7 +247,10 @@ module Bepro
       events.map do |event|
         {
           market_id: event['returnValues']['marketId'].to_i,
-          value: from_big_number_to_float(event['returnValues']['value']),
+          value: from_big_number_to_float(
+            event['returnValues']['value'],
+            network_market_erc20_decimals(network_id, market_id)
+          ),
           price: from_big_number_to_float(event['returnValues']['price']),
           timestamp: event['returnValues']['timestamp'].to_i,
         }
@@ -208,8 +272,14 @@ module Bepro
           action: ACTIONS_MAPPING[event['returnValues']['action'].to_i],
           market_id: event['returnValues']['marketId'].to_i,
           outcome_id: event['returnValues']['outcomeId'].to_i,
-          shares: from_big_number_to_float(event['returnValues']['shares']),
-          value: from_big_number_to_float(event['returnValues']['value']),
+          shares: from_big_number_to_float(
+            event['returnValues']['shares'],
+            network_market_erc20_decimals(network_id, market_id)
+          ),
+          value: from_big_number_to_float(
+            event['returnValues']['value'],
+            network_market_erc20_decimals(network_id, market_id)
+          ),
           timestamp: event['returnValues']['timestamp'].to_i,
           tx_id: event['transactionHash']
         }
@@ -256,6 +326,10 @@ module Bepro
         claim_winnings_count: actions.select { |v| v[:action] == 'claim_winnings' }.count,
         claim_winnings_total: actions.select { |v| v[:action] == 'claim_winnings' }.sum { |v| v[:value] }
       }
+    end
+
+    def weth_address
+      call(method: 'WETH')
     end
   end
 end

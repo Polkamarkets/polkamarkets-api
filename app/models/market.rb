@@ -1,4 +1,5 @@
 class Market < ApplicationRecord
+  include NetworkHelper
   include Immutable
   extend FriendlyId
   friendly_id :title, use: :slugged
@@ -10,7 +11,7 @@ class Market < ApplicationRecord
 
   has_one_attached :image
 
-  validates :outcomes, length: { minimum: 2, maximum: 2 } # currently supporting only binary markets
+  validates :outcomes, length: { minimum: 2 } # currently supporting only binary markets
 
   accepts_nested_attributes_for :outcomes
 
@@ -131,6 +132,18 @@ class Market < ApplicationRecord
     eth_data[:fee]
   end
 
+  def treasury_fee
+    return nil if eth_data.blank?
+
+    eth_data[:treasury_fee]
+  end
+
+  def treasury
+    return nil if eth_data.blank?
+
+    eth_data[:treasury]
+  end
+
   def resolved_outcome
     return unless resolved?
 
@@ -146,7 +159,7 @@ class Market < ApplicationRecord
   def liquidity_eur
     return nil if eth_data.blank?
 
-    liquidity * TokenRatesService.new.get_network_rate(network_id, 'eur')
+    liquidity * token_rate
   end
 
   def shares
@@ -233,7 +246,18 @@ class Market < ApplicationRecord
   end
 
   def volume_eur
-    volume * TokenRatesService.new.get_network_rate(network_id, 'eur')
+    # no need to fetch token value if volume is 0
+    return 0 if volume == 0
+
+    volume * token_rate
+  end
+
+  def token_rate
+    TokenRatesService.new.get_token_rate_from_address(token[:address], network_id, 'eur')
+  end
+
+  def token_rate_at(timestamp)
+    TokenRatesService.new.get_token_rate_from_address_at(token[:address], network_id, 'eur', timestamp)
   end
 
   def keywords(refresh: false)
@@ -343,6 +367,22 @@ class Market < ApplicationRecord
 
   def votes_delta
     votes[:up] - votes[:down]
+  end
+
+  def token(refresh: false)
+    Rails.cache.fetch("markets:network_#{network_id}:#{eth_market_id}:token", force: refresh) do
+      token_address = eth_data[:token_address]
+      return if token_address.blank?
+
+      token = Bepro::Erc20ContractService.new(network_id: network_id, contract_address: token_address).token_info
+      wrapped = token_address.downcase == network_weth_address(network_id).downcase
+
+      # TODO: configurable image urls
+      token.merge(
+        image_url: "https://dl.dropboxusercontent.com/s/zev7x0zcy0lu8x6/token.png?dl=0",
+        wrapped: wrapped
+      )
+    end
   end
 
   def polkamarkets_web_url

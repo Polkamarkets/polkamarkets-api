@@ -4,6 +4,7 @@ default: &default
   rinkeby: 4
   goerli: 5
   kovan: 42
+  polygon: 137
   moonbeam: 1284
   moonriver: 1285
   local: 1337
