@@ -177,7 +177,7 @@ module Bepro
           market_id: event['returnValues']['marketId'].to_i,
           value: from_big_number_to_float(
             event['returnValues']['value'],
-            network_market_erc20_decimals(network_id, market_id)
+            network_market_erc20_decimals(network_id, event['returnValues']['marketId'].to_i)
           ),
           timestamp: event['returnValues']['timestamp'].to_i,
         }
