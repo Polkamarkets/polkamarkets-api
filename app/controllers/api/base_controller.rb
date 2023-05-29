@@ -26,11 +26,9 @@ module Api
               jwks: fetch_jwks,
             )
 
-            puts jwt_payload
             email = jwt_payload[0]['email']
             login_public_key = jwt_payload[0]['wallets'][0]['public_key']
-            puts 'login'
-            puts login_public_key
+
             user = User.find_by(email: email, login_public_key: login_public_key)
 
             if user.nil?
