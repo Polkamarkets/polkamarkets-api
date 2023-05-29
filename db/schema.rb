@@ -139,6 +139,8 @@ ActiveRecord::Schema.define(version: 2023_05_31_094256) do
     t.string "login_type"
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
+    t.jsonb "discord_servers"
+    t.string "avatar"
   end
 
   add_foreign_key "achievement_tokens", "achievements"
