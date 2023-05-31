@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2022_12_02_190254) do
+ActiveRecord::Schema.define(version: 2023_05_31_094256) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -103,12 +103,32 @@ ActiveRecord::Schema.define(version: 2022_12_02_190254) do
     t.index ["slug"], name: "index_markets_on_slug", unique: true
   end
 
+  create_table "markets_tournaments", id: false, force: :cascade do |t|
+    t.bigint "market_id"
+    t.bigint "tournament_id"
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["market_id"], name: "index_markets_tournaments_on_market_id"
+    t.index ["tournament_id"], name: "index_markets_tournaments_on_tournament_id"
+  end
+
   create_table "portfolios", force: :cascade do |t|
     t.string "eth_address", null: false
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
     t.integer "network_id", null: false
     t.index ["eth_address", "network_id"], name: "index_portfolios_on_eth_address_and_network_id", unique: true
+  end
+
+  create_table "tournaments", force: :cascade do |t|
+    t.string "title", null: false
+    t.string "description", null: false
+    t.string "slug"
+    t.string "image_url"
+    t.integer "network_id", null: false
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["slug"], name: "index_tournaments_on_slug", unique: true
   end
 
   add_foreign_key "achievement_tokens", "achievements"
