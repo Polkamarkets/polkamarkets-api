@@ -88,6 +88,9 @@ module Api
         end
       end
 
+      # removing blacklisted users from leaderboard
+      leaderboard.reject! { |l| l[:user].in?(Rails.application.config_for(:ethereum).blacklist) }
+
       leaderboard
     end
 
@@ -101,9 +104,9 @@ module Api
       # adding the rank per parameter to the user leaderboard
       rank = {
         markets_created: leaderboard.sort_by { |user| -user[:markets_created] }.index(user_leaderboard) + 1,
-        volume: leaderboard.sort_by { |user| -user[:volume] }.index(user_leaderboard) + 1,
-        tvl_volume: leaderboard.sort_by { |user| -user[:tvl_volume] }.index(user_leaderboard) + 1,
-        tvl_liquidity: leaderboard.sort_by { |user| -user[:tvl_liquidity] }.index(user_leaderboard) + 1,
+        volume_eur: leaderboard.sort_by { |user| -user[:volume_eur] }.index(user_leaderboard) + 1,
+        tvl_volume_eur: leaderboard.sort_by { |user| -user[:tvl_volume_eur] }.index(user_leaderboard) + 1,
+        tvl_liquidity_eur: leaderboard.sort_by { |user| -user[:tvl_liquidity_eur] }.index(user_leaderboard) + 1,
         claim_winnings_count: leaderboard.sort_by { |user| -user[:claim_winnings_count] }.index(user_leaderboard) + 1,
       }
 
@@ -122,18 +125,18 @@ module Api
         user: user,
         ens: nil,
         markets_created: 0,
-        volume: 0,
-        tvl_volume: 0,
-        liquidity: 0,
-        tvl_liquidity: 0,
+        volume_eur: 0,
+        tvl_volume_eur: 0,
+        liquidity_eur: 0,
+        tvl_liquidity_eur: 0,
         claim_winnings_count: 0,
         transactions: 0,
         achievements: [ ],
         rank: {
           markets_created: 0,
-          volume: 0,
-          tvl_volume: 0,
-          tvl_liquidity: 0,
+          volume_eur: 0,
+          tvl_volume_eur: 0,
+          tvl_liquidity_eur: 0,
           claim_winnings_count: 0
         }
       }

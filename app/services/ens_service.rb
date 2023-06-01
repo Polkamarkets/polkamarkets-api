@@ -2,7 +2,7 @@ class EnsService
   def get_ens_domains(address:)
     response = HTTP.post('https://api.thegraph.com/subgraphs/name/ensdomains/ens', body: "{
       \"operationName\":\"getNamesFromSubgraph\",
-      \"variables\":{\"address\":\"#{address}\"},
+      \"variables\":{\"address\":\"#{address.downcase}\"},
       \"query\":\"query getNamesFromSubgraph($address: String\u0021) {domains(first: 1000, where: {resolvedAddress: $address}) {name resolver isMigrated createdAt __typename } }\"
     }")
 

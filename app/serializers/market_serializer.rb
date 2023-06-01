@@ -1,5 +1,5 @@
 class MarketSerializer < ActiveModel::Serializer
-  cache expires_in: 24.hours
+  # cache expires_in: 24.hours
 
   attributes(
     :id,
@@ -10,11 +10,14 @@ class MarketSerializer < ActiveModel::Serializer
     :created_at,
     :expires_at,
     :fee,
+    :treasury_fee,
+    :treasury,
     :state,
     :verified,
     :category,
     :subcategory,
     :resolution_source,
+    :token,
     :image_url,
     :liquidity,
     :liquidity_eur,

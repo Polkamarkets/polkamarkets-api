@@ -32,7 +32,7 @@ class FeedService
     actions.select do |action|
       # filtering buy actions that belong to liquidity actions
       FEED_ACTIONS.include?(action[:action]) &&
-        (action[:action] != 'buy' || actions.select { |a| a[:timestamp] == action[:timestamp] }.count < 2)
+        (action[:action] != 'buy' || actions.select { |a| a[:tx_id] == action[:tx_id] }.count < 2)
     end
   end
 

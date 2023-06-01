@@ -42,10 +42,12 @@ class StatsService
       {
         network_id: network_id,
         bepro_pm: Bepro::PredictionMarketContractService.new(
+          network_id: network_id,
           contract_address: Rails.application.config_for(:ethereum)[:"stats_network_#{network_id}"][:prediction_market_contract_address],
           api_url: Rails.application.config_for(:ethereum)[:"stats_network_#{network_id}"][:bepro_api_url]
         ),
         bepro_realitio: Bepro::RealitioErc20ContractService.new(
+          network_id: network_id,
           contract_address: Rails.application.config_for(:ethereum)[:"stats_network_#{network_id}"][:realitio_contract_address],
           api_url: Rails.application.config_for(:ethereum)[:"stats_network_#{network_id}"][:bepro_api_url]
         )
@@ -89,11 +91,10 @@ class StatsService
       volume = actions.select { |v| ['buy', 'sell'].include?(v[:action]) }
       bonds_volume = bonds.sum { |bond| bond[:value] }
       bonds_volume_eur = bonds.sum { |bond| bond[:value] * token_rate_at('polkamarkets', 'eur', bond[:timestamp]) }
-      volume_total = volume.sum { |v| v[:value] }
-      volume_eur = volume.sum { |v| v[:value] * network_rate_at(network_id, 'eur', v[:timestamp]) }
-      fee = network[:bepro_pm].get_fee
-      fees_total = volume_total * fee
-      fees_eur = volume_eur * fee
+      volume_eur = volume.sum do |a|
+        action_rate(a, network_id)
+      end
+
       users = actions.map { |a| a[:address] }.uniq.count
 
       [
@@ -102,10 +103,7 @@ class StatsService
           markets_created: markets_created,
           bond_volume: bonds_volume,
           bond_volume_eur: bonds_volume_eur,
-          volume: volume_total,
           volume_eur: volume_eur,
-          fees: fees_total,
-          fees_eur: fees_eur,
           users: users,
           transactions: actions.count
         }
@@ -116,7 +114,6 @@ class StatsService
       markets_created: stats.values.sum { |v| v[:markets_created] },
       bond_volume_eur: stats.values.sum { |v| v[:bond_volume_eur] },
       volume_eur: stats.values.sum { |v| v[:volume_eur] },
-      fees_eur: stats.values.sum { |v| v[:fees_eur] },
       users: stats.values.sum { |v| v[:users] },
       transactions: stats.values.sum { |v| v[:transactions] }
     }
@@ -149,10 +146,6 @@ class StatsService
             timestamp_from(action[:timestamp], timeframe)
           end
 
-          # fetching rate and fee values to avoid multiple API calls
-          rate = rate(network_id)
-          fee = network[:bepro_pm].get_fee
-
           [
             network_id,
             actions_by_timeframe.map do |timestamp, timeframe_actions|
@@ -160,23 +153,19 @@ class StatsService
               volume_by_tx_action = TX_ACTIONS.to_h do |action|
                 [
                   action,
-                  timeframe_actions.select { |a| a[:action] == action }.sum { |a| a[:value] }
+                  timeframe_actions.select { |a| a[:action] == action }.sum do |a|
+                    action_rate(a, network_id)
+                  end
                 ]
               end
 
               {
                 timestamp: timestamp,
                 markets_created: create_market_actions.select { |action| timestamp_from(action[:timestamp], timeframe) == timestamp }.count,
-                volume: volume_by_tx_action['buy'] + volume_by_tx_action['sell'],
-                volume_eur: (volume_by_tx_action['buy'] + volume_by_tx_action['sell']) * rate,
-                tvl_volume: volume_by_tx_action['buy'] - volume_by_tx_action['sell'],
-                tvl_volume_eur: (volume_by_tx_action['buy'] - volume_by_tx_action['sell']) * rate,
-                liquidity: volume_by_tx_action['add_liquidity'] + volume_by_tx_action['remove_liquidity'],
-                liquidity_eur: (volume_by_tx_action['add_liquidity'] + volume_by_tx_action['remove_liquidity']) * rate,
-                tvl_liquidity: volume_by_tx_action['add_liquidity'] - volume_by_tx_action['remove_liquidity'],
-                tvl_liquidity_eur: (volume_by_tx_action['add_liquidity'] - volume_by_tx_action['remove_liquidity']) * rate,
-                fees: (volume_by_tx_action['buy'] + volume_by_tx_action['sell']) * fee,
-                fees_eur: (volume_by_tx_action['buy'] + volume_by_tx_action['sell']) * fee * rate,
+                volume_eur: (volume_by_tx_action['buy'] + volume_by_tx_action['sell']),
+                tvl_volume_eur: (volume_by_tx_action['buy'] - volume_by_tx_action['sell']),
+                liquidity_eur: (volume_by_tx_action['add_liquidity'] + volume_by_tx_action['remove_liquidity']),
+                tvl_liquidity_eur: (volume_by_tx_action['add_liquidity'] - volume_by_tx_action['remove_liquidity']),
                 users: timeframe_actions.map { |a| a[:address] }.uniq.count,
                 transactions: timeframe_actions.count
               }
@@ -210,7 +199,14 @@ class StatsService
               volume_by_tx_action = TX_ACTIONS.to_h do |action|
                 [
                   action,
-                  timeframe_actions.select { |v| v[:action] == action }.group_by { |v| v[:network_id] }.map { |network_id, v| v.sum { |v| v[:value] * rate(network_id) } }.sum
+                  timeframe_actions
+                    .select { |v| v[:action] == action }
+                    .group_by { |v| v[:network_id] }
+                    .map do |network_id, v|
+                      v.sum do |a|
+                        action_rate(a, network_id)
+                      end
+                    end.sum
                 ]
               end
 
@@ -236,7 +232,6 @@ class StatsService
             tvl_volume_eur: timeframe_stats.sum { |v| v[:tvl_volume_eur] },
             liquidity_eur: timeframe_stats.sum { |v| v[:liquidity_eur] },
             tvl_liquidity_eur: timeframe_stats.sum { |v| v[:tvl_liquidity_eur] },
-            fees_eur: timeframe_stats.sum { |v| v[:fees_eur] },
             users: timeframe_stats.sum { |v| v[:users] },
             transactions: timeframe_stats.sum { |v| v[:transactions] }
           }
@@ -334,10 +329,6 @@ class StatsService
             actions_by_user[user] ||= []
           end
 
-          # fetching rate and fee values to avoid multiple API calls
-          rate = rate(network_id)
-          fee = network[:bepro_pm].get_fee
-
           [
             network_id.to_i,
             actions_by_user.map do |user, user_actions|
@@ -345,7 +336,9 @@ class StatsService
               volume_by_tx_action = TX_ACTIONS.to_h do |action|
                 [
                   action,
-                  user_actions.select { |a| a[:action] == action }.sum { |a| a[:value] }
+                  user_actions.select { |a| a[:action] == action }.sum do |a| a[:value]
+                    action_rate(a, network_id)
+                  end
                 ]
               end
 
@@ -354,10 +347,10 @@ class StatsService
                 ens: EnsService.new.cached_ens_domain(address: user),
                 markets_created: create_market_actions.select { |action| action[:address] == user }.count,
                 verified_markets_created: create_market_actions.select { |action| action[:address] == user && network_verified_market_ids(network_id).include?(action[:market_id]) }.count,
-                volume: volume_by_tx_action['buy'] + volume_by_tx_action['sell'] + volume_by_tx_action['add_liquidity'] + volume_by_tx_action['remove_liquidity'],
-                tvl_volume: volume_by_tx_action['buy'] - volume_by_tx_action['sell'],
-                liquidity: volume_by_tx_action['add_liquidity'] + volume_by_tx_action['remove_liquidity'],
-                tvl_liquidity: volume_by_tx_action['add_liquidity'] - volume_by_tx_action['remove_liquidity'],
+                volume_eur: volume_by_tx_action['buy'] + volume_by_tx_action['sell'],
+                tvl_volume_eur: volume_by_tx_action['buy'] - volume_by_tx_action['sell'],
+                liquidity_eur: volume_by_tx_action['add_liquidity'] + volume_by_tx_action['remove_liquidity'],
+                tvl_liquidity_eur: volume_by_tx_action['add_liquidity'] - volume_by_tx_action['remove_liquidity'],
                 bond_volume: bonds.select { |bond| bond[:user] == user }.sum { |bond| bond[:value] },
                 claim_winnings_count: user_actions.select { |a| a[:action] == 'claim_winnings' }.count,
                 transactions: user_actions.count,
@@ -390,6 +383,11 @@ class StatsService
     TokenRatesService.new.get_token_rate_at(token, currency, timestamp)
   end
 
+  def action_rate(action, network_id)
+    market = all_markets.find { |m| m.eth_market_id == action[:market_id] && m.network_id.to_i == network_id.to_i }
+    market.present? ? action[:value] * market.token_rate_at(action[:timestamp]) : 0
+  end
+
   def rates
     @_rates ||= TokenRatesService.new.get_rates(
       TokenRatesService::NETWORK_TOKENS.map { |_n, token| token } + ['polkamarkets'],
@@ -407,7 +405,8 @@ class StatsService
   end
 
   def timestamp_to(timestamp, timeframe)
-    return Time.now.to_i if TIMEFRAMES[timeframe] == 'all-time'
+    # setting to next 5 minute block if timeframe is all time
+    return (Time.now.to_i / 300 + 1) * 300 if TIMEFRAMES[timeframe] == 'all-time'
 
     # weekly timeframe starts on Fridays due to the rewarding system
     args = TIMEFRAMES[timeframe] == 'week' ? [:friday] : []
@@ -446,6 +445,10 @@ class StatsService
 
   def markets_by_category
     @_markets_by_category ||= Market.all.group_by(&:category)
+  end
+
+  def all_markets
+    @_all_markets ||= Market.all.to_a
   end
 
   def market_list

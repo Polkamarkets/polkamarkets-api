@@ -4,6 +4,7 @@ module Bepro
 
     def initialize(network_id: nil, api_url: nil, contract_address: nil)
       super(
+        network_id: network_id,
         contract_name: 'achievements',
         contract_address:
           contract_address ||
@@ -40,6 +41,7 @@ module Bepro
         title: event_data['title'],
         description: event_data['description'],
         image_hash: event_data['image'].split('/').last,
+        meta: event_data['meta'],
       }
     end
 

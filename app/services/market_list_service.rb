@@ -4,6 +4,11 @@ class MarketListService
   def initialize(uri)
     @uri = uri
 
+    if uri.blank?
+      @list = { markets: [] }
+      return
+    end
+
     response = HTTP.get(uri)
 
     unless response.status.success?
