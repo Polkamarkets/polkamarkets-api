@@ -8,16 +8,28 @@ module Api
       
       update_data = {
         'login_type' => params[:login_type],
-        'discord_servers' => params[:discord_servers],
         'avatar' => params[:avatar]
       }
 
-      if current_user.username.nil?
-        update_data['username'] = params[:username]
-      end
-
       if current_user.wallet_address.nil?
         update_data['wallet_address'] = params[:wallet_address]
+      end
+
+      if params[:login_type] == 'discord' && params[:oauth_access_token]
+        # get username and servers from discord
+        discord_service = DiscordService.new
+        username = discord_service.get_username(token: params[:oauth_access_token])
+        unless username.nil?
+          update_data['username'] = username
+        end
+
+        servers = discord_service.get_servers(token: params[:oauth_access_token])
+        unless servers.nil?
+          update_data['discord_servers'] = servers
+        end
+
+        # revoke token to allow new login
+        discord_service.revoke_token(token: params[:oauth_access_token])
       end
 
       current_user.update(update_data)
