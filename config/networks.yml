@@ -8,6 +8,7 @@ default: &default
   moonbeam: 1284
   moonriver: 1285
   local: 1337
+  mumbai: 80001
 
 production:
   <<: *default
