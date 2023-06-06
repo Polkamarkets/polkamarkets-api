@@ -18,9 +18,9 @@ class StatsService
   }.freeze
 
   LEADERBOARD_PARAMS = {
-    :volume => { :amount => 3, :value => 250 },
-    :tvl_volume => { :amount => 3, :value => 500 },
-    :tvl_liquidity => { :amount => 3, :value => 500 },
+    :volume_eur => { :amount => 3, :value => 250 },
+    :tvl_volume_eur => { :amount => 3, :value => 500 },
+    :tvl_liquidity_eur => { :amount => 3, :value => 500 },
     :verified_markets_created => { :amount => 3, :value => 250 },
     :bond_volume => { :amount => 5, :value => 100 },
     :upvotes => { :amount => 10, :value => 50 },
