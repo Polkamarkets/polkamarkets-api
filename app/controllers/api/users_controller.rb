@@ -5,7 +5,6 @@ module Api
     def update
 
       # create dictionary of params to update
-      
       update_data = {
         'login_type' => params[:login_type],
         'avatar' => params[:avatar]
