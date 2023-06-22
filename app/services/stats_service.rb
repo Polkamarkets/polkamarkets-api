@@ -8,6 +8,8 @@ class StatsService
     'sell',
     'add_liquidity',
     'remove_liquidity',
+    'claim_winnings',
+    'claim_voided'
   ].freeze
 
   TIMEFRAMES = {
@@ -349,6 +351,7 @@ class StatsService
                 verified_markets_created: create_market_actions.select { |action| action[:address] == user && network_verified_market_ids(network_id).include?(action[:market_id]) }.count,
                 volume_eur: volume_by_tx_action['buy'] + volume_by_tx_action['sell'],
                 tvl_volume_eur: volume_by_tx_action['buy'] - volume_by_tx_action['sell'],
+                earnings_eur: volume_by_tx_action['sell'] - volume_by_tx_action['buy'] + volume_by_tx_action['claim_winnings'] + volume_by_tx_action['claim_voided'],
                 liquidity_eur: volume_by_tx_action['add_liquidity'] + volume_by_tx_action['remove_liquidity'],
                 tvl_liquidity_eur: volume_by_tx_action['add_liquidity'] - volume_by_tx_action['remove_liquidity'],
                 bond_volume: bonds.select { |bond| bond[:user] == user }.sum { |bond| bond[:value] },
