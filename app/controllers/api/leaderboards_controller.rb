@@ -116,6 +116,7 @@ module Api
         volume_eur: leaderboard.sort_by { |user| -user[:volume_eur] }.index(user_leaderboard) + 1,
         tvl_volume_eur: leaderboard.sort_by { |user| -user[:tvl_volume_eur] }.index(user_leaderboard) + 1,
         tvl_liquidity_eur: leaderboard.sort_by { |user| -user[:tvl_liquidity_eur] }.index(user_leaderboard) + 1,
+        earnings_eur: leaderboard.sort_by { |user| -user[:earnings_eur] }.index(user_leaderboard) + 1,
         claim_winnings_count: leaderboard.sort_by { |user| -user[:claim_winnings_count] }.index(user_leaderboard) + 1,
       }
 
@@ -146,7 +147,8 @@ module Api
           volume_eur: 0,
           tvl_volume_eur: 0,
           tvl_liquidity_eur: 0,
-          claim_winnings_count: 0
+          earnings_eur: 0,
+          claim_winnings_count: 0,
         }
       }
     end
