@@ -65,5 +65,8 @@ module Api
       @current_user_id.present?
     end
 
+    def address_from_username
+      @_address_from_username ||= User.where('lower(username) = ?', params[:id].to_s.downcase).first&.wallet_address&.downcase
+    end
   end
 end
