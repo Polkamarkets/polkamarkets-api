@@ -9,7 +9,7 @@ module Api
     end
 
     def show
-      user_leaderboard = get_user_leaderboard(params[:network_id], params[:id])
+      user_leaderboard = get_user_leaderboard(params[:network_id], address_from_username || params[:id])
 
       render json: user_leaderboard, status: :ok
     end

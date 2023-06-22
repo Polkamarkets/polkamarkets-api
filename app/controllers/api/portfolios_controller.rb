@@ -1,12 +1,16 @@
 module Api
   class PortfoliosController < BaseController
     def show
+      raise ActiveRecord::RecordNotFound unless address.start_with?('0x')
+
       portfolio = Portfolio.find_or_create_by!(eth_address: address, network_id: params[:network_id])
 
       render json: portfolio, status: :ok
     end
 
     def feed
+      raise ActiveRecord::RecordNotFound unless address.start_with?('0x')
+
       portfolio = Portfolio.find_or_create_by!(eth_address: address, network_id: params[:network_id])
 
       render json: portfolio.feed_events, status: :ok
@@ -24,7 +28,7 @@ module Api
 
     def address
       # TODO: send through encrypted header
-      @_address ||= params[:id]&.downcase
+      @_address ||= address_from_username || params[:id]&.downcase
     end
   end
 end
