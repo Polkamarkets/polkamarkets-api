@@ -47,7 +47,7 @@ Rails.application.routes.draw do
       end
     end
 
-    resources :tournaments, only: [:index, :show]
+    resources :tournaments
 
     get 'achievement_tokens/:network/:id', to: 'achievement_tokens#show'
 
