@@ -11,6 +11,12 @@ module NetworkHelper
     end
   end
 
+  def network_locks(network_id)
+    Rails.cache.fetch("api:actions:#{network_id}", expires_in: 24.hours) do
+      Bepro::RewardContractService.new(network_id: network_id).get_lock_events
+    end
+  end
+
   def network_bonds(network_id)
     Rails.cache.fetch("api:bonds:#{network_id}", expires_in: 24.hours) do
       Bepro::RealitioErc20ContractService.new(network_id: network_id).get_bond_events
