@@ -9,7 +9,8 @@ class RewardsService
   def initialize
   end
 
-  def compute_rewards(refresh: false, date: Date.today)
+  def get_rewards(refresh: false, date: Date.today)
+    # TODO: do i neeed to get this also for each network?
     from, to = get_timestamps(date)
 
     from_block = get_block_number_from_timestamp(from)
@@ -18,6 +19,30 @@ class RewardsService
     @weight_of_each_block = 1 / (to_block - from_block)
 
     rewards = networks.to_h do |network|
+
+      # TODO get this from the smart contract
+      @tiers = [{
+          max_amount: 0,
+          multiplier: 1
+        },
+        {
+          max_amount: 1000,
+          multiplier: 1.3
+        },
+        {
+          max_amount: 5000,
+          multiplier: 1.5
+        },
+        {
+          max_amount: 10000,
+          multiplier: 1.7
+        },
+        {
+          max_amount: 20000,
+          multiplier: 2.1
+        }
+      ]
+
       network_id = network[:network_id]
       actions = network_actions(network_id)
       locks = network_locks(network_id)
@@ -27,7 +52,7 @@ class RewardsService
       # filter actions that are liquidity related
       actions.select! { |action| ['add_liquidity', 'remove_liquidity'].include?(v[:action]) }
 
-
+      # TODO: filtrar locks
       # grouping locks by block_number
       locks_by_block = locks.group_by do |lock|
         lock[:block_number]
@@ -71,44 +96,46 @@ class RewardsService
 
   private
 
-  def get_liquidity_by_market(markets_on_top, liquidity, actions)
-    # Iterate markets on top, filter the actions by market_id and compute the liquidity
-    markets_on_top.each do |market_id, lock_amount|
+  # sadasd
+  def compute_rewards(markets_on_top, liquidity_state, from_block, to_block)
+    user_rewards_for_this_block = {}
+    total_liquidity_for_this_block = 0
 
-      actions.select { |action| action[:market_id] == market_id }.each do |action|
+    # iterate markets_on_top and check if the user has liquidity in the market
+    markets_on_top.each do |market_id, locked_info|
 
-        # still no action performed in this market, initializing object
-        if liquidity[market_id].blank?
-          liquidity[market_id] = {
-            liquidity_shares: 0,
-            users: {}
-          }
+      liquidity = liquidity_state[market_id]
+
+      # iterate liquidity users of the market
+      liquidity[:users].each do |user_address, liquidity|
+        # compute rewards
+        multiplier = get_locked_multiplier(locked_info[:user_address]);
+
+        if user_rewards_for_this_block[user_address].blank?
+          user_rewards_for_this_block[user_address] = 0
         end
 
-        shares_to_add = 0
-        case action[:action]
-          when 'add_liquidity'
-            shares_to_add = action[:shares]
-          when 'remove_liquidity'
-            shares_to_add = -1 * action[:shares]
-        end
+        user_rewards_for_this_block[user_address] += liquidity * multiplier
 
-        user_id = action[:address]
-        liquidity[market_id][:liquidity_shares] += shares_to_add
-        if liquidity[market_id][:users][user_id].blank?
-          liquidity[market_id][:users][user_id] = 0
-        end
-        liquidity[market_id][:users][user_id] += shares_to_add
-
+        total_liquidity_for_this_block += liquidity * multiplier
       end
-
     end
 
-    liquidity
+    user_rewards_for_this_block.each do |user_address, reward|
+      @user_rewards[user_address] = 0 if @user_rewards[user_address].blank?
+      @user_rewards[user_address] += reward / total_liquidity_for_this_block * @weight_of_each_block * (to_block - from_block)
+    end
+
   end
 
-  def compute_rewards(markets_on_top, liquidity_state, from_block, to_block)
-    # TODO: compute rewards
+  def get_locked_multiplier(locked_amount)
+    locked_amount = 0 if locked_amount.blank?
+
+    @tiers.each do |tier|
+      if locked_amount <= tier[:max_amount]
+        return tier[:multiplier]
+      end
+    end
   end
 
   def iterate_liquidity(markets_on_top, actions, from_block, to_block)
@@ -141,8 +168,44 @@ class RewardsService
   end
 
   def get_lock_top(n, lock_state)
-    top_entries = lock_state.sort_by { |_, amount_locked| -amount_locked }.first(n)
+    top_entries = lock_state.sort_by { |_, value| -value[:lock_amount] }.first(n)
     top_entries.to_h
+  end
+
+  def get_liquidity_by_market(markets_on_top, liquidity, actions)
+    # Iterate markets on top, filter the actions by market_id and compute the liquidity
+    markets_on_top.each do |market_id, lock_amount|
+
+      actions.select { |action| action[:market_id] == market_id }.each do |action|
+
+        # still no action performed in this market, initializing object
+        if liquidity[market_id].blank?
+          liquidity[market_id] = {
+            liquidity_shares: 0,
+            users: {}
+          }
+        end
+
+        shares_to_add = 0
+        case action[:action]
+          when 'add_liquidity'
+            shares_to_add = action[:shares]
+          when 'remove_liquidity'
+            shares_to_add = -1 * action[:shares]
+        end
+
+        user_address = action[:address]
+        liquidity[market_id][:liquidity_shares] += shares_to_add
+        if liquidity[market_id][:users][user_address].blank?
+          liquidity[market_id][:users][user_address] = 0
+        end
+        liquidity[market_id][:users][user_address] += shares_to_add
+
+      end
+
+    end
+
+    liquidity
   end
 
   def get_locks_by_market(locks, lock_actions)
@@ -152,15 +215,26 @@ class RewardsService
 
       # still no action performed in this market, initializing object
       if locks[market_id].blank?
-        locks[market_id] = 0
+        locks[market_id] = {
+          lock_amount: 0,
+          users: {}
+        }
       end
 
+      shares_to_add = 0
       case action[:action]
-      when 'lock'
-        locks[market_id] += action[:lock_amount]
-      when 'unlock'
-        locks[market_id] -= action[:lock_amount]
+        when 'lock'
+          shares_to_add = action[:lock_amount]
+        when 'unlock'
+          shares_to_add = -1 * action[:lock_amount]
       end
+
+      user_address = action[:user]
+      locks[market_id][:lock_amount] += shares_to_add
+      if locks[market_id][:users][user_address].blank?
+        locks[market_id][:users][user_address] = 0
+      end
+      locks[market_id][:users][user_address] += shares_to_add
     end
 
     locks
