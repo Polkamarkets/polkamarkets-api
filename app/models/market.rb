@@ -7,6 +7,8 @@ class Market < ApplicationRecord
   validates_presence_of :title, :category, :expires_at, :network_id
   validates_uniqueness_of :eth_market_id, scope: :network_id
 
+  after_destroy :destroy_cache!
+
   has_many :outcomes, -> { order('eth_market_id ASC, created_at ASC') }, class_name: "MarketOutcome", dependent: :destroy, inverse_of: :market
 
   has_one_attached :image
