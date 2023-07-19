@@ -7,18 +7,20 @@ class RewardsService
 
 
   def initialize
+    # TODO Implement this
+    @networks = [{network_id: 1, name: 'Ethereum', chain: 'mainnet'}]
   end
 
-  def get_rewards(refresh: false, date: Date.today)
+  def get_rewards(date: Date.today, top: 10)
     # TODO: do i neeed to get this also for each network?
     from, to = get_timestamps(date)
 
     from_block = get_block_number_from_timestamp(from)
     to_block = get_block_number_from_timestamp(to)
 
-    @weight_of_each_block = 1 / (to_block - from_block)
+    @weight_of_each_block = 1.0 / (to_block - from_block + 1)
 
-    rewards = networks.to_h do |network|
+    rewards = @networks.to_h do |network|
 
       # TODO get this from the smart contract
       @tiers = [{
@@ -50,7 +52,7 @@ class RewardsService
       @user_rewards = {}
 
       # filter actions that are liquidity related
-      actions.select! { |action| ['add_liquidity', 'remove_liquidity'].include?(v[:action]) }
+      actions.select! { |action| ['add_liquidity', 'remove_liquidity'].include?(action[:action]) }
 
       # TODO: filtrar locks
       # grouping locks by block_number
@@ -58,10 +60,16 @@ class RewardsService
         lock[:block_number]
       end
 
+      locks_by_block.filter! do |block_number, a|
+        block_number >= from_block && block_number <= to_block
+      end
+
+      locks_by_block = locks_by_block.sort.to_h
+
       # GET TOP MARKETS AT FROM_BLOCK
       lock_state = get_locks_by_market({}, locks.select { |lock| lock[:block_number] < from_block })
 
-      markets_on_top = get_lock_top(10, lock_state_before_from)
+      markets_on_top = get_lock_top(top, lock_state)
 
       previous_block = from_block
 
@@ -72,7 +80,7 @@ class RewardsService
         # GET TOP MARKETS AT BLOCK_NUMBER
         lock_state = get_locks_by_market(lock_state, locks.select { |lock| lock[:block_number] >= previous_block && lock[:block_number] < block_number })
 
-        markets_on_top = get_lock_top(10, lock_state)
+        markets_on_top = get_lock_top(top, lock_state)
 
         previous_block = block_number
 
@@ -81,7 +89,7 @@ class RewardsService
       # GET TOP MARKETS AT TO_BLOCK
       lock_state = get_locks_by_market(lock_state, locks.select { |lock| lock[:block_number] >= previous_block && lock[:block_number] < to_block })
 
-      markets_on_top = get_lock_top(10, lock_state)
+      markets_on_top = get_lock_top(top, lock_state)
 
       iterate_liquidity(markets_on_top, actions.select { |action| action[:block_number] <= to_block }, previous_block, to_block)
 
@@ -96,7 +104,6 @@ class RewardsService
 
   private
 
-  # sadasd
   def compute_rewards(markets_on_top, liquidity_state, from_block, to_block)
     user_rewards_for_this_block = {}
     total_liquidity_for_this_block = 0
@@ -106,10 +113,12 @@ class RewardsService
 
       liquidity = liquidity_state[market_id]
 
+      return if liquidity.blank?
+
       # iterate liquidity users of the market
       liquidity[:users].each do |user_address, liquidity|
         # compute rewards
-        multiplier = get_locked_multiplier(locked_info[:user_address]);
+        multiplier = get_locked_multiplier(locked_info[:users][user_address]);
 
         if user_rewards_for_this_block[user_address].blank?
           user_rewards_for_this_block[user_address] = 0
@@ -123,7 +132,7 @@ class RewardsService
 
     user_rewards_for_this_block.each do |user_address, reward|
       @user_rewards[user_address] = 0 if @user_rewards[user_address].blank?
-      @user_rewards[user_address] += reward / total_liquidity_for_this_block * @weight_of_each_block * (to_block - from_block)
+      @user_rewards[user_address] += reward.to_f / total_liquidity_for_this_block * @weight_of_each_block * (to_block - from_block + 1)
     end
 
   end
@@ -145,12 +154,18 @@ class RewardsService
       action[:block_number]
     end
 
+    actions_by_block.filter! do |block_number, a|
+      block_number >= from_block && block_number <= to_block
+    end
+
+    actions_by_block = actions_by_block.sort.to_h
+
     # GET LIQUIDITY AT FROM_BLOCK
     liquidity_state = get_liquidity_by_markets(markets_on_top, {}, actions.select { |action| action[:block_number] < from_block })
 
     previous_block = from_block
 
-    actions.each do |block_number, action|
+    actions_by_block.each do |block_number, a|
 
       compute_rewards(markets_on_top, liquidity_state, previous_block, block_number)
 
@@ -172,7 +187,7 @@ class RewardsService
     top_entries.to_h
   end
 
-  def get_liquidity_by_market(markets_on_top, liquidity, actions)
+  def get_liquidity_by_markets(markets_on_top, liquidity, actions)
     # Iterate markets on top, filter the actions by market_id and compute the liquidity
     markets_on_top.each do |market_id, lock_amount|
 
@@ -268,8 +283,7 @@ class RewardsService
   def get_block_number_from_timestamp(timestamp)
 
     block = EtherscanService.new('blockscout').block_number_by_timestamp(timestamp)
-
-    return block['blockNumber']
+    return block[:blockNumber]
   end
 
 end

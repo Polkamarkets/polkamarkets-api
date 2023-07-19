@@ -78,3 +78,5 @@ gem 'aws-sdk-s3'
 
 # Discord
 gem 'discordrb'
+
+gem 'spy'
