@@ -18,7 +18,11 @@ default: &default
       realitio_contract_address: "<%= ENV["STATS_NETWORK_#{network_id}_REALITIO_ERC20_CONTRACT_ADDRESS"].to_s %>"
   <% end %>
     market_list_url: <%= ENV['ETHEREUM_MARKET_LIST_URL'] %>
-    network_ids: <%= ENV["ETHEREUM_NETWORK_IDS"].to_s.split(',') %>
+    network_ids: <%=
+      ENV["ETHEREUM_NETWORK_IDS"].to_s.split(',').select do |network_id|
+        ENV["ETHEREUM_NETWORK_#{network_id}_DISABLED"].to_s != 'true'
+      end
+    %>
     stats_network_ids: <%= ENV["STATS_NETWORK_IDS"].to_s.split(',') %>
     cache_ttl_seconds: <%= ENV["ETHEREUM_CACHE_TTL"] %>
     voting_delta: <%= ENV["ETHEREUM_VOTING_DELTA"] || 3 %>
