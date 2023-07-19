@@ -7,6 +7,8 @@ default: &default
       achievements_contract_address: "<%= ENV["ETHEREUM_NETWORK_#{network_id}_ACHIEVEMENTS_CONTRACT_ADDRESS"].to_s %>"
       voting_contract_address: "<%= ENV["ETHEREUM_NETWORK_#{network_id}_VOTING_CONTRACT_ADDRESS"].to_s %>"
       erc20_contract_address: "<%= ENV["ETHEREUM_NETWORK_#{network_id}_ERC20_CONTRACT_ADDRESS"].to_s %>"
+      arbitration_contract_address: "<%= ENV["ETHEREUM_NETWORK_#{network_id}_ARBITRATION_CONTRACT_ADDRESS"].to_s %>"
+      arbitration_proxy_contract_address: "<%= ENV["ETHEREUM_NETWORK_#{network_id}_ARBITRATION_PROXY_CONTRACT_ADDRESS"].to_s %>"
       image_url: "<%= ENV["ETHEREUM_NETWORK_#{network_id}_IMAGE_URL"].to_s %>"
   <% end %>
   <% ENV["STATS_NETWORK_IDS"].to_s.split(',') do |network_id| %>
