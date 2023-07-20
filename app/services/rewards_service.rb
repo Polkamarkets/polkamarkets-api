@@ -16,9 +16,9 @@ class RewardsService
     from, to = get_timestamps(date)
 
     from_block = get_block_number_from_timestamp(from)
-    to_block = get_block_number_from_timestamp(to)
+    to_block = get_block_number_from_timestamp(to) + 1 # add 1 to include the last block
 
-    @weight_of_each_block = 1.0 / (to_block - from_block + 1)
+    @weight_of_each_block = 1.0 / (to_block - from_block)
 
     rewards = @networks.to_h do |network|
 
@@ -61,37 +61,34 @@ class RewardsService
       end
 
       locks_by_block.filter! do |block_number, a|
-        block_number >= from_block && block_number <= to_block
+        block_number > from_block && block_number <= to_block
       end
 
       locks_by_block = locks_by_block.sort.to_h
 
-      # GET TOP MARKETS AT FROM_BLOCK
+      # Init previous_block and lock state
       lock_state = get_locks_by_market({}, locks.select { |lock| lock[:block_number] < from_block })
-
-      markets_on_top = get_lock_top(top, lock_state)
-
       previous_block = from_block
 
-      locks_by_block.each do |block_number, locks|
-        # compute the rewards between previous_block and block_number
-        iterate_liquidity(markets_on_top, actions.select { |action| action[:block_number] <= block_number }, previous_block, block_number)
+      locks_by_block.each do |block_number, _|
 
-        # GET TOP MARKETS AT BLOCK_NUMBER
         lock_state = get_locks_by_market(lock_state, locks.select { |lock| lock[:block_number] >= previous_block && lock[:block_number] < block_number })
 
         markets_on_top = get_lock_top(top, lock_state)
+
+        # compute the rewards between previous_block and block_number
+        iterate_liquidity(markets_on_top, actions.select { |action| action[:block_number] < block_number }, previous_block, block_number)
 
         previous_block = block_number
 
       end
 
-      # GET TOP MARKETS AT TO_BLOCK
+      # GET TOP MARKETS AT TO_BLOCK.
       lock_state = get_locks_by_market(lock_state, locks.select { |lock| lock[:block_number] >= previous_block && lock[:block_number] < to_block })
 
       markets_on_top = get_lock_top(top, lock_state)
 
-      iterate_liquidity(markets_on_top, actions.select { |action| action[:block_number] <= to_block }, previous_block, to_block)
+      iterate_liquidity(markets_on_top, actions.select { |action| action[:block_number] < to_block }, previous_block, to_block)
 
       [
         network_id,
@@ -119,7 +116,6 @@ class RewardsService
       liquidity[:users].each do |user_address, liquidity|
         # compute rewards
         multiplier = get_locked_multiplier(locked_info[:users][user_address]);
-
         if user_rewards_for_this_block[user_address].blank?
           user_rewards_for_this_block[user_address] = 0
         end
@@ -132,7 +128,8 @@ class RewardsService
 
     user_rewards_for_this_block.each do |user_address, reward|
       @user_rewards[user_address] = 0 if @user_rewards[user_address].blank?
-      @user_rewards[user_address] += reward.to_f / total_liquidity_for_this_block * @weight_of_each_block * (to_block - from_block + 1)
+
+      @user_rewards[user_address] += reward.to_f / total_liquidity_for_this_block * @weight_of_each_block * (to_block - from_block)
     end
 
   end
@@ -155,7 +152,7 @@ class RewardsService
     end
 
     actions_by_block.filter! do |block_number, a|
-      block_number >= from_block && block_number <= to_block
+      block_number > from_block && block_number <= to_block
     end
 
     actions_by_block = actions_by_block.sort.to_h
@@ -167,10 +164,10 @@ class RewardsService
 
     actions_by_block.each do |block_number, a|
 
-      compute_rewards(markets_on_top, liquidity_state, previous_block, block_number)
-
       # GET LIQUIDITY AT BLOCK_NUMBER
       liquidity_state = get_liquidity_by_markets(markets_on_top, liquidity_state, actions.select { |action| action[:block_number] >= previous_block && action[:block_number] < block_number })
+
+      compute_rewards(markets_on_top, liquidity_state, previous_block, block_number)
 
       previous_block = block_number
     end
