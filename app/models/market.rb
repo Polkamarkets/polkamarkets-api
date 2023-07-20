@@ -362,7 +362,7 @@ class Market < ApplicationRecord
       arbitration_network_id = Rails.application.config_for(:ethereum).dig(:"network_#{network_id}", :arbitration_network_id)
       arbitration_contract_address = Rails.application.config_for(:ethereum).dig(:"network_#{network_id}", :arbitration_proxy_contract_address).to_s.downcase
 
-      return question_data.merge(
+      next question_data.merge(
         dispute_id: nil,
         is_pending_arbitration_request: false
       ) if arbitration_network_id.blank? || question_data[:arbitrator].downcase != arbitration_contract_address
@@ -371,7 +371,7 @@ class Market < ApplicationRecord
         nil :
         Bepro::ArbitrationContractService.new(network_id: arbitration_network_id).dispute_id(question_id)
 
-      return question_data.merge(
+      next question_data.merge(
         dispute_id: dispute_id,
         is_pending_arbitration_request: false
       ) if dispute_id.present? || question_data[:is_pending_arbitration]
