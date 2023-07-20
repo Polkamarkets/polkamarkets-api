@@ -360,11 +360,12 @@ class Market < ApplicationRecord
 
       # fetching market dispute id and pending arbitration requests
       arbitration_network_id = Rails.application.config_for(:ethereum).dig(:"network_#{network_id}", :arbitration_network_id)
+      arbitration_contract_address = Rails.application.config_for(:ethereum).dig(:"network_#{network_id}", :arbitration_proxy_contract_address).to_s.downcase
 
       return question_data.merge(
         dispute_id: nil,
         is_pending_arbitration_request: false
-      ) if arbitration_network_id.blank?
+      ) if arbitration_network_id.blank? || question_data[:arbitrator].downcase != arbitration_contract_address
 
       dispute_id = question_data[:is_pending_arbitration] ?
         nil :
