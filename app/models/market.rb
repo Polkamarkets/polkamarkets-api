@@ -356,7 +356,33 @@ class Market < ApplicationRecord
   # realitio data
   def question_data(refresh: false)
     Rails.cache.fetch("markets:network_#{network_id}:#{eth_market_id}:question", force: refresh) do
-      Bepro::RealitioErc20ContractService.new(network_id: network_id).get_question(question_id)
+      question_data = Bepro::RealitioErc20ContractService.new(network_id: network_id).get_question(question_id)
+
+      # fetching market dispute id and pending arbitration requests
+      arbitration_network_id = Rails.application.config_for(:ethereum).dig(:"network_#{network_id}", :arbitration_network_id)
+
+      return question_data.merge(
+        dispute_id: nil,
+        is_pending_arbitration_request: false
+      ) if arbitration_network_id.blank?
+
+      dispute_id = question_data[:is_pending_arbitration] ?
+        nil :
+        Bepro::ArbitrationContractService.new(network_id: arbitration_network_id).dispute_id(question_id)
+
+      return question_data.merge(
+        dispute_id: dispute_id,
+        is_pending_arbitration_request: false
+      ) if dispute_id.present? || question_data[:is_pending_arbitration]
+
+      arbitration_requests = Bepro::ArbitrationContractService.new(network_id: arbitration_network_id).arbitration_requests(question_id)
+
+      arbitration_requests_rejected = Bepro::ArbitrationProxyContractService.new(network_id: network_id).arbitration_requests_rejected(question_id)
+
+      question_data.merge(
+        dispute_id: dispute_id,
+        is_pending_arbitration_request: arbitration_requests.count > arbitration_requests_rejected.count
+      )
     end
   end
 
