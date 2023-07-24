@@ -35,6 +35,29 @@ namespace :markets do
     end
   end
 
+  task :check_arbitration_requested_markets, [:symbol] => :environment do |task, args|
+    Rails.application.config_for(:ethereum).network_ids.each do |network_id|
+      arbitration_network_id = Rails.application.config_for(:ethereum).dig(:"network_#{network_id}", :arbitration_network_id)
+      arbitration_contract_address = Rails.application.config_for(:ethereum).dig(:"network_#{network_id}", :arbitration_proxy_contract_address).to_s.downcase
+
+      next if arbitration_network_id.blank? || arbitration_contract_address.blank?
+
+      markets = Market.where(network_id: network_id).all
+
+      arbitration_requests =
+        Bepro::ArbitrationContractService.new(network_id: arbitration_network_id)
+          .arbitration_requests
+
+      arbitration_requests.each do |arbitration_request|
+        # matching market question_id and arbitration_request question_id
+        market = markets.find { |market| market.question_id == arbitration_request[:question_id] }
+        next if market.blank?
+
+        Discord::PublishArbitrationRequestedWorker.perform_async(market.id, arbitration_request[:max_previous])
+      end
+    end
+  end
+
   desc "refreshes eth cache of markets"
   task :refresh_cache, [:symbol] => :environment do |task, args|
     Market.all.each { |m| m.refresh_cache!(queue: 'low') if m.should_refresh_cache? }
