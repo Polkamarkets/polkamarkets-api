@@ -7,20 +7,24 @@ class RewardsService
 
 
   def initialize
-    # TODO Implement this
-    @networks = [{network_id: 1, name: 'Ethereum', chain: 'mainnet'}]
+    @networks = rewards_network_ids.map do |network_id|
+      {
+        network_id: network_id,
+        chain: Rails.application.config_for(:ethereum)[:"rewards_network_#{network_id}"][:reward_contract_chain],
+      }
+    end
   end
 
   def get_rewards(date: Date.today, top: 10)
-    # TODO: do i neeed to get this also for each network?
+
     from, to = get_timestamps(date)
 
-    from_block = get_block_number_from_timestamp(from)
-    to_block = get_block_number_from_timestamp(to) + 1 # add 1 to include the last block
-
-    @weight_of_each_block = 1.0 / (to_block - from_block)
-
     rewards = @networks.to_h do |network|
+
+      from_block = get_block_number_from_timestamp(from, network[:chain])
+      to_block = get_block_number_from_timestamp(to, network[:chain]) + 1 # add 1 to include the last block
+
+      @weight_of_each_block = 1.0 / (to_block - from_block)
 
       # TODO get this from the smart contract
       @tiers = [{
@@ -54,7 +58,6 @@ class RewardsService
       # filter actions that are liquidity related
       actions.select! { |action| ['add_liquidity', 'remove_liquidity'].include?(action[:action]) }
 
-      # TODO: filtrar locks
       # grouping locks by block_number
       locks_by_block = locks.group_by do |lock|
         lock[:block_number]
@@ -100,6 +103,10 @@ class RewardsService
   end
 
   private
+
+  def rewards_network_ids
+    @_rewards_network_ids ||= Rails.application.config_for(:ethereum).rewards_network_ids
+  end
 
   def compute_rewards(markets_on_top, liquidity_state, from_block, to_block)
     user_rewards_for_this_block = {}
@@ -277,9 +284,9 @@ class RewardsService
     return from, to
   end
 
-  def get_block_number_from_timestamp(timestamp)
+  def get_block_number_from_timestamp(timestamp, chain = 'mainnet')
 
-    block = EtherscanService.new('blockscout').block_number_by_timestamp(timestamp)
+    block = EtherscanService.new(chain).block_number_by_timestamp(timestamp)
     return block[:blockNumber]
   end
 
