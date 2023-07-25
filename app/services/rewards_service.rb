@@ -110,7 +110,7 @@ class RewardsService
 
       liquidity = liquidity_state[market_id]
 
-      return if liquidity.blank?
+      next if liquidity.blank?
 
       # iterate liquidity users of the market
       liquidity[:users].each do |user_address, liquidity|
