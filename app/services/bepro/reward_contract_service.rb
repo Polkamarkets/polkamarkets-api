@@ -11,13 +11,16 @@ module Bepro
         contract_name: 'reward',
         contract_address:
           contract_address ||
-            Rails.application.config_for(:ethereum).dig(:"rewards_network_#{network_id}", :reward_contract_address)
+            Rails.application.config_for(:ethereum).dig(:"rewards_network_#{network_id}", :reward_contract_address),
         api_url:
           api_url ||
-            Rails.application.config_for(:ethereum).dig(:"rewards_network_#{network_id}", :bepro_api_url)
+            Rails.application.config_for(:ethereum).dig(:"rewards_network_#{network_id}", :bepro_api_url),
       )
     end
 
+    def tiers_info
+      call(method: 'tiers')
+    end
 
     def get_lock_events(market_id: nil, address: nil)
       # if contract is not deployed, returning [] as default

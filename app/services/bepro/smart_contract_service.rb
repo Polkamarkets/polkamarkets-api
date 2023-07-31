@@ -6,7 +6,8 @@ module Bepro
       'erc20',
       'realitio',
       'achievements',
-      'voting'
+      'voting',
+      'reward'
     ].freeze
 
     attr_accessor :contract_name, :contract_address, :api_url, :network_id
