@@ -22,6 +22,8 @@ module Bepro
       2 => 'resolved',
     }
 
+    DELIMITER = "\u241f"
+
     def initialize(network_id: nil, api_url: nil, contract_address: nil, version: 2)
       @version = version
 
@@ -78,7 +80,7 @@ module Bepro
 
       # decoding question from event. format from realitio
       # https://reality.eth.link/app/docs/html/contracts.html#how-questions-are-structured
-      question = events[0]['returnValues']['question'].split("\u241f")
+      question = events[0]['returnValues']['question'].split(DELIMITER)
       title = question[0].split(';').first
       description = question[0].split(';')[1..-1].join(';')
       category = question[2].split(';').first
@@ -86,7 +88,10 @@ module Bepro
       resolution_source = question[2].split(';')[2..-1].join(';') if question[2].split(';')[2..-1].present?
       outcome_titles = JSON.parse("[#{question[1]}]")
       outcomes.each_with_index { |outcome, i| outcome[:title] = outcome_titles[i] }
-      image_hash = events[0]['returnValues']['image']
+      image_hash = events[0]['returnValues']['image'].split(DELIMITER)[0]
+      outcomes_image_hashes = events[0]['returnValues']['image'].split(DELIMITER)[1].presence&.split(',')
+      # making sure outcomes_image_hashes length is correct
+      outcomes_image_hashes = outcomes_image_hashes.count == outcomes.count ? outcomes_image_hashes : []
       token_address = market_alt_data[3]
 
       {
@@ -108,6 +113,7 @@ module Bepro
         question_id: question_id,
         voided: is_market_voided,
         outcomes: outcomes,
+        outcomes_image_hashes: outcomes_image_hashes,
         token_address: token_address,
       }
     end
