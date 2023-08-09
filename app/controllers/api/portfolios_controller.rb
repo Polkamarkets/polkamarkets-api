@@ -1,6 +1,11 @@
 module Api
   class PortfoliosController < BaseController
     def show
+      if !allowed_network?
+        render json: Portfolio.empty_portfolio(address, params[:network_id]), status: :ok
+        return
+      end
+
       portfolio = Portfolio.find_or_create_by!(eth_address: address, network_id: params[:network_id])
 
       render json: portfolio, status: :ok
@@ -9,7 +14,9 @@ module Api
     def feed
       portfolio = Portfolio.find_or_create_by!(eth_address: address, network_id: params[:network_id])
 
-      render json: portfolio.feed_events, status: :ok
+      events = allowed_network? ? portfolio.feed_events : []
+
+      render json: events, status: :ok
     end
 
     def reload
