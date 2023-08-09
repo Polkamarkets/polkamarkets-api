@@ -6,6 +6,26 @@ class Portfolio < ApplicationRecord
 
   validate :eth_address_validation
 
+  def self.empty_portfolio(address, network_id)
+    {
+      address: address,
+      network_id: network_id.to_i,
+      holdings_value: 0,
+      holdings_performance: {
+        change: -0,
+        change_percent: -0
+      },
+      holdings_chart: [],
+      open_positions: 0,
+      won_positions: 0,
+      total_positions: 0,
+      closed_markets_profit: 0,
+      liquidity_provided: 0,
+      liquidity_fees_earned: 0,
+      first_position_at: nil
+    }
+  end
+
   def normalize_eth_address
     # setting default to downcase to avoid case duplicates
     self.eth_address = self.eth_address.downcase
