@@ -14,7 +14,9 @@ module Api
     def feed
       portfolio = Portfolio.find_or_create_by!(eth_address: address, network_id: params[:network_id])
 
-      render json: portfolio.feed_events, status: :ok
+      events = allowed_network? ? portfolio.feed_events : []
+
+      render json: events, status: :ok
     end
 
     def reload
