@@ -30,9 +30,9 @@ module Bepro
       event ? event['returnValues']['_disputeID'].to_i : nil
     end
 
-    def arbitration_requests(question_id)
+    def arbitration_requests(question_id = nil)
       events = get_events(event_name: 'ArbitrationRequested').select do |event|
-        event['returnValues']['_questionID'] == question_id
+        question_id.blank? || event['returnValues']['_questionID'] == question_id
       end
 
       events.map do |event|

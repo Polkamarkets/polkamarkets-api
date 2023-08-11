@@ -3,6 +3,7 @@ default: &default
   channel_id: <%= ENV['DISCORD_CHANNEL_ID'] %>
   client_id: <%= ENV['DISCORD_CLIENT_ID'] %>
   client_secret: <%= ENV['DISCORD_CLIENT_SECRET'] %>
+  arbitration_channel_id: <%= ENV['DISCORD_ARBITRATION_CHANNEL_ID'] %>
 
 production:
   <<: *default
