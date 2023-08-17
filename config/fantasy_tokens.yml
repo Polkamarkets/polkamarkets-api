@@ -1,5 +1,7 @@
 default: &default
   networks:
+    "137":
+      "0x7595e10C45CDd68cAb85F32Bc9d52EAD31da8965": "tween"
     "1284":
       "0xfb0e6023be6ce4ee03fa20382507afeafec56e28": "ifl"
     "80001":
