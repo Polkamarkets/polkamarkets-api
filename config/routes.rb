@@ -22,7 +22,7 @@ Rails.application.routes.draw do
       end
     end
 
-    resources :portfolios, only: [:show] do
+    resources :portfolios, only: [:show], constraints: { id: /.*/ } do
       member do
         post :reload
         get :feed
