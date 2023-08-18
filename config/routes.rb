@@ -35,7 +35,7 @@ Rails.application.routes.draw do
     resources :whitelist, only: [:show]
     resources :achievements, only: [:index, :show]
     get 'leaderboard' => 'leaderboards#index' # legacy route
-    resources :leaderboards, only: [:index, :show] do
+    resources :leaderboards, only: [:index, :show], constraints: { id: /.*/ } do
       collection do
         get 'winners', to: 'leaderboards#winners'
       end
