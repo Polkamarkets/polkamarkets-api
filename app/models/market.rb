@@ -50,8 +50,13 @@ class Market < ApplicationRecord
       image_url: IpfsService.image_url_from_hash(eth_data[:image_hash]),
       network_id: network_id
     )
-    eth_data[:outcomes].each do |outcome|
-      market.outcomes << MarketOutcome.new(title: outcome[:title], eth_market_id: outcome[:id])
+    eth_data[:outcomes].each_with_index do |outcome, i|
+      image_hash = eth_data[:outcomes_image_hashes].present? ? eth_data[:outcomes_image_hashes][i] : nil
+      market.outcomes << MarketOutcome.new(
+        title: outcome[:title],
+        eth_market_id: outcome[:id],
+        image_url: image_hash ? IpfsService.image_url_from_hash(image_hash) : nil
+      )
     end
 
     market.save!

@@ -22,18 +22,20 @@ Rails.application.routes.draw do
       end
     end
 
-    resources :portfolios, only: [:show] do
+    resources :portfolios, only: [:show], constraints: { id: /.*/ } do
       member do
         post :reload
         get :feed
       end
     end
 
+    put 'users' => 'users#update'
+
     resources :articles, only: [:index]
     resources :whitelist, only: [:show]
     resources :achievements, only: [:index, :show]
     get 'leaderboard' => 'leaderboards#index' # legacy route
-    resources :leaderboards, only: [:index, :show] do
+    resources :leaderboards, only: [:index, :show], constraints: { id: /.*/ } do
       collection do
         get 'winners', to: 'leaderboards#winners'
       end
@@ -45,7 +47,7 @@ Rails.application.routes.draw do
       end
     end
 
-    resources :tournaments, only: [:index, :show]
+    resources :tournaments
 
     get 'achievement_tokens/:network/:id', to: 'achievement_tokens#show'
 
