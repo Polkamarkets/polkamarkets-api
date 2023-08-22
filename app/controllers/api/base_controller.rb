@@ -68,5 +68,9 @@ module Api
     def address_from_username
       @_address_from_username ||= User.where('lower(username) = ?', params[:id].to_s.downcase).first&.wallet_address&.downcase
     end
+
+    def allowed_network?
+      Rails.application.config_for(:ethereum).network_ids.include?(params[:network_id].to_s)
+    end
   end
 end

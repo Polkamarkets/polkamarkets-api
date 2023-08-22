@@ -83,10 +83,10 @@ module Bepro
       question = events[0]['returnValues']['question'].split(DELIMITER)
       title = question[0].split(';').first
       description = question[0].split(';')[1..-1].join(';')
-      category = question[2].split(';').first
-      subcategory = question[2].split(';').second
-      resolution_source = question[2].split(';')[2..-1].join(';') if question[2].split(';')[2..-1].present?
-      outcome_titles = JSON.parse("[#{question[1]}]")
+      category = question[-1].split(';').first
+      subcategory = question[-1].split(';').second
+      resolution_source = question[-1].split(';')[2..-1].join(';') if question[-1].split(';')[2..-1].present?
+      outcome_titles = JSON.parse("[#{question[-2]}]")
       outcomes.each_with_index { |outcome, i| outcome[:title] = outcome_titles[i] }
       image_hash = events[0]['returnValues']['image'].split(DELIMITER)[0]
       outcomes_image_hashes = events[0]['returnValues']['image'].split(DELIMITER)[1].presence&.split(',')
