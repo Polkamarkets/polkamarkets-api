@@ -123,7 +123,7 @@ class Portfolio < ApplicationRecord
     holdings.sum do |holding|
       market = markets.find { |market| market.eth_market_id == holding[:market_id] }
 
-      return 0 unless market.present?
+      next 0 unless market.present?
 
       holding[:liquidity_shares] * market.liquidity_price * market.token_rate
     end
