@@ -346,6 +346,7 @@ class StatsService
 
               # calculating portfolio value to add to earnings
               portfolio_value = Portfolio.new(eth_address: user, network_id: network_id).holdings_value
+              is_sybil_attacker = SybilAttackFinderService.new(user, network_id).is_sybil_attacker?
 
               {
                 user: user,
@@ -362,6 +363,7 @@ class StatsService
                 transactions: user_actions.count,
                 upvotes: upvote_actions.select { |action| action[:user] == user }.count,
                 downvotes: downvote_actions.select { |action| action[:user] == user }.count,
+                malicious: is_sybil_attacker[:is_attacker],
               }
             end
           ]
