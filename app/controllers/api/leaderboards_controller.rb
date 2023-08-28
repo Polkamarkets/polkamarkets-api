@@ -56,7 +56,14 @@ module Api
       # mapping rewards to array
       rewards = rewards.map { |user, reward| { address: user, reward: reward } }
 
-      render json: { winners: winners, rewards: rewards }, status: :ok
+      render json: {
+        winners: winners,
+        rewards: rewards,
+        period: {
+          from: Time.at(StatsService.new.timestamp_from(timestamp, timeframe)).to_date,
+          to: Time.at(StatsService.new.timestamp_to(timestamp, timeframe)).to_date
+        }
+      }, status: :ok
     end
 
     private
