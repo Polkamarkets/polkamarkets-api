@@ -24,6 +24,7 @@ default: &default
         ENV["ETHEREUM_NETWORK_#{network_id}_DISABLED"].to_s != 'true'
       end
     %>
+    fantasy_enabled: <%= ENV["ETHEREUM_FANTASY_ENABLED"] == 'true' %>
     stats_network_ids: <%= ENV["STATS_NETWORK_IDS"].to_s.split(',') %>
     cache_ttl_seconds: <%= ENV["ETHEREUM_CACHE_TTL"] %>
     voting_delta: <%= ENV["ETHEREUM_VOTING_DELTA"] || 3 %>
