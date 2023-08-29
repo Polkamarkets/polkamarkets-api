@@ -347,7 +347,8 @@ class StatsService
               # calculating portfolio value to add to earnings
               portfolio_value = Portfolio.new(eth_address: user, network_id: network_id).holdings_value
               is_sybil_attacker = Rails.application.config_for(:ethereum).fantasy_enabled ?
-                SybilAttackFinderService.new(user, network_id).is_sybil_attacker? : false
+                SybilAttackFinderService.new(user, network_id).is_sybil_attacker? :
+                { is_attacker: false }
 
               {
                 user: user,
