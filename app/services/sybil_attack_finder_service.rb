@@ -1,5 +1,7 @@
 class SybilAttackFinderService
-  attr_accessor :user, :network_id, :actions
+  include NetworkHelper
+
+  attr_accessor :user, :network_id, :actions, :burn_actions
 
   CRITERIA = [
     {
@@ -19,9 +21,8 @@ class SybilAttackFinderService
   def initialize(user, network_id)
     @user = user
     @network_id = network_id
-    @actions = Rails.cache.fetch("api:actions:#{network_id}", expires_in: 24.hours) do
-      Bepro::PredictionMarketContractService.new(network_id: network_id).get_action_events
-    end.sort_by { |action| action[:timestamp] }
+    @actions = network_actions(network_id)
+    @burn_actions = network_burn_actions(network_id)
   end
 
   def is_sybil_attacker?
@@ -30,8 +31,10 @@ class SybilAttackFinderService
     users_to_analyze = []
     accomplices = []
 
+    user_last_burn_block_number = burn_actions.select { |action| action[:from].downcase == user.downcase }&.last&.dig(:block_number) || 0
+
     # analyzing all sell actions
-    user_actions.select { |action| action[:action] == 'sell' }.each do |action|
+    user_actions.select { |action| action[:action] == 'sell' && action[:block_number] > user_last_burn_block_number }.each do |action|
       # fetching last buy action for this market
       last_buy_action = user_actions.select do |user_action|
         user_action[:action] == 'buy' &&

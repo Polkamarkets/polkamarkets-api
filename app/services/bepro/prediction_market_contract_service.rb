@@ -288,7 +288,8 @@ module Bepro
             network_market_erc20_decimals(network_id, event['returnValues']['marketId'].to_i)
           ),
           timestamp: event['returnValues']['timestamp'].to_i,
-          tx_id: event['transactionHash']
+          tx_id: event['transactionHash'],
+          block_number: event['blockNumber']
         }
       end
     end

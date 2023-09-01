@@ -46,6 +46,23 @@ class Portfolio < ApplicationRecord
       end
   end
 
+  def burn_action_events(refresh: false)
+    return [] unless Rails.application.config_for(:ethereum).fantasy_enabled
+
+    return @burn_actions if @burn_actions.present? && !refresh
+
+    @burn_actions ||=
+      Rails.cache.fetch("portfolios:network_#{network_id}:#{eth_address}:burn_actions", expires_in: 24.hours, force: refresh) do
+        Bepro::Erc20ContractService.new(network_id: network_id).burn_events(from: eth_address)
+      end
+  end
+
+  def burn_total
+    return 0 unless Rails.application.config_for(:ethereum).fantasy_enabled
+
+    burn_action_events.sum { |event| event[:value] }
+  end
+
   def feed_events(refresh: false)
     Rails.cache.fetch("portfolios:network_#{network_id}:#{eth_address}:feed", expires_in: 24.hours, force: refresh) do
       FeedService.new(user: eth_address, network_id: network_id).serialized_actions(refresh: refresh)
