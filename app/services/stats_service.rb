@@ -282,6 +282,7 @@ class StatsService
           actions = network_actions(network_id)
           bonds = network_bonds(network_id)
           votes = network_votes(network_id)
+          burn_actions = network_burn_actions(network_id)
           market_ids = actions.map { |action| action[:market_id] }.uniq
 
           create_market_actions = market_ids.map do |market_id|
@@ -350,7 +351,8 @@ class StatsService
               if Rails.application.config_for(:ethereum).fantasy_enabled
                 portfolio = Portfolio.new(eth_address: user, network_id: network_id)
                 # calculating portfolio value to add to earnings
-                portfolio_value = portfolio.holdings_value - portfolio.burn_total
+                burn_total = burn_actions.select { |action| action[:from] == user }.sum { |action| action[:value] }
+                portfolio_value = portfolio.holdings_value - burn_total
 
                 is_sybil_attacker = SybilAttackFinderService.new(user, network_id).is_sybil_attacker?
               end

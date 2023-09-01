@@ -6,7 +6,6 @@ class Cache::PortfolioActionEventsWorker
     return if portfolio.blank?
 
     portfolio.action_events(refresh: true)
-    portfolio.burn_action_events(refresh: true)
     # forcing holdings chart refresh
     portfolio.holdings_chart(refresh: true)
   end
