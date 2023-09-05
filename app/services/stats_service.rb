@@ -349,7 +349,7 @@ class StatsService
               is_sybil_attacker = { is_attacker: false }
 
               if Rails.application.config_for(:ethereum).fantasy_enabled
-                portfolio = Portfolio.new(eth_address: user, network_id: network_id)
+                portfolio = Portfolio.new(eth_address: user.downcase, network_id: network_id)
                 # calculating portfolio value to add to earnings
                 burn_total = burn_actions.select { |action| action[:from] == user }.sum { |action| action[:value] }
                 portfolio_value = portfolio.holdings_value - burn_total
