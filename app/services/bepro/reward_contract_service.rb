@@ -19,7 +19,15 @@ module Bepro
     end
 
     def tiers_info
-      call(method: 'tiers')
+      number_of_tiers = call(method: 'getNumberOfTiers')
+      tiers = []
+
+      number_of_tiers.times do |i|
+        tier = call(method: 'tiers', args: i)
+        tiers << { max_amount: tier[0].to_i, multiplier: tier[1].to_f / 10 }
+      end
+
+      tiers
     end
 
     def get_lock_events(market_id: nil, address: nil)

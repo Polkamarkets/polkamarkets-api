@@ -26,28 +26,7 @@ class RewardsService
 
       @weight_of_each_block = 1.0 / (to_block - from_block)
 
-      # TODO get this from the smart contract
-      @tiers = [{
-          max_amount: 0,
-          multiplier: 1
-        },
-        {
-          max_amount: 1000,
-          multiplier: 1.3
-        },
-        {
-          max_amount: 5000,
-          multiplier: 1.5
-        },
-        {
-          max_amount: 10000,
-          multiplier: 1.7
-        },
-        {
-          max_amount: 20000,
-          multiplier: 2.1
-        }
-      ]
+      @tiers = get_tiers(network[:network_id])
 
       network_id = network[:network_id]
       actions = network_actions(network_id)
@@ -103,6 +82,10 @@ class RewardsService
   end
 
   private
+
+  def get_tiers(network_id)
+    Bepro::RewardContractService.new(network_id: network_id).tiers_info
+  end
 
   def rewards_network_ids
     @_rewards_network_ids ||= Rails.application.config_for(:ethereum).rewards_network_ids

@@ -55,12 +55,36 @@ class RewardServiceTest < ActiveSupport::TestCase
         ]
       end
 
+      spyTiersInfo = Spy.on_instance_method(RewardsService, :get_tiers).and_return do |networkId|
+        [{
+          max_amount: 0,
+          multiplier: 1
+        },
+        {
+          max_amount: 1000,
+          multiplier: 1.3
+        },
+        {
+          max_amount: 5000,
+          multiplier: 1.5
+        },
+        {
+          max_amount: 10000,
+          multiplier: 1.7
+        },
+        {
+          max_amount: 20000,
+          multiplier: 2.1
+        }
+      ]
+      end
       rewards = RewardsService.new.get_rewards(date: Date.new(2023, 7, 17), top: 2)
       assert_equal rewards, {"1"=>{"0xEF4D8DC13FDEB0F2B4784B1DAE743093C228A08A"=>0.5, "0x6122252DC9BE4DBF4DF78C22E5348A12B1C77D61"=>0.5}}
 
       spy1.unhook
       spy2.unhook
       spy3.unhook
+      spyTiersInfo.unhook
     end
   end
 
@@ -90,12 +114,37 @@ class RewardServiceTest < ActiveSupport::TestCase
         ]
       end
 
+      spyTiersInfo = Spy.on_instance_method(RewardsService, :get_tiers).and_return do |networkId|
+        [{
+          max_amount: 0,
+          multiplier: 1
+        },
+        {
+          max_amount: 1000,
+          multiplier: 1.3
+        },
+        {
+          max_amount: 5000,
+          multiplier: 1.5
+        },
+        {
+          max_amount: 10000,
+          multiplier: 1.7
+        },
+        {
+          max_amount: 20000,
+          multiplier: 2.1
+        }
+      ]
+      end
+
       rewards = RewardsService.new.get_rewards(date: Date.new(2023, 7, 17), top: 2)
       assert_equal rewards, {"1"=>{"0x6122252DC9BE4DBF4DF78C22E5348A12B1C77D61"=>0.4347826086956521, "0xEF4D8DC13FDEB0F2B4784B1DAE743093C228A08A"=>0.5652173913043478}}
 
       spy1.unhook
       spy2.unhook
       spy3.unhook
+      spyTiersInfo.unhook
     end
   end
 
@@ -128,6 +177,30 @@ class RewardServiceTest < ActiveSupport::TestCase
         ]
       end
 
+      spyTiersInfo = Spy.on_instance_method(RewardsService, :get_tiers).and_return do |networkId|
+        [{
+          max_amount: 0,
+          multiplier: 1
+        },
+        {
+          max_amount: 1000,
+          multiplier: 1.3
+        },
+        {
+          max_amount: 5000,
+          multiplier: 1.5
+        },
+        {
+          max_amount: 10000,
+          multiplier: 1.7
+        },
+        {
+          max_amount: 20000,
+          multiplier: 2.1
+        }
+      ]
+      end
+
       rewards = RewardsService.new.get_rewards(date: Date.new(2023, 7, 17), top: 2)
 
       assert_equal rewards, {"1"=>{"0xEF4D8DC13FDEB0F2B4784B1DAE743093C228A08A"=>0.8333333333333333, "0x6122252DC9BE4DBF4DF78C22E5348A12B1C77D61"=>0.16666666666666666}}
@@ -135,6 +208,7 @@ class RewardServiceTest < ActiveSupport::TestCase
       spy1.unhook
       spy2.unhook
       spy3.unhook
+      spyTiersInfo.unhook
     end
   end
 
@@ -167,6 +241,30 @@ class RewardServiceTest < ActiveSupport::TestCase
         ]
       end
 
+      spyTiersInfo = Spy.on_instance_method(RewardsService, :get_tiers).and_return do |networkId|
+        [{
+          max_amount: 0,
+          multiplier: 1
+        },
+        {
+          max_amount: 1000,
+          multiplier: 1.3
+        },
+        {
+          max_amount: 5000,
+          multiplier: 1.5
+        },
+        {
+          max_amount: 10000,
+          multiplier: 1.7
+        },
+        {
+          max_amount: 20000,
+          multiplier: 2.1
+        }
+      ]
+      end
+
       rewards = RewardsService.new.get_rewards(date: Date.new(2023, 7, 17), top: 2)
 
       assert_equal rewards, {"1"=>{"0xEF4D8DC13FDEB0F2B4784B1DAE743093C228A08A"=>0.75, "0x6122252DC9BE4DBF4DF78C22E5348A12B1C77D61"=>0.25}}
@@ -174,6 +272,7 @@ class RewardServiceTest < ActiveSupport::TestCase
       spy1.unhook
       spy2.unhook
       spy3.unhook
+      spyTiersInfo.unhook
     end
   end
 
@@ -207,6 +306,30 @@ class RewardServiceTest < ActiveSupport::TestCase
         ]
       end
 
+      spyTiersInfo = Spy.on_instance_method(RewardsService, :get_tiers).and_return do |networkId|
+        [{
+          max_amount: 0,
+          multiplier: 1
+        },
+        {
+          max_amount: 1000,
+          multiplier: 1.3
+        },
+        {
+          max_amount: 5000,
+          multiplier: 1.5
+        },
+        {
+          max_amount: 10000,
+          multiplier: 1.7
+        },
+        {
+          max_amount: 20000,
+          multiplier: 2.1
+        }
+      ]
+      end
+
       rewards = RewardsService.new.get_rewards(date: Date.new(2023, 7, 17), top: 2)
 
       assert_equal rewards, {"1"=>{"0xEF4D8DC13FDEB0F2B4784B1DAE743093C228A08A"=>0.75, "0x6122252DC9BE4DBF4DF78C22E5348A12B1C77D61"=>0.25}}
@@ -214,6 +337,7 @@ class RewardServiceTest < ActiveSupport::TestCase
       spy1.unhook
       spy2.unhook
       spy3.unhook
+      spyTiersInfo.unhook
     end
   end
 
@@ -248,6 +372,30 @@ class RewardServiceTest < ActiveSupport::TestCase
         ]
       end
 
+      spyTiersInfo = Spy.on_instance_method(RewardsService, :get_tiers).and_return do |networkId|
+        [{
+          max_amount: 0,
+          multiplier: 1
+        },
+        {
+          max_amount: 1000,
+          multiplier: 1.3
+        },
+        {
+          max_amount: 5000,
+          multiplier: 1.5
+        },
+        {
+          max_amount: 10000,
+          multiplier: 1.7
+        },
+        {
+          max_amount: 20000,
+          multiplier: 2.1
+        }
+      ]
+      end
+
       rewards = RewardsService.new.get_rewards(date: Date.new(2023, 7, 17), top: 2)
 
       assert_equal rewards, {"1"=>{"0xEF4D8DC13FDEB0F2B4784B1DAE743093C228A08A"=>0.7222222222222222, "0x6122252DC9BE4DBF4DF78C22E5348A12B1C77D61"=>0.2777777777777778}}
@@ -255,6 +403,7 @@ class RewardServiceTest < ActiveSupport::TestCase
       spy1.unhook
       spy2.unhook
       spy3.unhook
+      spyTiersInfo.unhook
     end
   end
 
@@ -285,12 +434,37 @@ class RewardServiceTest < ActiveSupport::TestCase
         ]
       end
 
+      spyTiersInfo = Spy.on_instance_method(RewardsService, :get_tiers).and_return do |networkId|
+        [{
+          max_amount: 0,
+          multiplier: 1
+        },
+        {
+          max_amount: 1000,
+          multiplier: 1.3
+        },
+        {
+          max_amount: 5000,
+          multiplier: 1.5
+        },
+        {
+          max_amount: 10000,
+          multiplier: 1.7
+        },
+        {
+          max_amount: 20000,
+          multiplier: 2.1
+        }
+      ]
+      end
+
       rewards = RewardsService.new.get_rewards(date: Date.new(2023, 7, 17), top: 2)
       assert_equal rewards, {"1"=>{"0x6122252DC9BE4DBF4DF78C22E5348A12B1C77D61"=>0.40861513687600637, "0xEF4D8DC13FDEB0F2B4784B1DAE743093C228A08A"=>0.5913848631239935}}
 
       spy1.unhook
       spy2.unhook
       spy3.unhook
+      spyTiersInfo.unhook
     end
   end
 
@@ -321,12 +495,37 @@ class RewardServiceTest < ActiveSupport::TestCase
         ]
       end
 
+      spyTiersInfo = Spy.on_instance_method(RewardsService, :get_tiers).and_return do |networkId|
+        [{
+          max_amount: 0,
+          multiplier: 1
+        },
+        {
+          max_amount: 1000,
+          multiplier: 1.3
+        },
+        {
+          max_amount: 5000,
+          multiplier: 1.5
+        },
+        {
+          max_amount: 10000,
+          multiplier: 1.7
+        },
+        {
+          max_amount: 20000,
+          multiplier: 2.1
+        }
+      ]
+      end
+
       rewards = RewardsService.new.get_rewards(date: Date.new(2023, 7, 17), top: 2)
       assert_equal rewards, {"1"=>{"0x6122252DC9BE4DBF4DF78C22E5348A12B1C77D61"=>1.0}}
 
       spy1.unhook
       spy2.unhook
       spy3.unhook
+      spyTiersInfo.unhook
     end
   end
 
@@ -353,12 +552,37 @@ class RewardServiceTest < ActiveSupport::TestCase
         ]
       end
 
+      spyTiersInfo = Spy.on_instance_method(RewardsService, :get_tiers).and_return do |networkId|
+        [{
+          max_amount: 0,
+          multiplier: 1
+        },
+        {
+          max_amount: 1000,
+          multiplier: 1.3
+        },
+        {
+          max_amount: 5000,
+          multiplier: 1.5
+        },
+        {
+          max_amount: 10000,
+          multiplier: 1.7
+        },
+        {
+          max_amount: 20000,
+          multiplier: 2.1
+        }
+      ]
+      end
+
       rewards = RewardsService.new.get_rewards(date: Date.new(2023, 7, 17), top: 2)
       assert_equal rewards, {"1"=>{}}
 
       spy1.unhook
       spy2.unhook
       spy3.unhook
+      spyTiersInfo.unhook
     end
   end
 
@@ -389,12 +613,37 @@ class RewardServiceTest < ActiveSupport::TestCase
         ]
       end
 
+      spyTiersInfo = Spy.on_instance_method(RewardsService, :get_tiers).and_return do |networkId|
+        [{
+          max_amount: 0,
+          multiplier: 1
+        },
+        {
+          max_amount: 1000,
+          multiplier: 1.3
+        },
+        {
+          max_amount: 5000,
+          multiplier: 1.5
+        },
+        {
+          max_amount: 10000,
+          multiplier: 1.7
+        },
+        {
+          max_amount: 20000,
+          multiplier: 2.1
+        }
+      ]
+      end
+
       rewards = RewardsService.new.get_rewards(date: Date.new(2023, 7, 17), top: 2)
       assert_equal rewards, {"1"=>{"0xEF4D8DC13FDEB0F2B4784B1DAE743093C228A08A"=>1.0}}
 
       spy1.unhook
       spy2.unhook
       spy3.unhook
+      spyTiersInfo.unhook
     end
   end
 
@@ -423,12 +672,37 @@ class RewardServiceTest < ActiveSupport::TestCase
         ]
       end
 
+      spyTiersInfo = Spy.on_instance_method(RewardsService, :get_tiers).and_return do |networkId|
+        [{
+          max_amount: 0,
+          multiplier: 1
+        },
+        {
+          max_amount: 1000,
+          multiplier: 1.3
+        },
+        {
+          max_amount: 5000,
+          multiplier: 1.5
+        },
+        {
+          max_amount: 10000,
+          multiplier: 1.7
+        },
+        {
+          max_amount: 20000,
+          multiplier: 2.1
+        }
+      ]
+      end
+
       rewards = RewardsService.new.get_rewards(date: Date.new(2023, 7, 17), top: 2)
       assert_equal rewards, {"1"=>{}}
 
       spy1.unhook
       spy2.unhook
       spy3.unhook
+      spyTiersInfo.unhook
     end
   end
 
