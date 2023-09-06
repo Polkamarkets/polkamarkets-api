@@ -107,6 +107,9 @@ module Api
       # removing blacklisted users from leaderboard
       leaderboard.reject! { |l| l[:user].in?(Rails.application.config_for(:ethereum).blacklist) }
 
+      # removing users only with upvotes/downvotes
+      leaderboard.reject! { |l| l[:transactions] == 0 }
+
       leaderboard
     end
 
