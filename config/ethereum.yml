@@ -11,6 +11,7 @@ default: &default
       arbitration_proxy_contract_address: "<%= ENV["ETHEREUM_NETWORK_#{network_id}_ARBITRATION_PROXY_CONTRACT_ADDRESS"].to_s %>"
       arbitration_network_id: <%= ENV["ETHEREUM_NETWORK_#{network_id}_ARBITRATION_NETWORK_ID"].to_s %>
       image_url: "<%= ENV["ETHEREUM_NETWORK_#{network_id}_IMAGE_URL"].to_s %>"
+      burn_from_block: <%= ENV["ETHEREUM_NETWORK_#{network_id}_BURN_FROM_BLOCK"].to_i %>
   <% end %>
   <% ENV["STATS_NETWORK_IDS"].to_s.split(',') do |network_id| %>
     stats_network_<%= network_id %>:

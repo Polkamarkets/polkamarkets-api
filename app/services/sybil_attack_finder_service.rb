@@ -22,7 +22,9 @@ class SybilAttackFinderService
     @user = user
     @network_id = network_id
     @actions = network_actions(network_id)
-    @burn_actions = network_burn_actions(network_id)
+    @burn_actions = network_burn_actions(network_id).select do |action|
+      action[:block_number] >= Rails.application.config_for(:ethereum).dig(:"network_#{network_id}", :burn_from_block)
+    end
   end
 
   def is_sybil_attacker?
