@@ -8,7 +8,7 @@ module Api
         return
       end
 
-      portfolio = Portfolio.find_or_create_by!(eth_address: address, network_id: params[:network_id])
+      portfolio = Portfolio.create_or_find_by!(eth_address: address, network_id: params[:network_id])
 
       render json: portfolio, status: :ok
     end
@@ -16,7 +16,7 @@ module Api
     def feed
       raise ActiveRecord::RecordNotFound unless address.start_with?('0x')
 
-      portfolio = Portfolio.find_or_create_by!(eth_address: address, network_id: params[:network_id])
+      portfolio = Portfolio.create_or_find_by!(eth_address: address, network_id: params[:network_id])
 
       events = allowed_network? ? portfolio.feed_events : []
 
@@ -25,7 +25,7 @@ module Api
 
     def reload
       # forcing cache refresh of market
-      portfolio = Portfolio.find_by!(eth_address: address, network_id: params[:network_id])
+      portfolio = Portfolio.create_or_find_by!(eth_address: address, network_id: params[:network_id])
       portfolio.refresh_cache!(queue: 'critical')
 
       render json: { status: 'ok' }, status: :ok
@@ -34,7 +34,6 @@ module Api
     private
 
     def address
-      # TODO: send through encrypted header
       @_address ||= address_from_username || params[:id]&.downcase
     end
   end
