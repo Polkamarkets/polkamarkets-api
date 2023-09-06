@@ -6,6 +6,26 @@ class Portfolio < ApplicationRecord
 
   validate :eth_address_validation
 
+  def self.empty_portfolio(address, network_id)
+    {
+      address: address,
+      network_id: network_id.to_i,
+      holdings_value: 0,
+      holdings_performance: {
+        change: -0,
+        change_percent: -0
+      },
+      holdings_chart: [],
+      open_positions: 0,
+      won_positions: 0,
+      total_positions: 0,
+      closed_markets_profit: 0,
+      liquidity_provided: 0,
+      liquidity_fees_earned: 0,
+      first_position_at: nil
+    }
+  end
+
   def normalize_eth_address
     # setting default to downcase to avoid case duplicates
     self.eth_address = self.eth_address.downcase
@@ -24,6 +44,23 @@ class Portfolio < ApplicationRecord
       Rails.cache.fetch("portfolios:network_#{network_id}:#{eth_address}:actions", expires_in: 24.hours, force: refresh) do
         Bepro::PredictionMarketContractService.new(network_id: network_id).get_action_events(address: eth_address)
       end
+  end
+
+  def burn_action_events(refresh: false)
+    return [] unless Rails.application.config_for(:ethereum).fantasy_enabled
+
+    return @burn_actions if @burn_actions.present? && !refresh
+
+    @burn_actions ||=
+      Rails.cache.fetch("portfolios:network_#{network_id}:#{eth_address}:burn_actions", expires_in: 24.hours, force: refresh) do
+        Bepro::Erc20ContractService.new(network_id: network_id).burn_events(from: eth_address)
+      end
+  end
+
+  def burn_total
+    return 0 unless Rails.application.config_for(:ethereum).fantasy_enabled
+
+    burn_action_events.sum { |event| event[:value] }
   end
 
   def feed_events(refresh: false)
@@ -103,7 +140,7 @@ class Portfolio < ApplicationRecord
     holdings.sum do |holding|
       market = markets.find { |market| market.eth_market_id == holding[:market_id] }
 
-      return 0 unless market.present?
+      next 0 unless market.present?
 
       holding[:liquidity_shares] * market.liquidity_price * market.token_rate
     end

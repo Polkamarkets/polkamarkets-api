@@ -282,6 +282,7 @@ class StatsService
           actions = network_actions(network_id)
           bonds = network_bonds(network_id)
           votes = network_votes(network_id)
+          burn_actions = network_burn_actions(network_id)
           market_ids = actions.map { |action| action[:market_id] }.uniq
 
           create_market_actions = market_ids.map do |market_id|
@@ -344,6 +345,18 @@ class StatsService
                 ]
               end
 
+              portfolio_value = 0
+              is_sybil_attacker = { is_attacker: false }
+
+              if Rails.application.config_for(:ethereum).fantasy_enabled
+                portfolio = Portfolio.new(eth_address: user.downcase, network_id: network_id)
+                # calculating portfolio value to add to earnings
+                burn_total = burn_actions.select { |action| action[:from] == user }.sum { |action| action[:value] }
+                portfolio_value = portfolio.holdings_value - burn_total
+
+                is_sybil_attacker = SybilAttackFinderService.new(user, network_id).is_sybil_attacker?
+              end
+
               {
                 user: user,
                 ens: EnsService.new.cached_ens_domain(address: user),
@@ -351,7 +364,7 @@ class StatsService
                 verified_markets_created: create_market_actions.select { |action| action[:address] == user && network_verified_market_ids(network_id).include?(action[:market_id]) }.count,
                 volume_eur: volume_by_tx_action['buy'] + volume_by_tx_action['sell'],
                 tvl_volume_eur: volume_by_tx_action['buy'] - volume_by_tx_action['sell'],
-                earnings_eur: volume_by_tx_action['sell'] - volume_by_tx_action['buy'] + volume_by_tx_action['claim_winnings'] + volume_by_tx_action['claim_voided'],
+                earnings_eur: volume_by_tx_action['sell'] - volume_by_tx_action['buy'] + volume_by_tx_action['claim_winnings'] + volume_by_tx_action['claim_voided'] + portfolio_value,
                 liquidity_eur: volume_by_tx_action['add_liquidity'] + volume_by_tx_action['remove_liquidity'],
                 tvl_liquidity_eur: volume_by_tx_action['add_liquidity'] - volume_by_tx_action['remove_liquidity'],
                 bond_volume: bonds.select { |bond| bond[:user] == user }.sum { |bond| bond[:value] },
@@ -359,6 +372,7 @@ class StatsService
                 transactions: user_actions.count,
                 upvotes: upvote_actions.select { |action| action[:user] == user }.count,
                 downvotes: downvote_actions.select { |action| action[:user] == user }.count,
+                malicious: is_sybil_attacker[:is_attacker],
               }
             end
           ]

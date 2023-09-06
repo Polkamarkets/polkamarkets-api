@@ -39,6 +39,11 @@ namespace :cache do
 
       bonds = Bepro::RealitioErc20ContractService.new(network_id: network_id).get_bond_events
       Rails.cache.write("api:bonds:#{network_id}", bonds, expires_in: 24.hours)
+
+      if Rails.application.config_for(:ethereum).fantasy_enabled
+        burn_events = Bepro::Erc20ContractService.new(network_id: network_id).burn_events
+        Rails.cache.write("api:burn_actions:#{network_id}", burn_events, expires_in: 24.hours)
+      end
     end
   end
 

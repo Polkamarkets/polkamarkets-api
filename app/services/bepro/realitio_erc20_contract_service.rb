@@ -34,6 +34,8 @@ module Bepro
         bond: from_big_number_to_float(question_data[9], network_realitio_decimals(network_id)),
         best_answer: best_answer,
         is_finalized: question_is_finalized,
+        arbitrator: question_data[1],
+        is_pending_arbitration: question_data[5],
         is_claimed: question_is_claimed,
         finalize_ts: question_data[4].to_i
       }

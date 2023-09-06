@@ -36,5 +36,28 @@ module Bepro
         decimals: decimals,
       }
     end
+
+    def transfer_events(from: nil, to: nil)
+      events = get_events(
+        event_name: 'Transfer',
+        filter: {
+          from: from,
+          to: to
+        }
+      )
+
+      events.map do |event|
+        {
+          from: event['returnValues']['from'],
+          to: event['returnValues']['to'],
+          value: from_big_number_to_float(event['returnValues']['value'], decimals),
+          block_number: event['blockNumber']
+        }
+      end
+    end
+
+    def burn_events(from: nil)
+      transfer_events(from: from, to: '0x0000000000000000000000000000000000000000')
+    end
   end
 end

@@ -58,4 +58,12 @@ module NetworkHelper
       Bepro::Erc20ContractService.new(network_id: network_id, contract_address: token_address).decimals
     end
   end
+
+  def network_burn_actions(network_id)
+    return [] unless Rails.application.config_for(:ethereum).fantasy_enabled
+
+    Rails.cache.fetch("api:burn_actions:#{network_id}", expires_in: 24.hours) do
+      Bepro::Erc20ContractService.new(network_id: network_id).burn_events
+    end
+  end
 end

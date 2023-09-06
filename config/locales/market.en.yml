@@ -3,3 +3,4 @@ en:
     discord:
       market_created: "New market created in %{network} 👀\n\n**%{title}**\n\n%{url}"
       market_expiring: "Market expiring soon in %{network} ⏳\n\n**%{title}**\n\n%{url}"
+      arbitration_requested: "@everyone arbitration requested in %{network} for market 👨‍⚖️ Current bond: %{max_previous} POLK\n\n**%{title}**\n\n%{url}"

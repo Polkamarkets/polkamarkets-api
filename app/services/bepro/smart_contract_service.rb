@@ -8,6 +8,8 @@ module Bepro
       'achievements',
       'voting',
       'reward'
+      'arbitration',
+      'arbitrationProxy',
     ].freeze
 
     attr_accessor :contract_name, :contract_address, :api_url, :network_id

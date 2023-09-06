@@ -7,6 +7,8 @@ class Market < ApplicationRecord
   validates_presence_of :title, :category, :expires_at, :network_id
   validates_uniqueness_of :eth_market_id, scope: :network_id
 
+  after_destroy :destroy_cache!
+
   has_many :outcomes, -> { order('eth_market_id ASC, created_at ASC') }, class_name: "MarketOutcome", dependent: :destroy, inverse_of: :market
 
   has_one_attached :image
@@ -48,8 +50,13 @@ class Market < ApplicationRecord
       image_url: IpfsService.image_url_from_hash(eth_data[:image_hash]),
       network_id: network_id
     )
-    eth_data[:outcomes].each do |outcome|
-      market.outcomes << MarketOutcome.new(title: outcome[:title], eth_market_id: outcome[:id])
+    eth_data[:outcomes].each_with_index do |outcome, i|
+      image_hash = eth_data[:outcomes_image_hashes].present? ? eth_data[:outcomes_image_hashes][i] : nil
+      market.outcomes << MarketOutcome.new(
+        title: outcome[:title],
+        eth_market_id: outcome[:id],
+        image_url: image_hash ? IpfsService.image_url_from_hash(image_hash) : nil
+      )
     end
 
     market.save!
@@ -354,7 +361,34 @@ class Market < ApplicationRecord
   # realitio data
   def question_data(refresh: false)
     Rails.cache.fetch("markets:network_#{network_id}:#{eth_market_id}:question", force: refresh) do
-      Bepro::RealitioErc20ContractService.new(network_id: network_id).get_question(question_id)
+      question_data = Bepro::RealitioErc20ContractService.new(network_id: network_id).get_question(question_id)
+
+      # fetching market dispute id and pending arbitration requests
+      arbitration_network_id = Rails.application.config_for(:ethereum).dig(:"network_#{network_id}", :arbitration_network_id)
+      arbitration_contract_address = Rails.application.config_for(:ethereum).dig(:"network_#{network_id}", :arbitration_proxy_contract_address).to_s.downcase
+
+      next question_data.merge(
+        dispute_id: nil,
+        is_pending_arbitration_request: false
+      ) if arbitration_network_id.blank? || question_data[:arbitrator].downcase != arbitration_contract_address
+
+      dispute_id = question_data[:is_pending_arbitration] ?
+        nil :
+        Bepro::ArbitrationContractService.new(network_id: arbitration_network_id).dispute_id(question_id)
+
+      next question_data.merge(
+        dispute_id: dispute_id,
+        is_pending_arbitration_request: false
+      ) if dispute_id.present? || question_data[:is_pending_arbitration]
+
+      arbitration_requests = Bepro::ArbitrationContractService.new(network_id: arbitration_network_id).arbitration_requests(question_id)
+
+      arbitration_requests_rejected = Bepro::ArbitrationProxyContractService.new(network_id: network_id).arbitration_requests_rejected(question_id)
+
+      question_data.merge(
+        dispute_id: dispute_id,
+        is_pending_arbitration_request: arbitration_requests.count > arbitration_requests_rejected.count
+      )
     end
   end
 
