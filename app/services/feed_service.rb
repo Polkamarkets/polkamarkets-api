@@ -20,12 +20,22 @@ class FeedService
       .sort_by { |a| -a[:timestamp] }
   end
 
+  def vote_actions
+    @vote_actions ||= Bepro::VotingContractService.new(network_id: network_id)
+      .get_voting_events(user: user)
+      .sort_by { |a| -a[:timestamp] }
+  end
+
   def create_event_actions
     @create_event_actions ||= Bepro::PredictionMarketContractService.new(network_id: network_id).get_events(event_name: 'MarketCreated')
   end
 
   def markets
     @markets ||= Market.where(network_id: network_id, eth_market_id: actions.map { |a| a[:market_id] }.uniq).includes(:outcomes)
+  end
+
+  def voting_markets
+    @voting_markets ||= Market.where(network_id: network_id, eth_market_id: vote_actions.map { |a| a[:item_id] }.uniq).includes(:outcomes)
   end
 
   def filtered_actions
@@ -36,7 +46,11 @@ class FeedService
     end
   end
 
-  def serialized_actions(refresh: false)
+  def feed_actions
+    (serialized_actions + serialized_vote_actions).sort_by { |a| -a[:timestamp] }
+  end
+
+  def serialized_actions
     filtered_actions.map do |action|
       market = markets.find { |m| m.eth_market_id == action[:market_id] }
       outcome = market.outcomes.find { |o| o.eth_market_id == action[:outcome_id] } if action[:action] == 'buy' || action[:action] == 'sell'
@@ -54,6 +68,26 @@ class FeedService
         image_url: market.image_url,
         shares: action[:shares],
         value: action[:value],
+        timestamp: action[:timestamp]
+      }
+    end
+  end
+
+  def serialized_vote_actions
+    puts vote_actions
+
+    vote_actions.map do |action|
+      market = voting_markets.find { |m| m.eth_market_id == action[:item_id].to_i }
+
+      {
+        user: action[:user],
+        action: action[:action],
+        market_title: market.title,
+        market_slug: market.slug,
+        outcome_title: nil,
+        image_url: market.image_url,
+        shares: nil,
+        value: nil,
         timestamp: action[:timestamp]
       }
     end
