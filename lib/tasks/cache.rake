@@ -44,6 +44,19 @@ namespace :cache do
         burn_events = Bepro::Erc20ContractService.new(network_id: network_id).burn_events
         Rails.cache.write("api:burn_actions:#{network_id}", burn_events, expires_in: 24.hours)
       end
+
+      # fetching users from last 24 hours and creating a Portfolio entry, in case it doesn't exist
+      addresses = actions
+        .select { |action| action[:timestamp] > 24. hours.ago.to_i }
+        .map { |action| action[:address] } +
+        bonds.select { |bond| bond[:timestamp] > 24. hours.ago.to_i }
+        .map { |bond| bond[:user] }
+
+      missing_addresses = addresses.uniq.map(&:downcase) - Portfolio.where(network_id: network_id).pluck(:eth_address)
+
+      missing_addresses.uniq.each do |address|
+        Portfolio.find_or_create_by(eth_address: address.downcase, network_id: network_id)
+      end
     end
   end
 

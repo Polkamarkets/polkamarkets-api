@@ -65,7 +65,7 @@ class Portfolio < ApplicationRecord
 
   def feed_events(refresh: false)
     Rails.cache.fetch("portfolios:network_#{network_id}:#{eth_address}:feed", expires_in: 24.hours, force: refresh) do
-      FeedService.new(user: eth_address, network_id: network_id).serialized_actions(refresh: refresh)
+      FeedService.new(user: eth_address, network_id: network_id).feed_actions
     end
   end
 

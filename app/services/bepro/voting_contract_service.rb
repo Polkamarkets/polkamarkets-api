@@ -34,14 +34,13 @@ module Bepro
       }
     end
 
-    def get_voting_events(question_id: nil, user: nil)
+    def get_voting_events(user: nil)
       # if contract is not deployed, returning [] as default
       return [] if contract_address.blank?
 
       events = get_events(
         event_name: 'ItemVoteAction',
         filter: {
-          question_id: question_id,
           user: user,
         }
       )
