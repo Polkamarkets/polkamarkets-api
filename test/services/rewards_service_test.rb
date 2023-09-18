@@ -5,7 +5,7 @@ class RewardServiceTest < ActiveSupport::TestCase
   def mocked_env
     {
       "REWARDS_NETWORK_IDS" => "1",
-      "REWARDS_NETWORK_1__REWARD_CONTRACT_CHAIN" => 'blockscout'
+      "REWARDS_NETWORK_1_REWARD_CONTRACT_CHAIN" => 'blockscout'
     }
   end
 

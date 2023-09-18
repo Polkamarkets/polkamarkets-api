@@ -7,7 +7,8 @@ module Bepro
       'realitio',
       'achievements',
       'voting',
-      'reward'
+      'reward',
+      'merkleDistributor',
       'arbitration',
       'arbitrationProxy',
     ].freeze
