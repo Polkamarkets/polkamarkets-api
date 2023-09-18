@@ -24,6 +24,10 @@ default: &default
       bepro_api_url: <%= ENV["REWARDS_NETWORK_#{network_id}_BEPRO_API_URL"] %>
       reward_contract_address: "<%= ENV["REWARDS_NETWORK_#{network_id}_REWARD_CONTRACT_ADDRESS"].to_s %>"
       reward_contract_chain: "<%= ENV["REWARDS_NETWORK_#{network_id}_REWARD_CONTRACT_CHAIN"].to_s %>"
+      reward_amount_to_distribute: "<%= ENV["REWARDS_NETWORK_#{network_id}_REWARD_AMOUNT_TO_DISTRIBUTE"].to_s %>"
+      reward_timeframe: "<%= ENV["REWARDS_NETWORK_#{network_id}_REWARD_TIMEFRAME"].to_s %>"
+      reward_merkle_contract_address: "<%= ENV["REWARDS_NETWORK_#{network_id}_MERKLE_CONTRACT_ADDRESS"].to_s %>"
+      reward_token_address: "<%= ENV["REWARDS_NETWORK_#{network_id}_REWARD_TOKEN_ADDRESS"].to_s %>"
   <% end %>
     market_list_url: <%= ENV['ETHEREUM_MARKET_LIST_URL'] %>
     network_ids: <%=
