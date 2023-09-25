@@ -1,32 +1,38 @@
 class WhitelistService
-  attr_accessor :address
+  attr_accessor :item
 
-  def initialize(address)
-    @address = address
+  def is_whitelisted?(item)
+    item_is_email = is_email?(item)
+
+    whitelist_row = item_list.find do |row|
+      # if item is an email, stripping down dots and plus signs as well
+      row.to_s.downcase == item.downcase ||
+        (item_is_email && normalize_email(row.to_s) == normalize_email(item))
+    end
+
+    whitelist_row.present?
   end
 
-  def whitelisted_status
-    whitelist_row = address_list.find { |row| row.to_s.downcase == address.downcase }
+  def is_email?(item)
+    item.match?(/\A[\w+\-.]+@[a-z\d\-]+(\.[a-z\d\-]+)*\.[a-z]+\z/i)
+  end
 
-    {
-      address: address,
-      whitelisted: whitelist_row.present?,
-    }
+  def normalize_email(email)
+    # stripping down dots and plus signs
+    email.downcase.gsub(/(\+).+@/, "@").gsub(/(\.)(?=.*@)/, "")
   end
 
   private
 
-  def address_list
-    Rails.cache.fetch("whitelist:addresses") do
+  def item_list(refresh: false)
+    Rails.cache.fetch("whitelist:items", force: refresh) do
       spreadsheet = GoogleSpreadsheetsService.new.fetch_spreadsheet(
         Rails.application.config_for(:whitelist).spreadsheet_id,
         Rails.application.config_for(:whitelist).spreadsheet_tab,
         Rails.application.config_for(:whitelist).spreadsheet_range,
       )
 
-      # row 5 - has access boolean
-      # row 4 - eth address
-      spreadsheet.select { |row| row[5].to_s.downcase == "true" }.map { |row| row[4] }
+      spreadsheet.map { |row| row[0] }.uniq.compact
     end
   end
 end
