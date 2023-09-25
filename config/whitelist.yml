@@ -3,7 +3,7 @@ default: &default
 
   # listeners credentials
   spreadsheet_id: <%= ENV['WHITELIST_SPREADSHEET_ID'] %>
-  spreadsheet_tab: <%= ENV['WHITELIST_SPREADSHEET_ID'] %>
+  spreadsheet_tab: <%= ENV['WHITELIST_SPREADSHEET_TAB'] %>
   spreadsheet_range: <%= ENV['WHITELIST_SPREADSHEET_RANGE'] %>
 
 development:
