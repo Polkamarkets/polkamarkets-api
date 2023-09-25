@@ -22,7 +22,9 @@ class WhitelistService
     email.downcase.gsub(/(\+).+@/, "@").gsub(/(\.)(?=.*@)/, "")
   end
 
-  private
+  def refresh_item_list!
+    item_list(refresh: true)
+  end
 
   def item_list(refresh: false)
     Rails.cache.fetch("whitelist:items", force: refresh) do
