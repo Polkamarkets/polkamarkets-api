@@ -7,7 +7,7 @@ class MerkleTreeServiceTest < ActiveSupport::TestCase
       "REWARDS_NETWORK_IDS" => "1",
       "REWARDS_NETWORK_1_REWARD_CONTRACT_CHAIN" => 'blockscout',
       "REWARDS_NETWORK_1_REWARD_AMOUNT_TO_DISTRIBUTE" => '10000',
-      "REWARDS_NETWORK_1_REWARD_TIMEFRAME" => 'week',
+      "REWARDS_NETWORK_1_REWARD_TIMEFRAME" => '1w',
       "REWARDS_NETWORK_1_BEPRO_API_URL" => 'http://localhost:3333',
       "REWARDS_NETWORK_1_MERKLE_CONTRACT_ADDRESSES" => '0x62552dcB7cd91E08d00f93C66a34F3521bBA172a',
       "ETHEREUM_MERKLE_GENERATOR_API_URL" => 'http://localhost:3344',
@@ -36,7 +36,7 @@ class MerkleTreeServiceTest < ActiveSupport::TestCase
       # Create reward on database
       Reward.create(
         epoch: 1,
-        timeframe: 'week',
+        timeframe: '1w',
         token_address: '0xB7837bfca452ce8819F9C21007FfB207795e800a',
         network_id: 1,
         merkle_tree: {
@@ -63,7 +63,7 @@ class MerkleTreeServiceTest < ActiveSupport::TestCase
       # Get last reward created
       reward_created = Reward.find_by(
         network_id: 1,
-        timeframe: 'week',
+        timeframe: '1w',
         token_address:'0xB7837bfca452ce8819F9C21007FfB207795e800a',
         epoch: 2
       )
