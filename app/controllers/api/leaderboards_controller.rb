@@ -19,7 +19,12 @@ module Api
       timeframe = params[:timeframe]
       network_id = params[:network_id].to_i
 
-      timestamp = timeframe == 'at' ? Time.now.to_i : (Time.now - 1.send(StatsService::TIMEFRAMES[timeframe])).to_i
+      timestamp = params[:timestamp].present? ?
+        params[:timestamp].to_i :
+        (timeframe == 'at' ?
+          Time.now.to_i :
+          (Time.now - 1.send(StatsService::TIMEFRAMES[timeframe])).to_i
+        )
 
       leaderboards = StatsService.new.get_leaderboard(timeframe: params[:timeframe], timestamp: timestamp)
       leaderboard = leaderboards[network_id.to_i] || []
