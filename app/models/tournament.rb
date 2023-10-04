@@ -6,7 +6,7 @@ class Tournament < ApplicationRecord
   validate :markets_network_id_validation
 
   has_and_belongs_to_many :markets
-  belongs_to :tournament_group
+  belongs_to :tournament_group, optional: true
 
   acts_as_list scope: :tournament_group
 
