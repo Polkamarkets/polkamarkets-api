@@ -13,6 +13,8 @@ Rails.application.routes.draw do
         ActiveSupport::SecurityUtils.secure_compare(::Digest::SHA256.hexdigest(password), ::Digest::SHA256.hexdigest(ENV["ADMIN_PASSWORD"]))
     end if !Rails.env.development?
     mount Sidekiq::Web, at: "/sidekiq"
+
+    resources :tournaments, only: [:create, :update, :destroy]
   end
 
   scope :module => 'api' do
@@ -47,7 +49,7 @@ Rails.application.routes.draw do
       end
     end
 
-    resources :tournaments
+    resources :tournaments, except: [:edit, :create, :update, :destroy]
 
     get 'achievement_tokens/:network/:id', to: 'achievement_tokens#show'
 
