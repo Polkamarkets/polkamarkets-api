@@ -15,6 +15,7 @@ Rails.application.routes.draw do
     mount Sidekiq::Web, at: "/sidekiq"
 
     resources :tournaments, only: [:create, :update, :destroy]
+    resources :tournament_groups, only: [:create, :update, :destroy]
   end
 
   scope :module => 'api' do
@@ -49,7 +50,8 @@ Rails.application.routes.draw do
       end
     end
 
-    resources :tournaments, except: [:edit, :create, :update, :destroy]
+    resources :tournaments, only: [:index, :show]
+    resources :tournament_groups, only: [:index, :show]
 
     get 'achievement_tokens/:network/:id', to: 'achievement_tokens#show'
 
