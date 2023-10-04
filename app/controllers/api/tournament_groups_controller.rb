@@ -1,7 +1,7 @@
 module Api
   class TournamentGroupsController < BaseController
     def index
-      tournament_groups = TournamentGroup.all
+      tournament_groups = TournamentGroup.order(position: :asc).all
 
       render json: tournament_groups
     end

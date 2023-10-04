@@ -15,7 +15,12 @@ Rails.application.routes.draw do
     mount Sidekiq::Web, at: "/sidekiq"
 
     resources :tournaments, only: [:create, :update, :destroy]
-    resources :tournament_groups, only: [:create, :update, :destroy]
+    resources :tournament_groups, only: [:create, :update, :destroy] do
+      member do
+        post :move_up
+        post :move_down
+      end
+    end
   end
 
   scope :module => 'api' do
