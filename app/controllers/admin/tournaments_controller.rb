@@ -45,7 +45,17 @@ module Admin
     private
 
     def tournament_params
-      params.require(:tournament).permit(:id, :title, :description, :image_url, :network_id, market_ids: [])
+      params
+        .require(:tournament)
+        .permit(
+          :id,
+          :title,
+          :description,
+          :image_url,
+          :network_id,
+          :tournament_group_id,
+          market_ids: []
+        )
     end
   end
 end
