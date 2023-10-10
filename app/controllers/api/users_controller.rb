@@ -7,8 +7,9 @@ module Api
       # create dictionary of params to update
       update_data = {
         'login_type' => params[:login_type],
-        'avatar' => params[:avatar]
       }
+
+      update_data['avatar'] = params[:avatar] if params[:avatar].present?
 
       if current_user.wallet_address.nil?
         update_data['wallet_address'] = params[:wallet_address]
@@ -33,7 +34,7 @@ module Api
 
       current_user.update(update_data)
 
-      render json: { update: 'ok' }, status: :ok
+      render json: { user: current_user }, status: :ok
     end
   end
 end

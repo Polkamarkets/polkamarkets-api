@@ -1,4 +1,6 @@
 class WhitelistService
+  include ApplicationHelper
+
   attr_accessor :item
 
   def is_whitelisted?(item)
@@ -15,11 +17,6 @@ class WhitelistService
 
   def is_email?(item)
     item.match?(/\A[\w+\-.]+@[a-z\d\-]+(\.[a-z\d\-]+)*\.[a-z]+\z/i)
-  end
-
-  def normalize_email(email)
-    # stripping down dots and plus signs
-    email.downcase.gsub(/(\+).+@/, "@").gsub(/(\.)(?=.*@)/, "")
   end
 
   def refresh_item_list!

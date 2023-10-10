@@ -1,5 +1,7 @@
 module Api
   class BaseController < ActionController::API
+    include ApplicationHelper
+
     include ActionController::HttpAuthentication::Token::ControllerMethods
 
     before_action :authenticate_user
@@ -26,14 +28,16 @@ module Api
               jwks: fetch_jwks,
             )
 
-            email = jwt_payload[0]['email']
+            email = normalize_email(jwt_payload[0]['email'])
             login_public_key = jwt_payload[0]['wallets'][0]['public_key']
 
-            user = User.find_by(email: email, login_public_key: login_public_key)
+            user = User.find_by(email: email)
 
             if user.nil?
               user = User.new(email: email, login_public_key: login_public_key)
               user.save!
+            else
+              user.update(login_public_key: login_public_key)
             end
 
             @current_user_id = user.id
