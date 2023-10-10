@@ -78,3 +78,6 @@ gem 'aws-sdk-s3'
 
 # Discord
 gem 'discordrb'
+
+gem 'rbsecp256k1'
+gem 'keccak', '~> 1.3'

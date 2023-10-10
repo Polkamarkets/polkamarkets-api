@@ -1,3 +1,6 @@
+require 'rbsecp256k1'
+require 'digest/keccak'
+
 module Api
   class BaseController < ActionController::API
     include ActionController::HttpAuthentication::Token::ControllerMethods
