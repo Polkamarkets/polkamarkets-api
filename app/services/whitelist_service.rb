@@ -4,12 +4,11 @@ class WhitelistService
   attr_accessor :item
 
   def is_whitelisted?(item)
-    item_is_email = is_email?(item)
+    return false unless is_email?(item)
 
     whitelist_row = item_list.find do |row|
       # if item is an email, stripping down dots and plus signs as well
-      row.to_s.downcase == item.downcase ||
-        (item_is_email && normalize_email(row.to_s) == normalize_email(item))
+      normalize_email(row[:email].to_s) == normalize_email(item)
     end
 
     whitelist_row.present?
@@ -31,7 +30,13 @@ class WhitelistService
         Rails.application.config_for(:whitelist).spreadsheet_range,
       )
 
-      spreadsheet.map { |row| row[0] }.uniq.compact
+      spreadsheet.map do |row|
+        {
+          username: row[0].to_s.gsub("*", ""),
+          email: normalize_email(row[1].to_s),
+          avatar: row[5].to_s
+        }
+      end
     end
   end
 end
