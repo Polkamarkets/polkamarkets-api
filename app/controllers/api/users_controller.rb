@@ -8,7 +8,7 @@ module Api
         'login_type' => params[:login_type],
       }
 
-      if current_user.wallet_address.nil?
+      if params[:wallet_address].present?
         update_data['wallet_address'] = params[:wallet_address]
       end
 
