@@ -3,16 +3,17 @@ module Api
     before_action :authenticate_user!
 
     def update
-
       # create dictionary of params to update
       update_data = {
         'login_type' => params[:login_type],
       }
 
-      update_data['avatar'] = params[:avatar] if params[:avatar].present?
-
       if current_user.wallet_address.nil?
         update_data['wallet_address'] = params[:wallet_address]
+      end
+
+      if current_user.avatar.blank? && params[:avatar].present?
+        update_data['avatar'] = params[:avatar]
       end
 
       if params[:login_type] == 'discord' && params[:oauth_access_token]
