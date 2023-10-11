@@ -320,6 +320,23 @@ module Bepro
       events[0]['returnValues']['timestamp'].to_i
     end
 
+    def get_market_resolved_events()
+      events = get_events(
+        event_name: 'MarketResolved',
+      )
+
+
+      events.map do |event|
+        {
+          user: event['returnValues']['user'],
+          market_id: event['returnValues']['market_id'],
+          outcome_id: event['returnValues']['market_id'],
+          timestamp: event['returnValues']['timestamp'].to_i,
+          block_number: event['blockNumber']
+        }
+      end
+    end
+
     def stats(market_id: nil)
       actions = get_action_events(market_id: market_id)
 

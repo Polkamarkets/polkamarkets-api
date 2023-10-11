@@ -31,6 +31,10 @@ class RewardsService
       network_id = network[:network_id]
       actions = network_actions(network_id)
       locks = network_locks(network_id)
+      markets_resolved = network_markets_resolved(network_id)
+
+      # concat locks and markets_resolved
+      locks.concat(markets_resolved)
 
       @user_rewards = {}
 
@@ -56,7 +60,7 @@ class RewardsService
 
         lock_state = get_locks_by_market(lock_state, locks.select { |lock| lock[:block_number] >= previous_block && lock[:block_number] < block_number })
 
-        markets_on_top = get_lock_top(top, lock_state)
+        markets_on_top = get_lock_top(top, lock_state, block_number)
 
         # compute the rewards between previous_block and block_number
         iterate_liquidity(markets_on_top, actions.select { |action| action[:block_number] < block_number }, previous_block, block_number)
@@ -68,7 +72,7 @@ class RewardsService
       # GET TOP MARKETS AT TO_BLOCK.
       lock_state = get_locks_by_market(lock_state, locks.select { |lock| lock[:block_number] >= previous_block && lock[:block_number] < to_block })
 
-      markets_on_top = get_lock_top(top, lock_state)
+      markets_on_top = get_lock_top(top, lock_state, to_block)
 
       iterate_liquidity(markets_on_top, actions.select { |action| action[:block_number] < to_block }, previous_block, to_block)
 
@@ -169,8 +173,11 @@ class RewardsService
 
   end
 
-  def get_lock_top(n, lock_state)
-    top_entries = lock_state.sort_by { |_, value| -value[:lock_amount] }.first(n)
+  def get_lock_top(n, lock_state, at_block_number)
+    # remove from lock state the ones with market_resolved_at_block < at_block_number
+    top_entries = lock_state
+      .select { |_, value| value[:market_resolved_at_block].nil? || value[:market_resolved_at_block] >= at_block_number }
+      .sort_by { |_, value| -value[:lock_amount] }.first(n)
     top_entries.to_h
   end
 
@@ -213,30 +220,46 @@ class RewardsService
   def get_locks_by_market(locks, lock_actions)
 
     lock_actions.each do |action|
-      market_id = action[:item_id]
+      if action[:item_id].present?
+        market_id = action[:item_id]
+  
+        # still no action performed in this market, initializing object
+        if locks[market_id].blank?
+          locks[market_id] = {
+            lock_amount: 0,
+            users: {},
+            market_resolved_at_block: nil
+          }
+        end
+  
+        shares_to_add = 0
+        case action[:action]
+          when 'lock'
+            shares_to_add = action[:lock_amount]
+          when 'unlock'
+            shares_to_add = -1 * action[:lock_amount]
+        end
+  
+        user_address = action[:user]
+        locks[market_id][:lock_amount] += shares_to_add
+        if locks[market_id][:users][user_address].blank?
+          locks[market_id][:users][user_address] = 0
+        end
+        locks[market_id][:users][user_address] += shares_to_add
+      else
+        # it's a market resolved event
+        market_id = action[:market_id]
 
-      # still no action performed in this market, initializing object
-      if locks[market_id].blank?
-        locks[market_id] = {
-          lock_amount: 0,
-          users: {}
-        }
-      end
+        if locks[market_id].blank?
+          locks[market_id] = {
+            lock_amount: 0,
+            users: {},
+            market_resolved_at_block: nil
+          }
+        end
 
-      shares_to_add = 0
-      case action[:action]
-        when 'lock'
-          shares_to_add = action[:lock_amount]
-        when 'unlock'
-          shares_to_add = -1 * action[:lock_amount]
+        locks[market_id][:market_resolved_at_block] = action[:block_number]
       end
-
-      user_address = action[:user]
-      locks[market_id][:lock_amount] += shares_to_add
-      if locks[market_id][:users][user_address].blank?
-        locks[market_id][:users][user_address] = 0
-      end
-      locks[market_id][:users][user_address] += shares_to_add
     end
 
     locks
