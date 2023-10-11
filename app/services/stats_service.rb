@@ -1,5 +1,5 @@
 class StatsService
-  include NetworkHelper
+  include NetworkHelper, TimeframerHelper
 
   attr_accessor :networks, :categories
 
@@ -11,13 +11,6 @@ class StatsService
     'claim_winnings',
     'claim_voided'
   ].freeze
-
-  TIMEFRAMES = {
-    'at' => 'all-time',
-    '1d' => 'day',
-    '1w' => 'week',
-    '1m' => 'month'
-  }.freeze
 
   LEADERBOARD_PARAMS = {
     :volume_eur => { :amount => 3, :value => 250 },
@@ -410,25 +403,6 @@ class StatsService
       TokenRatesService::NETWORK_TOKENS.map { |_n, token| token } + ['polkamarkets'],
       'eur'
     )
-  end
-
-  def timestamp_from(timestamp, timeframe)
-    return 0 if TIMEFRAMES[timeframe] == 'all-time'
-
-    # weekly timeframe starts on Fridays due to the rewarding system
-    args = TIMEFRAMES[timeframe] == 'week' ? [:friday] : []
-
-    date = Time.at(timestamp).utc.public_send("beginning_of_#{TIMEFRAMES[timeframe]}", *args).to_i
-  end
-
-  def timestamp_to(timestamp, timeframe)
-    # setting to next 5 minute block if timeframe is all time
-    return (Time.now.to_i / 300 + 1) * 300 if TIMEFRAMES[timeframe] == 'all-time'
-
-    # weekly timeframe starts on Fridays due to the rewarding system
-    args = TIMEFRAMES[timeframe] == 'week' ? [:friday] : []
-
-    date = Time.at(timestamp).utc.public_send("end_of_#{TIMEFRAMES[timeframe]}", *args).to_i
   end
 
   private

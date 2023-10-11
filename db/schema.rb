@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2023_06_06_150451) do
+ActiveRecord::Schema.define(version: 2023_09_06_172742) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -119,6 +119,16 @@ ActiveRecord::Schema.define(version: 2023_06_06_150451) do
     t.datetime "updated_at", precision: 6, null: false
     t.integer "network_id", null: false
     t.index ["eth_address", "network_id"], name: "index_portfolios_on_eth_address_and_network_id", unique: true
+  end
+
+  create_table "rewards", force: :cascade do |t|
+    t.integer "epoch", null: false
+    t.string "timeframe", null: false
+    t.string "token_address", null: false
+    t.integer "network_id", null: false
+    t.jsonb "merkle_tree", null: false
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
   end
 
   create_table "tournaments", force: :cascade do |t|

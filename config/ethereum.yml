@@ -19,6 +19,15 @@ default: &default
       prediction_market_contract_address: "<%= ENV["STATS_NETWORK_#{network_id}_PREDICTION_MARKET_CONTRACT_ADDRESS"].to_s %>"
       realitio_contract_address: "<%= ENV["STATS_NETWORK_#{network_id}_REALITIO_ERC20_CONTRACT_ADDRESS"].to_s %>"
   <% end %>
+  <% ENV["REWARDS_NETWORK_IDS"].to_s.split(',') do |network_id| %>
+    rewards_network_<%= network_id %>:
+      bepro_api_url: <%= ENV["REWARDS_NETWORK_#{network_id}_BEPRO_API_URL"] %>
+      reward_contract_address: "<%= ENV["REWARDS_NETWORK_#{network_id}_REWARD_CONTRACT_ADDRESS"].to_s %>"
+      reward_contract_chain: "<%= ENV["REWARDS_NETWORK_#{network_id}_REWARD_CONTRACT_CHAIN"].to_s %>"
+      reward_amount_to_distribute: "<%= ENV["REWARDS_NETWORK_#{network_id}_REWARD_AMOUNT_TO_DISTRIBUTE"].to_s %>"
+      reward_timeframe: "<%= ENV["REWARDS_NETWORK_#{network_id}_REWARD_TIMEFRAME"].to_s %>"
+      reward_merkle_contract_addresses: <%= ENV["REWARDS_NETWORK_#{network_id}_MERKLE_CONTRACT_ADDRESSES"].to_s.split(',') %>
+  <% end %>
     market_list_url: <%= ENV['ETHEREUM_MARKET_LIST_URL'] %>
     network_ids: <%=
       ENV["ETHEREUM_NETWORK_IDS"].to_s.split(',').select do |network_id|
@@ -27,9 +36,11 @@ default: &default
     %>
     fantasy_enabled: <%= ENV["ETHEREUM_FANTASY_ENABLED"] == 'true' %>
     stats_network_ids: <%= ENV["STATS_NETWORK_IDS"].to_s.split(',') %>
+    rewards_network_ids: <%= ENV["REWARDS_NETWORK_IDS"].to_s.split(',') %>
     cache_ttl_seconds: <%= ENV["ETHEREUM_CACHE_TTL"] %>
     voting_delta: <%= ENV["ETHEREUM_VOTING_DELTA"] || 3 %>
     blacklist: <%= ENV["ETHEREUM_BLACKLIST"].to_s.split(',') %>
+    merkle_generator_api_url: <%= ENV['ETHEREUM_MERKLE_GENERATOR_API_URL'] %>
 
 production:
   <<: *default
