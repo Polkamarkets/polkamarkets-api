@@ -58,6 +58,7 @@ class FeedService
       if action[:action] == 'add_liquidity' && create_event_actions.any? { |e| e['transactionHash'] == action[:tx_id] }
         action[:action] = 'create_market'
       end
+      image_url = outcome&.image_url&.present? ? outcome.image_url : market.image_url
 
       {
         user: action[:address],
@@ -65,7 +66,7 @@ class FeedService
         market_title: market.title,
         market_slug: market.slug,
         outcome_title: outcome&.title,
-        image_url: market.image_url,
+        image_url: image_url,
         shares: action[:shares],
         value: action[:value],
         timestamp: action[:timestamp]
