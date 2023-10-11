@@ -1,5 +1,5 @@
 class RewardsService
-  include NetworkHelper
+  include NetworkHelper, TimeframerHelper
 
 
   attr_accessor :actions
@@ -11,15 +11,19 @@ class RewardsService
       {
         network_id: network_id,
         chain: Rails.application.config_for(:ethereum)[:"rewards_network_#{network_id}"][:reward_contract_chain],
+        reward_timeframe: Rails.application.config_for(:ethereum)[:"rewards_network_#{network_id}"][:reward_timeframe]
       }
     end
   end
 
   def get_rewards(date: Date.today, top: 10)
 
-    from, to = get_timestamps(date)
-
     rewards = @networks.to_h do |network|
+
+      timeframe = network[:reward_timeframe]
+
+      from = timestamp_from(date.to_time.to_i, timeframe)
+      to = timestamp_to(date.to_time.to_i, timeframe)
 
       from_block = get_block_number_from_timestamp(from, network[:chain])
       to_block = get_block_number_from_timestamp(to, network[:chain]) + 1 # add 1 to include the last block
@@ -263,31 +267,6 @@ class RewardsService
     end
 
     locks
-  end
-
-  def get_timestamps(date)
-    # weekly timeframe starts on Fridays due to the rewarding system
-
-    # Find the previous Friday
-    previous_friday = date.prev_day(date.wday > 5 ? date.wday - 5 : date.wday + 2)
-
-    # Set the time to midnight
-    previous_friday_midnight = previous_friday.to_datetime.midnight
-
-    # Convert to Unix timestamp
-    to = previous_friday_midnight.to_i
-
-
-    # Find the Friday before the previous Friday
-    friday_before_previous = previous_friday.prev_day(7)
-
-    # Set the time to midnight
-    friday_before_previous_midnight = friday_before_previous.to_datetime.midnight
-
-    # Convert to Unix timestamp
-    from = friday_before_previous_midnight.to_i
-
-    return from, to
   end
 
   def get_block_number_from_timestamp(timestamp, chain = 'mainnet')

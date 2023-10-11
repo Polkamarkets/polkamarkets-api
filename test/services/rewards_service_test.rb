@@ -30,11 +30,11 @@ class RewardServiceTest < ActiveSupport::TestCase
     mock_enviroment(env:"production", partial_env_hash:mocked_env) do
 
       etherscan_spy = Spy.on_instance_method(EtherscanService, :block_number_by_timestamp).and_return do |timestamp|
-        assert timestamp == 1688688000 || timestamp == 1689292800, "Timestamp invalid"
+        assert timestamp == 1688688000 || timestamp == 1689292799, "Timestamp invalid"
 
         if timestamp == 1688688000
           { blockNumber: 3 }
-        elsif timestamp == 1689292800
+        elsif timestamp == 1689292799
           { blockNumber: 8 }
         end
       end
@@ -83,7 +83,7 @@ class RewardServiceTest < ActiveSupport::TestCase
         }
       ]
       end
-      rewards = RewardsService.new.get_rewards(date: Date.new(2023, 7, 17), top: 2)
+      rewards = RewardsService.new.get_rewards(date: Date.new(2023, 7, 14), top: 2)
       assert_equal ({"1"=>{"0xEF4D8DC13FDEB0F2B4784B1DAE743093C228A08A"=>0.5, "0x6122252DC9BE4DBF4DF78C22E5348A12B1C77D61"=>0.5}}), rewards
 
       etherscan_spy.unhook
@@ -97,11 +97,11 @@ class RewardServiceTest < ActiveSupport::TestCase
   test "compute rewards simple case with multiplier" do
     mock_enviroment(env:"production", partial_env_hash:mocked_env) do
       etherscan_spy = Spy.on_instance_method(EtherscanService, :block_number_by_timestamp).and_return do |timestamp|
-        assert timestamp == 1688688000 || timestamp == 1689292800, "Timestamp invalid"
+        assert timestamp == 1688688000 || timestamp == 1689292799, "Timestamp invalid"
 
         if timestamp == 1688688000
           { blockNumber: 3 }
-        elsif timestamp == 1689292800
+        elsif timestamp == 1689292799
           { blockNumber: 8 }
         end
       end
@@ -148,7 +148,7 @@ class RewardServiceTest < ActiveSupport::TestCase
       ]
       end
 
-      rewards = RewardsService.new.get_rewards(date: Date.new(2023, 7, 17), top: 2)
+      rewards = RewardsService.new.get_rewards(date: Date.new(2023, 7, 14), top: 2)
       assert_equal ({"1"=>{"0x6122252DC9BE4DBF4DF78C22E5348A12B1C77D61"=>0.4347826086956521, "0xEF4D8DC13FDEB0F2B4784B1DAE743093C228A08A"=>0.5652173913043478}}), rewards
 
       etherscan_spy.unhook
@@ -162,11 +162,11 @@ class RewardServiceTest < ActiveSupport::TestCase
   test "compute rewards top changing" do
     mock_enviroment(env:"production", partial_env_hash:mocked_env) do
       etherscan_spy = Spy.on_instance_method(EtherscanService, :block_number_by_timestamp).and_return do |timestamp|
-        assert timestamp == 1688688000 || timestamp == 1689292800, "Timestamp invalid"
+        assert timestamp == 1688688000 || timestamp == 1689292799, "Timestamp invalid"
 
         if timestamp == 1688688000
           { blockNumber: 3 }
-        elsif timestamp == 1689292800
+        elsif timestamp == 1689292799
           { blockNumber: 8 }
         end
       end
@@ -216,7 +216,7 @@ class RewardServiceTest < ActiveSupport::TestCase
       ]
       end
 
-      rewards = RewardsService.new.get_rewards(date: Date.new(2023, 7, 17), top: 2)
+      rewards = RewardsService.new.get_rewards(date: Date.new(2023, 7, 14), top: 2)
 
       assert_equal ({"1"=>{"0xEF4D8DC13FDEB0F2B4784B1DAE743093C228A08A"=>0.8333333333333333, "0x6122252DC9BE4DBF4DF78C22E5348A12B1C77D61"=>0.16666666666666666}}), rewards
 
@@ -231,11 +231,11 @@ class RewardServiceTest < ActiveSupport::TestCase
   test "compute rewards top changing in the end" do
     mock_enviroment(env:"production", partial_env_hash:mocked_env) do
       etherscan_spy = Spy.on_instance_method(EtherscanService, :block_number_by_timestamp).and_return do |timestamp|
-        assert timestamp == 1688688000 || timestamp == 1689292800, "Timestamp invalid"
+        assert timestamp == 1688688000 || timestamp == 1689292799, "Timestamp invalid"
 
         if timestamp == 1688688000
           { blockNumber: 3 }
-        elsif timestamp == 1689292800
+        elsif timestamp == 1689292799
           { blockNumber: 8 }
         end
       end
@@ -285,7 +285,7 @@ class RewardServiceTest < ActiveSupport::TestCase
       ]
       end
 
-      rewards = RewardsService.new.get_rewards(date: Date.new(2023, 7, 17), top: 2)
+      rewards = RewardsService.new.get_rewards(date: Date.new(2023, 7, 14), top: 2)
 
       assert_equal ({"1"=>{"0xEF4D8DC13FDEB0F2B4784B1DAE743093C228A08A"=>0.75, "0x6122252DC9BE4DBF4DF78C22E5348A12B1C77D61"=>0.25}}), rewards
 
@@ -300,11 +300,11 @@ class RewardServiceTest < ActiveSupport::TestCase
   test "compute rewards user locked but without liquidity" do
     mock_enviroment(env:"production", partial_env_hash:mocked_env) do
       etherscan_spy = Spy.on_instance_method(EtherscanService, :block_number_by_timestamp).and_return do |timestamp|
-        assert timestamp == 1688688000 || timestamp == 1689292800, "Timestamp invalid"
+        assert timestamp == 1688688000 || timestamp == 1689292799, "Timestamp invalid"
 
         if timestamp == 1688688000
           { blockNumber: 3 }
-        elsif timestamp == 1689292800
+        elsif timestamp == 1689292799
           { blockNumber: 8 }
         end
       end
@@ -355,7 +355,7 @@ class RewardServiceTest < ActiveSupport::TestCase
       ]
       end
 
-      rewards = RewardsService.new.get_rewards(date: Date.new(2023, 7, 17), top: 2)
+      rewards = RewardsService.new.get_rewards(date: Date.new(2023, 7, 14), top: 2)
 
       assert_equal ({"1"=>{"0xEF4D8DC13FDEB0F2B4784B1DAE743093C228A08A"=>0.75, "0x6122252DC9BE4DBF4DF78C22E5348A12B1C77D61"=>0.25}}), rewards
 
@@ -370,11 +370,11 @@ class RewardServiceTest < ActiveSupport::TestCase
   test "compute rewards remove liquidity" do
     mock_enviroment(env:"production", partial_env_hash:mocked_env) do
       etherscan_spy = Spy.on_instance_method(EtherscanService, :block_number_by_timestamp).and_return do |timestamp|
-        assert timestamp == 1688688000 || timestamp == 1689292800, "Timestamp invalid"
+        assert timestamp == 1688688000 || timestamp == 1689292799, "Timestamp invalid"
 
         if timestamp == 1688688000
           { blockNumber: 3 }
-        elsif timestamp == 1689292800
+        elsif timestamp == 1689292799
           { blockNumber: 8 }
         end
       end
@@ -426,7 +426,7 @@ class RewardServiceTest < ActiveSupport::TestCase
       ]
       end
 
-      rewards = RewardsService.new.get_rewards(date: Date.new(2023, 7, 17), top: 2)
+      rewards = RewardsService.new.get_rewards(date: Date.new(2023, 7, 14), top: 2)
 
       assert_equal ({"1"=>{"0xEF4D8DC13FDEB0F2B4784B1DAE743093C228A08A"=>0.7222222222222222, "0x6122252DC9BE4DBF4DF78C22E5348A12B1C77D61"=>0.2777777777777778}}), rewards
 
@@ -441,11 +441,11 @@ class RewardServiceTest < ActiveSupport::TestCase
   test "compute rewards liquidity changing in the end and start" do
     mock_enviroment(env:"production", partial_env_hash:mocked_env) do
       etherscan_spy = Spy.on_instance_method(EtherscanService, :block_number_by_timestamp).and_return do |timestamp|
-        assert timestamp == 1688688000 || timestamp == 1689292800, "Timestamp invalid"
+        assert timestamp == 1688688000 || timestamp == 1689292799, "Timestamp invalid"
 
         if timestamp == 1688688000
           { blockNumber: 3 }
-        elsif timestamp == 1689292800
+        elsif timestamp == 1689292799
           { blockNumber: 8 }
         end
       end
@@ -493,7 +493,7 @@ class RewardServiceTest < ActiveSupport::TestCase
       ]
       end
 
-      rewards = RewardsService.new.get_rewards(date: Date.new(2023, 7, 17), top: 2)
+      rewards = RewardsService.new.get_rewards(date: Date.new(2023, 7, 14), top: 2)
       assert_equal ({"1"=>{"0x6122252DC9BE4DBF4DF78C22E5348A12B1C77D61"=>0.40861513687600637, "0xEF4D8DC13FDEB0F2B4784B1DAE743093C228A08A"=>0.5913848631239935}}), rewards
 
       etherscan_spy.unhook
@@ -507,11 +507,11 @@ class RewardServiceTest < ActiveSupport::TestCase
   test "compute rewards no liquidity in some of the top market" do
     mock_enviroment(env:"production", partial_env_hash:mocked_env) do
       etherscan_spy = Spy.on_instance_method(EtherscanService, :block_number_by_timestamp).and_return do |timestamp|
-        assert timestamp == 1688688000 || timestamp == 1689292800, "Timestamp invalid"
+        assert timestamp == 1688688000 || timestamp == 1689292799, "Timestamp invalid"
 
         if timestamp == 1688688000
           { blockNumber: 3 }
-        elsif timestamp == 1689292800
+        elsif timestamp == 1689292799
           { blockNumber: 8 }
         end
       end
@@ -559,7 +559,7 @@ class RewardServiceTest < ActiveSupport::TestCase
       ]
       end
 
-      rewards = RewardsService.new.get_rewards(date: Date.new(2023, 7, 17), top: 2)
+      rewards = RewardsService.new.get_rewards(date: Date.new(2023, 7, 14), top: 2)
       assert_equal ({"1"=>{"0x6122252DC9BE4DBF4DF78C22E5348A12B1C77D61"=>1.0}}), rewards
 
       etherscan_spy.unhook
@@ -573,11 +573,11 @@ class RewardServiceTest < ActiveSupport::TestCase
   test "compute rewards no liquidity ever" do
     mock_enviroment(env:"production", partial_env_hash:mocked_env) do
       etherscan_spy = Spy.on_instance_method(EtherscanService, :block_number_by_timestamp).and_return do |timestamp|
-        assert timestamp == 1688688000 || timestamp == 1689292800, "Timestamp invalid"
+        assert timestamp == 1688688000 || timestamp == 1689292799, "Timestamp invalid"
 
         if timestamp == 1688688000
           { blockNumber: 3 }
-        elsif timestamp == 1689292800
+        elsif timestamp == 1689292799
           { blockNumber: 8 }
         end
       end
@@ -621,7 +621,7 @@ class RewardServiceTest < ActiveSupport::TestCase
       ]
       end
 
-      rewards = RewardsService.new.get_rewards(date: Date.new(2023, 7, 17), top: 2)
+      rewards = RewardsService.new.get_rewards(date: Date.new(2023, 7, 14), top: 2)
       assert_equal ({"1"=>{}}), rewards
 
       etherscan_spy.unhook
@@ -635,11 +635,11 @@ class RewardServiceTest < ActiveSupport::TestCase
   test "compute rewards only one market with lock" do
     mock_enviroment(env:"production", partial_env_hash:mocked_env) do
       etherscan_spy = Spy.on_instance_method(EtherscanService, :block_number_by_timestamp).and_return do |timestamp|
-        assert timestamp == 1688688000 || timestamp == 1689292800, "Timestamp invalid"
+        assert timestamp == 1688688000 || timestamp == 1689292799, "Timestamp invalid"
 
         if timestamp == 1688688000
           { blockNumber: 3 }
-        elsif timestamp == 1689292800
+        elsif timestamp == 1689292799
           { blockNumber: 8 }
         end
       end
@@ -687,7 +687,7 @@ class RewardServiceTest < ActiveSupport::TestCase
       ]
       end
 
-      rewards = RewardsService.new.get_rewards(date: Date.new(2023, 7, 17), top: 2)
+      rewards = RewardsService.new.get_rewards(date: Date.new(2023, 7, 14), top: 2)
       assert_equal ({"1"=>{"0xEF4D8DC13FDEB0F2B4784B1DAE743093C228A08A"=>1.0}}), rewards
 
       etherscan_spy.unhook
@@ -701,11 +701,11 @@ class RewardServiceTest < ActiveSupport::TestCase
   test "compute rewards no lock ever" do
     mock_enviroment(env:"production", partial_env_hash:mocked_env) do
       etherscan_spy = Spy.on_instance_method(EtherscanService, :block_number_by_timestamp).and_return do |timestamp|
-        assert timestamp == 1688688000 || timestamp == 1689292800, "Timestamp invalid"
+        assert timestamp == 1688688000 || timestamp == 1689292799, "Timestamp invalid"
 
         if timestamp == 1688688000
           { blockNumber: 3 }
-        elsif timestamp == 1689292800
+        elsif timestamp == 1689292799
           { blockNumber: 8 }
         end
       end
@@ -751,7 +751,7 @@ class RewardServiceTest < ActiveSupport::TestCase
       ]
       end
 
-      rewards = RewardsService.new.get_rewards(date: Date.new(2023, 7, 17), top: 2)
+      rewards = RewardsService.new.get_rewards(date: Date.new(2023, 7, 14), top: 2)
       assert_equal ({"1"=>{}}), rewards
 
       etherscan_spy.unhook
@@ -766,11 +766,11 @@ class RewardServiceTest < ActiveSupport::TestCase
     mock_enviroment(env:"production", partial_env_hash:mocked_env) do
 
       etherscan_spy = Spy.on_instance_method(EtherscanService, :block_number_by_timestamp).and_return do |timestamp|
-        assert timestamp == 1688688000 || timestamp == 1689292800, "Timestamp invalid"
+        assert timestamp == 1688688000 || timestamp == 1689292799, "Timestamp invalid"
 
         if timestamp == 1688688000
           { blockNumber: 3 }
-        elsif timestamp == 1689292800
+        elsif timestamp == 1689292799
           { blockNumber: 8 }
         end
       end
@@ -821,7 +821,7 @@ class RewardServiceTest < ActiveSupport::TestCase
         }
       ]
       end
-      rewards = RewardsService.new.get_rewards(date: Date.new(2023, 7, 17), top: 2)
+      rewards = RewardsService.new.get_rewards(date: Date.new(2023, 7, 14), top: 2)
       assert_equal ({"1"=>{"0xEF4D8DC13FDEB0F2B4784B1DAE743093C228A08A"=>1}}), rewards
 
       etherscan_spy.unhook
@@ -836,11 +836,11 @@ class RewardServiceTest < ActiveSupport::TestCase
     mock_enviroment(env:"production", partial_env_hash:mocked_env) do
 
       etherscan_spy = Spy.on_instance_method(EtherscanService, :block_number_by_timestamp).and_return do |timestamp|
-        assert timestamp == 1688688000 || timestamp == 1689292800, "Timestamp invalid"
+        assert timestamp == 1688688000 || timestamp == 1689292799, "Timestamp invalid"
 
         if timestamp == 1688688000
           { blockNumber: 3 }
-        elsif timestamp == 1689292800
+        elsif timestamp == 1689292799
           { blockNumber: 8 }
         end
       end
@@ -891,7 +891,7 @@ class RewardServiceTest < ActiveSupport::TestCase
         }
       ]
       end
-      rewards = RewardsService.new.get_rewards(date: Date.new(2023, 7, 17), top: 2)
+      rewards = RewardsService.new.get_rewards(date: Date.new(2023, 7, 14), top: 2)
       assert_equal ({"1"=>{"0x6122252DC9BE4DBF4DF78C22E5348A12B1C77D61"=>0.5, "0xEF4D8DC13FDEB0F2B4784B1DAE743093C228A08A"=>0.5}}), rewards
 
       etherscan_spy.unhook
@@ -906,11 +906,11 @@ class RewardServiceTest < ActiveSupport::TestCase
     mock_enviroment(env:"production", partial_env_hash:mocked_env) do
 
       etherscan_spy = Spy.on_instance_method(EtherscanService, :block_number_by_timestamp).and_return do |timestamp|
-        assert timestamp == 1688688000 || timestamp == 1689292800, "Timestamp invalid"
+        assert timestamp == 1688688000 || timestamp == 1689292799, "Timestamp invalid"
 
         if timestamp == 1688688000
           { blockNumber: 3 }
-        elsif timestamp == 1689292800
+        elsif timestamp == 1689292799
           { blockNumber: 8 }
         end
       end
@@ -961,7 +961,7 @@ class RewardServiceTest < ActiveSupport::TestCase
         }
       ]
       end
-      rewards = RewardsService.new.get_rewards(date: Date.new(2023, 7, 17), top: 2)
+      rewards = RewardsService.new.get_rewards(date: Date.new(2023, 7, 14), top: 2)
       assert_equal ({"1"=>{"0x6122252DC9BE4DBF4DF78C22E5348A12B1C77D61"=>0.25, "0xEF4D8DC13FDEB0F2B4784B1DAE743093C228A08A"=>0.75}}), rewards
 
       etherscan_spy.unhook
