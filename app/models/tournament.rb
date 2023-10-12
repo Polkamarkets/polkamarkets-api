@@ -15,4 +15,12 @@ class Tournament < ApplicationRecord
       errors.add(:markets, 'network id is not valid') unless market.network_id == network_id
     end
   end
+
+  def expires_at
+    markets.map(&:expires_at).max
+  end
+
+  def users
+    markets.map(&:action_events).flatten.map { |a| a[:address] }.uniq.count
+  end
 end

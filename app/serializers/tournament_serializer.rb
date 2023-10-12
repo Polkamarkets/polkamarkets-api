@@ -6,7 +6,9 @@ class TournamentSerializer < ActiveModel::Serializer
     :title,
     :description,
     :image_url,
-    :markets
+    :markets,
+    :expires_at,
+    :users,
   )
 
   belongs_to :tournament_group, key: :group
