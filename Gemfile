@@ -49,6 +49,7 @@ gem 'tzinfo-data', platforms: [:mingw, :mswin, :x64_mingw, :jruby]
 gem 'simple_form'
 gem 'friendly_id'
 gem 'http'
+gem 'acts_as_list'
 
 # workers
 gem 'sidekiq'

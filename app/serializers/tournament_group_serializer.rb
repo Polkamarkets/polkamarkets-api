@@ -1,17 +1,11 @@
-class TournamentSerializer < ActiveModel::Serializer
+class TournamentGroupSerializer < ActiveModel::Serializer
   attributes(
     :id,
-    :network_id,
     :slug,
     :title,
     :description,
-    :image_url,
-    :markets,
-    :expires_at,
-    :users,
+    :position
   )
-
-  belongs_to :tournament_group, key: :group
 
   def markets
     object.markets.map do |market|
@@ -22,5 +16,9 @@ class TournamentSerializer < ActiveModel::Serializer
         slug: market.slug,
       }
     end
+  end
+
+  def group
+    object.tournament_group
   end
 end

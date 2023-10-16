@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2023_06_06_150451) do
+ActiveRecord::Schema.define(version: 2023_10_04_124529) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -121,6 +121,16 @@ ActiveRecord::Schema.define(version: 2023_06_06_150451) do
     t.index ["eth_address", "network_id"], name: "index_portfolios_on_eth_address_and_network_id", unique: true
   end
 
+  create_table "tournament_groups", force: :cascade do |t|
+    t.string "title", null: false
+    t.string "description", null: false
+    t.string "slug"
+    t.integer "position"
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["slug"], name: "index_tournament_groups_on_slug", unique: true
+  end
+
   create_table "tournaments", force: :cascade do |t|
     t.string "title", null: false
     t.string "description", null: false
@@ -129,7 +139,10 @@ ActiveRecord::Schema.define(version: 2023_06_06_150451) do
     t.integer "network_id", null: false
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
+    t.bigint "tournament_group_id"
+    t.integer "position"
     t.index ["slug"], name: "index_tournaments_on_slug", unique: true
+    t.index ["tournament_group_id"], name: "index_tournaments_on_tournament_group_id"
   end
 
   create_table "users", force: :cascade do |t|
@@ -147,4 +160,5 @@ ActiveRecord::Schema.define(version: 2023_06_06_150451) do
   add_foreign_key "achievement_tokens", "achievements"
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "market_outcomes", "markets"
+  add_foreign_key "tournaments", "tournament_groups"
 end
