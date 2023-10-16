@@ -60,4 +60,10 @@ module NetworkHelper
       Bepro::Erc20ContractService.new(network_id: network_id).burn_events
     end
   end
+
+  def network_markets_resolved(network_id)
+    Rails.cache.fetch("api:markets_resolved:#{network_id}", expires_in: 24.hours) do
+      Bepro::PredictionMarketContractService.new(network_id: network_id).get_market_resolved_events
+    end
+  end
 end
