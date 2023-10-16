@@ -283,6 +283,7 @@ class StatsService
           bonds = network_bonds(network_id)
           votes = network_votes(network_id)
           burn_actions = network_burn_actions(network_id)
+          markets_resolved = network_markets_resolved(network_id)
           market_ids = actions.map { |action| action[:market_id] }.uniq
 
           create_market_actions = market_ids.map do |market_id|
@@ -318,6 +319,11 @@ class StatsService
               (!to || action[:timestamp] <= to)
           end
 
+          markets_resolved.select! do |action|
+            (!from || action[:timestamp] >= from) &&
+              (!to || action[:timestamp] <= to)
+          end
+
           # grouping actions by intervals
           actions_by_user = actions.group_by do |action|
             action[:address]
@@ -346,7 +352,9 @@ class StatsService
               end
 
               portfolio_value = 0
+              winnings_value = 0
               is_sybil_attacker = { is_attacker: false }
+              claim_winnings_count = 0
 
               if Rails.application.config_for(:ethereum).fantasy_enabled
                 portfolio = Portfolio.new(eth_address: user.downcase, network_id: network_id)
@@ -354,7 +362,18 @@ class StatsService
                 burn_total = burn_actions.select { |action| action[:from] == user }.sum { |action| action[:value] }
                 portfolio_value = portfolio.holdings_value - burn_total
 
+                # calculating winnings value to add to earnings
+                winnings = portfolio.closed_markets_winnings(
+                  filter_by_market_ids: markets_resolved.map { |action| action[:market_id] }
+                )
+
+                claim_winnings_count = winnings[:count]
+                winnings_value = winnings[:value]
+
                 is_sybil_attacker = SybilAttackFinderService.new(user, network_id).is_sybil_attacker?
+              else
+                claim_winnings_count = user_actions.select { |a| a[:action] == 'claim_winnings' }.count
+                winnings_value = volume_by_tx_action['claim_winnings']
               end
 
               {
@@ -364,11 +383,11 @@ class StatsService
                 verified_markets_created: create_market_actions.select { |action| action[:address] == user && network_verified_market_ids(network_id).include?(action[:market_id]) }.count,
                 volume_eur: volume_by_tx_action['buy'] + volume_by_tx_action['sell'],
                 tvl_volume_eur: volume_by_tx_action['buy'] - volume_by_tx_action['sell'],
-                earnings_eur: volume_by_tx_action['sell'] - volume_by_tx_action['buy'] + volume_by_tx_action['claim_winnings'] + volume_by_tx_action['claim_voided'] + portfolio_value,
+                earnings_eur: volume_by_tx_action['sell'] - volume_by_tx_action['buy'] + volume_by_tx_action['claim_voided'] + portfolio_value + winnings_value,
                 liquidity_eur: volume_by_tx_action['add_liquidity'] + volume_by_tx_action['remove_liquidity'],
                 tvl_liquidity_eur: volume_by_tx_action['add_liquidity'] - volume_by_tx_action['remove_liquidity'],
                 bond_volume: bonds.select { |bond| bond[:user] == user }.sum { |bond| bond[:value] },
-                claim_winnings_count: user_actions.select { |a| a[:action] == 'claim_winnings' }.count,
+                claim_winnings_count: claim_winnings_count,
                 transactions: user_actions.count,
                 upvotes: upvote_actions.select { |action| action[:user] == user }.count,
                 downvotes: downvote_actions.select { |action| action[:user] == user }.count,
