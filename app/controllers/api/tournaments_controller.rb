@@ -1,7 +1,7 @@
 module Api
   class TournamentsController < BaseController
     def index
-      tournaments = Tournament.all
+      tournaments = Tournament.order(position: :asc).all
 
       render json: tournaments
     end
