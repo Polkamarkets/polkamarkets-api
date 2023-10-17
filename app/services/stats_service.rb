@@ -335,7 +335,7 @@ class StatsService
           markets_resolved.select! do |action|
             (!from || action[:timestamp] >= from) &&
               (!to || action[:timestamp] <= to) &&
-              (tournament_market_ids.blank? || tournament_market_ids.include?(action[:item_id]))
+              (tournament_market_ids.blank? || tournament_market_ids.include?(action[:market_id]))
           end
 
           # grouping actions by intervals
