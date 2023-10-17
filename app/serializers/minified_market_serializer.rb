@@ -22,7 +22,8 @@ class MinifiedMarketSerializer < ActiveModel::Serializer
     :voided,
     :trading_view_symbol,
     :question,
-    :banner_url
+    :banner_url,
+    :users
   )
 
   has_many :outcomes, class_name: "MarketOutcome", serializer: MinifiedMarketOutcomeSerializer

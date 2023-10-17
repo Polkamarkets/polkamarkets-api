@@ -419,6 +419,10 @@ class Market < ApplicationRecord
     end
   end
 
+  def users
+    action_events.map { |action| action[:address] }.uniq.count
+  end
+
   def polkamarkets_web_url
     "#{Rails.application.config_for(:polkamarkets).web_url}/markets/#{slug}"
   end
