@@ -282,7 +282,7 @@ class StatsService
         network_id = network[:network_id]
 
         key = "api:leaderboard:#{timeframe}:#{from}:#{to}:#{network_id}"
-        key << ":#{tournament_id}" if tournament.present? && tournament.network_id == network_id
+        key << ":#{tournament_id}" if tournament.present? && tournament.network_id == network_id.to_i
 
         Rails.cache.fetch(key, expires_in: 24.hours, force: refresh) do
           actions = network_actions(network_id)
@@ -296,16 +296,16 @@ class StatsService
           market_ids = actions.map { |action| action[:market_id] }.uniq
           market_ids = market_ids & tournament_market_ids if tournament_market_ids.present?
 
+          create_market_actions = market_ids.map do |market_id|
+            # first action represents market creation
+            action = actions.find { |action| action[:market_id] == market_id }
+          end
+
           # filtering by timestamps, if provided
           actions.select! do |action|
             (!from || action[:timestamp] >= from) &&
               (!to || action[:timestamp] <= to) &&
               (tournament_market_ids.blank? || tournament_market_ids.include?(action[:market_id]))
-          end
-
-          create_market_actions = market_ids.map do |market_id|
-            # first action represents market creation
-            action = actions.find { |action| action[:market_id] == market_id }
           end
 
           bonds.select! do |bond|
