@@ -196,7 +196,7 @@ class Portfolio < ApplicationRecord
       end
   end
 
-  def holdings_value
+  def holdings_value(filter_by_market_ids: nil)
     value = 0
 
     # fetching holdings markets
@@ -204,6 +204,8 @@ class Portfolio < ApplicationRecord
     markets = Market.where(eth_market_id: market_ids, network_id: network_id).includes(:outcomes)
     # ignoring resolved markets
     markets = markets.to_a.reject { |market| market.resolved? }
+    # filtering by market ids if provided
+    markets.select! { |market| filter_by_market_ids.include?(market.eth_market_id) } if !filter_by_market_ids.nil?
 
     markets.each do |market|
       holding = holdings.find { |holding| holding[:market_id] == market.eth_market_id }

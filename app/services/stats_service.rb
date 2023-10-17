@@ -269,32 +269,43 @@ class StatsService
     stats_by_timeframe
   end
 
-  def get_leaderboard(timeframe:, refresh: false, timestamp: Time.now.to_i)
+  def get_leaderboard(timeframe:, refresh: false, timestamp: Time.now.to_i, tournament_id: nil)
     raise "Invalid timeframe: #{timeframe}" unless TIMEFRAMES.key?(timeframe)
 
     from = timestamp_from(timestamp, timeframe)
     to = timestamp_to(timestamp, timeframe)
 
+    tournament = Tournament.find_by(id: tournament_id)
+
     leaderboard =
-      Rails.cache.fetch("api:leaderboard:#{timeframe}:#{from}:#{to}", expires_in: 24.hours, force: refresh) do
-        networks.to_h do |network|
-          network_id = network[:network_id]
+      networks.to_h do |network|
+        network_id = network[:network_id]
+
+        key = "api:leaderboard:#{timeframe}:#{from}:#{to}:#{network_id}"
+        key << ":#{tournament_id}" if tournament.present? && tournament.network_id == network_id
+
+        Rails.cache.fetch(key, expires_in: 24.hours, force: refresh) do
           actions = network_actions(network_id)
           bonds = network_bonds(network_id)
           votes = network_votes(network_id)
           burn_actions = network_burn_actions(network_id)
           markets_resolved = network_markets_resolved(network_id)
-          market_ids = actions.map { |action| action[:market_id] }.uniq
 
-          create_market_actions = market_ids.map do |market_id|
-            # first action represents market creation
-            action = actions.find { |action| action[:market_id] == market_id }
-          end
+          tournament_market_ids = tournament.markets.map(&:eth_market_id) if tournament.present? && tournament.network_id == network_id.to_i
+
+          market_ids = actions.map { |action| action[:market_id] }.uniq
+          market_ids = market_ids & tournament_market_ids if tournament_market_ids.present?
 
           # filtering by timestamps, if provided
           actions.select! do |action|
             (!from || action[:timestamp] >= from) &&
-              (!to || action[:timestamp] <= to)
+              (!to || action[:timestamp] <= to) &&
+              (tournament_market_ids.blank? || tournament_market_ids.include?(action[:market_id]))
+          end
+
+          create_market_actions = market_ids.map do |market_id|
+            # first action represents market creation
+            action = actions.find { |action| action[:market_id] == market_id }
           end
 
           bonds.select! do |bond|
@@ -310,18 +321,21 @@ class StatsService
           upvote_actions = votes.select do |action|
             action[:action] == 'upvote' &&
               (!from || action[:timestamp] >= from) &&
-              (!to || action[:timestamp] <= to)
+              (!to || action[:timestamp] <= to) &&
+              (tournament_market_ids.blank? || tournament_market_ids.include?(action[:item_id]))
           end
 
           downvote_actions = votes.select do |action|
             action[:action] == 'downvote' &&
               (!from || action[:timestamp] >= from) &&
-              (!to || action[:timestamp] <= to)
+              (!to || action[:timestamp] <= to) &&
+              (tournament_market_ids.blank? || tournament_market_ids.include?(action[:item_id]))
           end
 
           markets_resolved.select! do |action|
             (!from || action[:timestamp] >= from) &&
-              (!to || action[:timestamp] <= to)
+              (!to || action[:timestamp] <= to) &&
+              (tournament_market_ids.blank? || tournament_market_ids.include?(action[:item_id]))
           end
 
           # grouping actions by intervals
@@ -360,7 +374,7 @@ class StatsService
                 portfolio = Portfolio.new(eth_address: user.downcase, network_id: network_id)
                 # calculating portfolio value to add to earnings
                 burn_total = burn_actions.select { |action| action[:from] == user }.sum { |action| action[:value] }
-                portfolio_value = portfolio.holdings_value - burn_total
+                portfolio_value = portfolio.holdings_value(filter_by_market_ids: tournament_market_ids) - burn_total
 
                 # calculating winnings value to add to earnings
                 winnings = portfolio.closed_markets_winnings(
