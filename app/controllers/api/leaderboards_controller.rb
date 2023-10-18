@@ -116,6 +116,20 @@ module Api
       # removing users only with upvotes/downvotes
       leaderboard.reject! { |l| l[:transactions] == 0 }
 
+      # sorting leaderboard, when tournament param is present
+      if params[:tournament_id].present?
+        tournament = Tournament.find(params[:tournament_id])
+
+        raise "tournament network does not match" if tournament.network_id.to_i != network_id.to_i
+
+        # sorting params are comma separated
+        sort_params = tournament.rank_by.split(',').map(&:to_sym)
+
+        leaderboard.sort_by! do |user|
+          sort_params.map { |param| -user[param] }
+        end
+      end
+
       leaderboard
     end
 
