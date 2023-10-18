@@ -9,6 +9,7 @@ class TournamentSerializer < ActiveModel::Serializer
     :markets,
     :expires_at,
     :users,
+    :rank_by,
   )
 
   belongs_to :tournament_group, key: :group
