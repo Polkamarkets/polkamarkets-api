@@ -31,6 +31,10 @@ class Tournament < ApplicationRecord
     end
   end
 
+  def rank_by
+    self[:rank_by] || 'earnings_eur,claim_winnings_count'
+  end
+
   def rank_by_validation
     return if rank_by.blank?
 
