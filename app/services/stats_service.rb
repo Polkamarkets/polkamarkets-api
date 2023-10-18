@@ -269,21 +269,32 @@ class StatsService
     stats_by_timeframe
   end
 
-  def get_leaderboard(timeframe:, refresh: false, timestamp: Time.now.to_i)
+  def get_leaderboard(timeframe:, refresh: false, timestamp: Time.now.to_i, tournament_id: nil)
     raise "Invalid timeframe: #{timeframe}" unless TIMEFRAMES.key?(timeframe)
 
     from = timestamp_from(timestamp, timeframe)
     to = timestamp_to(timestamp, timeframe)
 
+    tournament = Tournament.find_by(id: tournament_id)
+
     leaderboard =
-      Rails.cache.fetch("api:leaderboard:#{timeframe}:#{from}:#{to}", expires_in: 24.hours, force: refresh) do
-        networks.to_h do |network|
-          network_id = network[:network_id]
+      networks.to_h do |network|
+        network_id = network[:network_id]
+
+        key = "api:leaderboard:#{timeframe}:#{from}:#{to}:#{network_id}"
+        key << ":#{tournament_id}" if tournament.present? && tournament.network_id == network_id.to_i
+
+        Rails.cache.fetch(key, expires_in: 24.hours, force: refresh) do
           actions = network_actions(network_id)
           bonds = network_bonds(network_id)
           votes = network_votes(network_id)
           burn_actions = network_burn_actions(network_id)
+          markets_resolved = network_markets_resolved(network_id)
+
+          tournament_market_ids = tournament.markets.map(&:eth_market_id) if tournament.present? && tournament.network_id == network_id.to_i
+
           market_ids = actions.map { |action| action[:market_id] }.uniq
+          market_ids = market_ids & tournament_market_ids if tournament_market_ids.present?
 
           create_market_actions = market_ids.map do |market_id|
             # first action represents market creation
@@ -293,7 +304,8 @@ class StatsService
           # filtering by timestamps, if provided
           actions.select! do |action|
             (!from || action[:timestamp] >= from) &&
-              (!to || action[:timestamp] <= to)
+              (!to || action[:timestamp] <= to) &&
+              (tournament_market_ids.blank? || tournament_market_ids.include?(action[:market_id]))
           end
 
           bonds.select! do |bond|
@@ -309,13 +321,21 @@ class StatsService
           upvote_actions = votes.select do |action|
             action[:action] == 'upvote' &&
               (!from || action[:timestamp] >= from) &&
-              (!to || action[:timestamp] <= to)
+              (!to || action[:timestamp] <= to) &&
+              (tournament_market_ids.blank? || tournament_market_ids.include?(action[:item_id]))
           end
 
           downvote_actions = votes.select do |action|
             action[:action] == 'downvote' &&
               (!from || action[:timestamp] >= from) &&
-              (!to || action[:timestamp] <= to)
+              (!to || action[:timestamp] <= to) &&
+              (tournament_market_ids.blank? || tournament_market_ids.include?(action[:item_id]))
+          end
+
+          markets_resolved.select! do |action|
+            (!from || action[:timestamp] >= from) &&
+              (!to || action[:timestamp] <= to) &&
+              (tournament_market_ids.blank? || tournament_market_ids.include?(action[:market_id]))
           end
 
           # grouping actions by intervals
@@ -346,15 +366,28 @@ class StatsService
               end
 
               portfolio_value = 0
+              winnings_value = 0
               is_sybil_attacker = { is_attacker: false }
+              claim_winnings_count = 0
 
               if Rails.application.config_for(:ethereum).fantasy_enabled
                 portfolio = Portfolio.new(eth_address: user.downcase, network_id: network_id)
                 # calculating portfolio value to add to earnings
                 burn_total = burn_actions.select { |action| action[:from] == user }.sum { |action| action[:value] }
-                portfolio_value = portfolio.holdings_value - burn_total
+                portfolio_value = portfolio.holdings_value(filter_by_market_ids: tournament_market_ids) - burn_total
+
+                # calculating winnings value to add to earnings
+                winnings = portfolio.closed_markets_winnings(
+                  filter_by_market_ids: markets_resolved.map { |action| action[:market_id] }
+                )
+
+                claim_winnings_count = winnings[:count]
+                winnings_value = winnings[:value]
 
                 is_sybil_attacker = SybilAttackFinderService.new(user, network_id).is_sybil_attacker?
+              else
+                claim_winnings_count = user_actions.select { |a| a[:action] == 'claim_winnings' }.count
+                winnings_value = volume_by_tx_action['claim_winnings']
               end
 
               {
@@ -364,11 +397,11 @@ class StatsService
                 verified_markets_created: create_market_actions.select { |action| action[:address] == user && network_verified_market_ids(network_id).include?(action[:market_id]) }.count,
                 volume_eur: volume_by_tx_action['buy'] + volume_by_tx_action['sell'],
                 tvl_volume_eur: volume_by_tx_action['buy'] - volume_by_tx_action['sell'],
-                earnings_eur: volume_by_tx_action['sell'] - volume_by_tx_action['buy'] + volume_by_tx_action['claim_winnings'] + volume_by_tx_action['claim_voided'] + portfolio_value,
+                earnings_eur: volume_by_tx_action['sell'] - volume_by_tx_action['buy'] + volume_by_tx_action['claim_voided'] + portfolio_value + winnings_value,
                 liquidity_eur: volume_by_tx_action['add_liquidity'] + volume_by_tx_action['remove_liquidity'],
                 tvl_liquidity_eur: volume_by_tx_action['add_liquidity'] - volume_by_tx_action['remove_liquidity'],
                 bond_volume: bonds.select { |bond| bond[:user] == user }.sum { |bond| bond[:value] },
-                claim_winnings_count: user_actions.select { |a| a[:action] == 'claim_winnings' }.count,
+                claim_winnings_count: claim_winnings_count,
                 transactions: user_actions.count,
                 upvotes: upvote_actions.select { |action| action[:user] == user }.count,
                 downvotes: downvote_actions.select { |action| action[:user] == user }.count,

@@ -86,6 +86,36 @@ class Portfolio < ApplicationRecord
     end
   end
 
+  def closed_markets_winnings(filter_by_market_ids: nil)
+    value = 0
+    count = 0
+
+    # fetching holdings markets
+    market_ids = holdings.map { |holding| holding[:market_id] }.uniq
+
+    markets = Market.where(eth_market_id: market_ids, network_id: network_id).includes(:outcomes)
+    # filtering holdings by resolved by markets
+    markets = markets.to_a.select { |market| market.resolved? }
+
+    markets.select! { |market| filter_by_market_ids.include?(market.eth_market_id) } if !filter_by_market_ids.nil?
+
+    markets.each do |market|
+      # TODO: add liquidity shares value
+      holding = holdings.find { |holding| holding[:market_id] == market.eth_market_id }
+
+      # calculating holding value
+      if !market.voided && holding[:outcome_shares][market.resolved_outcome_id] > 0
+        value += holding[:outcome_shares][market.resolved_outcome_id] * market.token_rate
+        count += 1
+      end
+    end
+
+    {
+      value: value,
+      count: count,
+    }
+  end
+
   # profit/loss from resolved events
   def closed_markets_profit
     value = 0
@@ -166,7 +196,7 @@ class Portfolio < ApplicationRecord
       end
   end
 
-  def holdings_value
+  def holdings_value(filter_by_market_ids: nil)
     value = 0
 
     # fetching holdings markets
@@ -174,6 +204,8 @@ class Portfolio < ApplicationRecord
     markets = Market.where(eth_market_id: market_ids, network_id: network_id).includes(:outcomes)
     # ignoring resolved markets
     markets = markets.to_a.reject { |market| market.resolved? }
+    # filtering by market ids if provided
+    markets.select! { |market| filter_by_market_ids.include?(market.eth_market_id) } if !filter_by_market_ids.nil?
 
     markets.each do |market|
       holding = holdings.find { |holding| holding[:market_id] == market.eth_market_id }
