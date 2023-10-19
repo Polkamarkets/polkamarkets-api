@@ -75,8 +75,6 @@ class FeedService
   end
 
   def serialized_vote_actions
-    puts vote_actions
-
     vote_actions.map do |action|
       market = voting_markets.find { |m| m.eth_market_id == action[:item_id].to_i }
 
