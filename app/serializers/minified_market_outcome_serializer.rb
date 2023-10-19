@@ -8,8 +8,6 @@ class MinifiedMarketOutcomeSerializer < ActiveModel::Serializer
     :price_charts
   )
 
-  belongs_to :market, serializer: MinifiedMarketSerializer
-
   def id
     # returning eth market id in chain, not db market
     object.eth_market_id
