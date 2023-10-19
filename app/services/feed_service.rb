@@ -1,5 +1,5 @@
 class FeedService
-  attr_accessor :user, :network_id, :actions, :markets
+  attr_accessor :address, :market, :network_id, :actions, :markets
 
   FEED_ACTIONS = [
     'buy',
@@ -9,33 +9,43 @@ class FeedService
     'claim_winnings'
   ].freeze
 
-  def initialize(user:, network_id:)
-    @user = user
+  def initialize(network_id:, address: nil, market_id: nil)
+    raise 'cannot initialize FeedService with address + market_id' if address.present? && market_id.present?
+
+    @address = address
+    @market = Market.find(market_id) if market_id.present?
     @network_id = network_id
   end
 
   def actions
     @actions ||= Bepro::PredictionMarketContractService.new(network_id: network_id)
-      .get_action_events(address: user)
+      .get_action_events(address: address, market_id: market&.eth_market_id)
       .sort_by { |a| -a[:timestamp] }
   end
 
   def vote_actions
     @vote_actions ||= Bepro::VotingContractService.new(network_id: network_id)
-      .get_voting_events(user: user)
+      .get_voting_events(user: address, item_id: market&.eth_market_id)
       .sort_by { |a| -a[:timestamp] }
   end
 
   def create_event_actions
-    @create_event_actions ||= Bepro::PredictionMarketContractService.new(network_id: network_id).get_events(event_name: 'MarketCreated')
+    @create_event_actions ||=
+      Bepro::PredictionMarketContractService.new(network_id: network_id).get_events(event_name: 'MarketCreated')
   end
 
   def markets
-    @markets ||= Market.where(network_id: network_id, eth_market_id: actions.map { |a| a[:market_id] }.uniq).includes(:outcomes)
+    @markets ||=
+      Market
+        .where(network_id: network_id, eth_market_id: actions.map { |a| a[:market_id] }.uniq)
+        .includes(:outcomes)
   end
 
   def voting_markets
-    @voting_markets ||= Market.where(network_id: network_id, eth_market_id: vote_actions.map { |a| a[:item_id] }.uniq).includes(:outcomes)
+    @voting_markets ||=
+      Market
+        .where(network_id: network_id, eth_market_id: vote_actions.map { |a| a[:item_id] }.uniq)
+        .includes(:outcomes)
   end
 
   def filtered_actions
