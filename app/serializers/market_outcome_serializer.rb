@@ -13,8 +13,6 @@ class MarketOutcomeSerializer < ActiveModel::Serializer
 
   attribute :price_charts, if: :show_price_charts?
 
-  belongs_to :market, serializer: MarketSerializer
-
   def id
     # returning eth market id in chain, not db market
     object.eth_market_id
