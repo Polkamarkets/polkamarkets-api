@@ -37,6 +37,7 @@ class MarketSerializer < ActiveModel::Serializer
   )
 
   has_many :outcomes, class_name: "MarketOutcome", serializer: MarketOutcomeSerializer
+  has_many :comments, serializer: CommentSerializer
 
   def id
     # returning eth market id in chain, not db market
