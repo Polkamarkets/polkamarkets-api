@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2023_10_04_124529) do
+ActiveRecord::Schema.define(version: 2023_10_18_153434) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -141,6 +141,7 @@ ActiveRecord::Schema.define(version: 2023_10_04_124529) do
     t.datetime "updated_at", precision: 6, null: false
     t.bigint "tournament_group_id"
     t.integer "position"
+    t.string "rank_by"
     t.index ["slug"], name: "index_tournaments_on_slug", unique: true
     t.index ["tournament_group_id"], name: "index_tournaments_on_tournament_group_id"
   end
