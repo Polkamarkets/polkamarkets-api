@@ -66,6 +66,9 @@ Rails.application.routes.draw do
       end
     end
 
+    # only allowing comment creation for now
+    resources :comments, only: [:create]
+
     if !Rails.env.production?
       post 'webhooks/faucet' => "webhooks#faucet"
     end
