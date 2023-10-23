@@ -27,6 +27,7 @@ Rails.application.routes.draw do
     resources :markets, only: [:index, :show, :create] do
       member do
         post :reload
+        get :feed
       end
     end
 
