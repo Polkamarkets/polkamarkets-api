@@ -309,7 +309,7 @@ class Market < ApplicationRecord
     return [] if eth_market_id.blank?
 
     Rails.cache.fetch("markets:network_#{network_id}:#{eth_market_id}:feed", force: refresh) do
-      FeedService.new(market_id: market.eth_market_id, network_id: network_id).feed_actions
+      FeedService.new(market_id: eth_market_id, network_id: network_id).feed_actions
     end
   end
 
