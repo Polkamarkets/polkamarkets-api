@@ -1,5 +1,7 @@
 module Api
   class MarketsController < BaseController
+    before_action :get_market, only: %i[show reload feed]
+
     def index
       markets = Market.published.order(created_at: :desc).includes(:outcomes).with_attached_image
 
@@ -27,10 +29,7 @@ module Api
     end
 
     def show
-      # finding items by eth market id
-      market = Market.find_by_slug_or_eth_market_id!(params[:id], params[:network_id])
-
-      render json: market, scope: { show_price_charts: true }, status: :ok
+      render json: @market, scope: { show_price_charts: true }, status: :ok
     end
 
     def create
@@ -40,13 +39,21 @@ module Api
     end
 
     def reload
-      # forcing cache refresh of market
-      market = Market.find_by_slug_or_eth_market_id!(params[:id])
       # cleaning up total market cache
-      market.destroy_cache!
-      market.refresh_cache!(queue: 'critical')
+      @market.destroy_cache!
+      @market.refresh_cache!(queue: 'critical')
 
       render json: { status: 'ok' }, status: :ok
+    end
+
+    def feed
+      render json: @market.feed, status: :ok
+    end
+
+    private
+
+    def get_market
+      @market = Market.find_by_slug_or_eth_market_id!(params[:id], params[:network_id])
     end
   end
 end
