@@ -28,7 +28,7 @@ module Api
 
     def show
       # finding items by eth market id
-      market = Market.find_by_slug_or_eth_market_id(params[:id], params[:network_id])
+      market = Market.find_by_slug_or_eth_market_id!(params[:id], params[:network_id])
 
       render json: market, scope: { show_price_charts: true }, status: :ok
     end
@@ -41,7 +41,7 @@ module Api
 
     def reload
       # forcing cache refresh of market
-      market = Market.find_by_slug_or_eth_market_id(params[:id])
+      market = Market.find_by_slug_or_eth_market_id!(params[:id])
       # cleaning up total market cache
       market.destroy_cache!
       market.refresh_cache!(queue: 'critical')
