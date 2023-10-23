@@ -25,7 +25,7 @@ class Market < ApplicationRecord
 
   IMMUTABLE_FIELDS = [:title]
 
-  def self.find_by_slug_or_eth_market_id(id_or_slug, network_id = nil)
+  def self.find_by_slug_or_eth_market_id!(id_or_slug, network_id = nil)
     Market.find_by(slug: id_or_slug) ||
       Market.find_by!(eth_market_id: id_or_slug, network_id: network_id)
   end
@@ -302,6 +302,14 @@ class Market < ApplicationRecord
         Sentry.capture_exception(exception)
         []
       end
+    end
+  end
+
+  def feed(refresh: false)
+    return [] if eth_market_id.blank?
+
+    Rails.cache.fetch("markets:network_#{network_id}:#{eth_market_id}:feed", force: refresh) do
+      FeedService.new(market_id: eth_market_id, network_id: network_id).feed_actions
     end
   end
 
