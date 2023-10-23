@@ -305,6 +305,14 @@ class Market < ApplicationRecord
     end
   end
 
+  def feed(refresh: false)
+    return [] if eth_market_id.blank?
+
+    Rails.cache.fetch("markets:network_#{network_id}:#{eth_market_id}:feed", force: refresh) do
+      FeedService.new(market_id: market.eth_market_id, network_id: network_id).feed_actions
+    end
+  end
+
   def should_refresh_cache?
     # TODO: figure out caching system from closed (and unresolved) markets
     !(resolved? && resolved_at < 1.day.ago.to_i)
