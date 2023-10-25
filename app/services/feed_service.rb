@@ -98,7 +98,8 @@ class FeedService
         image_url: image_url,
         shares: action[:shares],
         value: action[:value],
-        timestamp: action[:timestamp]
+        timestamp: action[:timestamp],
+        ticker: action_market.token[:symbol]
       }
     end
   end
@@ -116,7 +117,8 @@ class FeedService
         image_url: market.image_url,
         shares: nil,
         value: nil,
-        timestamp: action[:timestamp]
+        timestamp: action[:timestamp],
+        ticker: market.token[:symbol]
       }
     end
   end
