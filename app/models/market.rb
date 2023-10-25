@@ -333,6 +333,7 @@ class Market < ApplicationRecord
     Cache::MarketLiquidityPricesWorker.set(queue: queue).perform_async(id)
     Cache::MarketQuestionDataWorker.set(queue: queue).perform_async(id)
     Cache::MarketVotesWorker.set(queue: queue).perform_async(id)
+    Cache::MarketFeedWorker.set(queue: queue).perform_async(id)
   end
 
   def refresh_cache_sync!
@@ -344,6 +345,7 @@ class Market < ApplicationRecord
     Cache::MarketLiquidityPricesWorker.new.perform(id)
     Cache::MarketQuestionDataWorker.new.perform(id)
     Cache::MarketVotesWorker.new.perform(id)
+    Cache::MarketFeedWorker.new.perform(id)
 
     true
   end
