@@ -8,6 +8,8 @@ default: &default
     "80001":
       "0x3cd5c7f47c0933267aed07a115c8e5a3d0a30f22": "damat"
       "0xb098f0a6a27a67b529bb3bceeaa1efe7e93b1f7b": "tween"
+      "0xa6ccbd9367a3bf9b0b6758bc21a1bec961841f94": "pcl"
+      "0x02158400A4c0efE4F13D37c48CA63b477Fc755E9": "alpha"
 
 production:
   <<: *default
