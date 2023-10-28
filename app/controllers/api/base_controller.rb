@@ -40,6 +40,8 @@ module Api
               user.update(login_public_key: login_public_key)
             end
 
+            user.update(username: email.split('@').first) if user.username.blank?
+
             @current_user_id = user.id
           rescue JWT::ExpiredSignature, JWT::VerificationError, JWT::DecodeError
             head :unauthorized
