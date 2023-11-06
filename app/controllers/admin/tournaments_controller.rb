@@ -68,6 +68,7 @@ module Admin
           :image_url,
           :network_id,
           :tournament_group_id,
+          :rank_by,
           market_ids: []
         )
     end

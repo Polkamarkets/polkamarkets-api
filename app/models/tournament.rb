@@ -32,7 +32,7 @@ class Tournament < ApplicationRecord
   end
 
   def rank_by
-    self[:rank_by] || 'earnings_eur,claim_winnings_count'
+    self[:rank_by] || 'claim_winnings_count,earnings_eur'
   end
 
   def rank_by_validation
