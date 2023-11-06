@@ -42,6 +42,20 @@ module Admin
       tournament.destroy
     end
 
+    def move_up
+      tournament = Tournament.friendly.find(params[:id])
+      tournament.move_higher
+
+      render json: tournament
+    end
+
+    def move_down
+      tournament = Tournament.friendly.find(params[:id])
+      tournament.move_lower
+
+      render json: tournament
+    end
+
     private
 
     def tournament_params

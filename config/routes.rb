@@ -14,7 +14,12 @@ Rails.application.routes.draw do
     end if !Rails.env.development?
     mount Sidekiq::Web, at: "/sidekiq"
 
-    resources :tournaments, only: [:create, :update, :destroy]
+    resources :tournaments, only: [:create, :update, :destroy] do
+      member do
+        post :move_up
+        post :move_down
+      end
+    end
     resources :tournament_groups, only: [:create, :update, :destroy] do
       member do
         post :move_up
