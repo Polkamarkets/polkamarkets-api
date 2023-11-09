@@ -385,9 +385,11 @@ class StatsService
                 winnings_value = winnings[:value]
 
                 is_sybil_attacker = SybilAttackFinderService.new(user, network_id).is_sybil_attacker?
+                bankrupt_data = BankruptcyFinderService.new(user, network_id).is_bankrupt?
               else
                 claim_winnings_count = user_actions.select { |a| a[:action] == 'claim_winnings' }.count
                 winnings_value = volume_by_tx_action['claim_winnings']
+                bankrupt_data = { bankrupt: false, needs_rescue: false }
               end
 
               {
@@ -406,6 +408,8 @@ class StatsService
                 upvotes: upvote_actions.select { |action| action[:user] == user }.count,
                 downvotes: downvote_actions.select { |action| action[:user] == user }.count,
                 malicious: is_sybil_attacker[:is_attacker],
+                bankrupt: bankrupt_data[:bankrupt],
+                needs_rescue: bankrupt_data[:needs_rescue]
               }
             end
           ]
