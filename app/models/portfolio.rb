@@ -269,6 +269,7 @@ class Portfolio < ApplicationRecord
 
       @holdings_timeline.push({
         timestamp: action[:timestamp],
+        block_number: action[:block_number],
         holdings: holdings.deep_dup,
       })
     end
