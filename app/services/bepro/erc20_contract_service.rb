@@ -59,5 +59,9 @@ module Bepro
     def burn_events(from: nil)
       transfer_events(from: from, to: '0x0000000000000000000000000000000000000000')
     end
+
+    def mint_events(to: nil)
+      transfer_events(from: '0x0000000000000000000000000000000000000000', to: to)
+    end
   end
 end
