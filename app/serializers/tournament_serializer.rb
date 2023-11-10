@@ -13,7 +13,9 @@ class TournamentSerializer < ActiveModel::Serializer
     :rank_by
   )
 
-  belongs_to :tournament_group, key: :group
+  # TODO remove; legacy
+  belongs_to :tournament_group, key: :group, if: :show_tournament_group?
+  belongs_to :tournament_group, key: :land, if: :show_tournament_group?
 
   def markets
     object.markets.map do |market|
@@ -24,5 +26,9 @@ class TournamentSerializer < ActiveModel::Serializer
         slug: market.slug,
       }
     end
+  end
+
+  def show_tournament_group?
+    !scope&.dig(:show_tournaments)
   end
 end

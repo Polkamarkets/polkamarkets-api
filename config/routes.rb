@@ -62,7 +62,9 @@ Rails.application.routes.draw do
     end
 
     resources :tournaments, only: [:index, :show]
+    # TODO remove; legacy
     resources :tournament_groups, only: [:index, :show]
+    resources :lands, controller: :tournament_groups, only: [:index, :show]
 
     get 'achievement_tokens/:network/:id', to: 'achievement_tokens#show'
 
