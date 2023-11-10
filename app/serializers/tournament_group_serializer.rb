@@ -7,18 +7,9 @@ class TournamentGroupSerializer < ActiveModel::Serializer
     :position
   )
 
-  def markets
-    object.markets.map do |market|
-      {
-        id: market.eth_market_id,
-        title: market.title,
-        image_url: market.image_url,
-        slug: market.slug,
-      }
-    end
-  end
+  has_many :tournaments, serializer: TournamentSerializer, if: :show_tournaments?
 
-  def group
-    object.tournament_group
+  def show_tournaments?
+    !!scope&.dig(:show_tournaments)
   end
 end
