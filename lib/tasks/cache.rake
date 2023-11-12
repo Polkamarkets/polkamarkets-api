@@ -50,6 +50,9 @@ namespace :cache do
       if Rails.application.config_for(:ethereum).fantasy_enabled
         burn_events = Bepro::Erc20ContractService.new(network_id: network_id).burn_events
         Rails.cache.write("api:burn_actions:#{network_id}", burn_events, expires_in: 24.hours)
+
+        mint_events = Bepro::Erc20ContractService.new(network_id: network_id).mint_events
+        Rails.cache.write("api:mint_actions:#{network_id}", mint_events, expires_in: 24.hours)
       end
 
       # fetching users from last 24 hours and creating a Portfolio entry, in case it doesn't exist
