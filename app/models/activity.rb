@@ -14,13 +14,13 @@ class Activity < ApplicationRecord
     :token_address
 
   def self.create_from_prediction_market_action(network_id, action)
-    activity = Activity.find_or_create_by(
+    activity = Activity.find_or_initialize_by(
       network_id: network_id,
       tx_id: action[:tx_id],
       action: action[:action]
     )
 
-    # token address not on action, emulating a market model and fetching from eth_data
+    # token address not on action, fetching from eth_data from market model
     market = Market.find_or_initialize_by(network_id: network_id, eth_market_id: action[:market_id])
 
     activity.update(
