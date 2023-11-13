@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2023_10_23_091658) do
+ActiveRecord::Schema.define(version: 2023_11_13_020837) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -58,6 +58,25 @@ ActiveRecord::Schema.define(version: 2023_10_23_091658) do
     t.string "checksum", null: false
     t.datetime "created_at", null: false
     t.index ["key"], name: "index_active_storage_blobs_on_key", unique: true
+  end
+
+  create_table "activities", force: :cascade do |t|
+    t.integer "network_id"
+    t.datetime "timestamp"
+    t.text "address"
+    t.text "action"
+    t.text "tx_id"
+    t.text "block_number"
+    t.float "amount"
+    t.float "shares"
+    t.integer "market_id"
+    t.integer "outcome_id"
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["action"], name: "index_activities_on_action"
+    t.index ["address"], name: "index_activities_on_address"
+    t.index ["market_id"], name: "index_activities_on_market_id"
+    t.index ["network_id", "tx_id", "action"], name: "index_activities_on_network_id_and_tx_id_and_action", unique: true
   end
 
   create_table "comments", force: :cascade do |t|
