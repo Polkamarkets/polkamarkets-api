@@ -4,7 +4,9 @@ class TournamentGroupSerializer < ActiveModel::Serializer
     :slug,
     :title,
     :description,
-    :position
+    :position,
+    :image_url,
+    :banner_url
   )
 
   has_many :tournaments, serializer: TournamentSerializer, if: :show_tournaments?
