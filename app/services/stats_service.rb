@@ -475,7 +475,7 @@ class StatsService
   end
 
   def network_verified_market_ids(network_id)
-    return @network_verified_market_ids&.dig(network_id) if @network_verified_market_ids&.dig(network_id).present?
+    return @network_verified_market_ids&.dig(network_id) if !@network_verified_market_ids&.dig(network_id).nil?
 
     @network_verified_market_ids ||= {}
 
