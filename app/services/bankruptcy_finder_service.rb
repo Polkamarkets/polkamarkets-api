@@ -1,7 +1,7 @@
 class BankruptcyFinderService
   include NetworkHelper
 
-  attr_accessor :user, :network_id, :actions, :mint_actions, :markets_resolved
+  attr_accessor :user, :network_id, :actions, :mint_actions, :markets_resolved, :portfolio
 
   def initialize(user, network_id)
     @user = user
@@ -9,6 +9,7 @@ class BankruptcyFinderService
     @actions = network_actions(network_id)
     @mint_actions = network_mint_actions(network_id)
     @markets_resolved = network_markets_resolved(network_id)
+    @portfolio = Portfolio.new(eth_address: user.downcase, network_id: network_id)
   end
 
   def is_bankrupt?

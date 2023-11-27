@@ -245,8 +245,13 @@ class Portfolio < ApplicationRecord
     holdings = {}
     @holdings_timeline = []
 
+    markets = Market
+      .where(eth_market_id: action_events.map { |action| action[:market_id] }.uniq, network_id: network_id)
+      .includes(:outcomes)
+      .all
+
     action_events.each do |action|
-      market = Market.find_by(eth_market_id: action[:market_id], network_id: network_id)
+      market = markets.find { |market| market.eth_market_id == action[:market_id] }
 
       # still no action performed in this market, initializing object
       if holdings[action[:market_id]].blank?

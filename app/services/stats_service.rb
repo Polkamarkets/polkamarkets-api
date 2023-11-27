@@ -368,6 +368,7 @@ class StatsService
               portfolio_value = 0
               winnings_value = 0
               is_sybil_attacker = { is_attacker: false }
+              bankrupt_data = { bankrupt: false, needs_rescue: false }
               claim_winnings_count = 0
 
               if Rails.application.config_for(:ethereum).fantasy_enabled
@@ -389,7 +390,6 @@ class StatsService
               else
                 claim_winnings_count = user_actions.select { |a| a[:action] == 'claim_winnings' }.count
                 winnings_value = volume_by_tx_action['claim_winnings']
-                bankrupt_data = { bankrupt: false, needs_rescue: false }
               end
 
               {
