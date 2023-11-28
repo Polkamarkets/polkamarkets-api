@@ -36,8 +36,6 @@ class BankruptcyFinderService
         ['buy'].include?(action[:action])
       end.sum { |action| action[:value] }
 
-      portfolio = Portfolio.new(eth_address: user.downcase, network_id: network_id)
-
       market_ids += actions_to_check.map { |action| action[:market_id] }.uniq
       market_ids.uniq!
 

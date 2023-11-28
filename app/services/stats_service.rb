@@ -286,6 +286,7 @@ class StatsService
 
         Rails.cache.fetch(key, expires_in: 24.hours, force: refresh) do
           actions = network_actions(network_id)
+          all_actions = actions.clone
           bonds = network_bonds(network_id)
           votes = network_votes(network_id)
           burn_actions = network_burn_actions(network_id)
@@ -372,21 +373,26 @@ class StatsService
               claim_winnings_count = 0
 
               if Rails.application.config_for(:ethereum).fantasy_enabled
-                portfolio = Portfolio.new(eth_address: user.downcase, network_id: network_id)
-                # calculating portfolio value to add to earnings
-                burn_total = burn_actions.select { |action| action[:from] == user }.sum { |action| action[:value] }
-                portfolio_value = portfolio.holdings_value(filter_by_market_ids: tournament_market_ids) - burn_total
+                user_market_ids = all_actions.select { |action| action[:address] == user }.map { |action| action[:market_id] }.uniq
+                user_market_ids = user_market_ids & tournament_market_ids if tournament_market_ids.present?
 
-                # calculating winnings value to add to earnings
-                winnings = portfolio.closed_markets_winnings(
-                  filter_by_market_ids: markets_resolved.map { |action| action[:market_id] }
-                )
+                if user_market_ids.present?
+                  portfolio = Portfolio.new(eth_address: user.downcase, network_id: network_id)
+                  # calculating portfolio value to add to earnings
+                  burn_total = burn_actions.select { |action| action[:from] == user }.sum { |action| action[:value] }
+                  portfolio_value = portfolio.holdings_value(filter_by_market_ids: tournament_market_ids) - burn_total
 
-                claim_winnings_count = winnings[:count]
-                winnings_value = winnings[:value]
+                  # calculating winnings value to add to earnings
+                  winnings = portfolio.closed_markets_winnings(
+                    filter_by_market_ids: markets_resolved.map { |action| action[:market_id] }
+                  )
 
-                is_sybil_attacker = SybilAttackFinderService.new(user, network_id).is_sybil_attacker?
-                bankrupt_data = BankruptcyFinderService.new(user, network_id).is_bankrupt?
+                  claim_winnings_count = winnings[:count]
+                  winnings_value = winnings[:value]
+
+                  is_sybil_attacker = SybilAttackFinderService.new(user, network_id).is_sybil_attacker?
+                  bankrupt_data = BankruptcyFinderService.new(user, network_id).is_bankrupt?
+                end
               else
                 claim_winnings_count = user_actions.select { |a| a[:action] == 'claim_winnings' }.count
                 winnings_value = volume_by_tx_action['claim_winnings']
