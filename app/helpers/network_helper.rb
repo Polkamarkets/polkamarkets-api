@@ -61,6 +61,14 @@ module NetworkHelper
     end
   end
 
+  def network_mint_actions(network_id)
+    return [] unless Rails.application.config_for(:ethereum).fantasy_enabled
+
+    Rails.cache.fetch("api:mint_actions:#{network_id}", expires_in: 24.hours) do
+      Bepro::Erc20ContractService.new(network_id: network_id).mint_events
+    end
+  end
+
   def network_markets_resolved(network_id)
     Rails.cache.fetch("api:markets_resolved:#{network_id}", expires_in: 24.hours) do
       Bepro::PredictionMarketContractService.new(network_id: network_id).get_market_resolved_events

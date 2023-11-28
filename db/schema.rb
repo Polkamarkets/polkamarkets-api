@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2023_11_13_024559) do
+ActiveRecord::Schema.define(version: 2023_11_27_165322) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -160,6 +160,8 @@ ActiveRecord::Schema.define(version: 2023_11_13_024559) do
     t.integer "position"
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
+    t.string "image_url"
+    t.string "banner_url"
     t.index ["slug"], name: "index_tournament_groups_on_slug", unique: true
   end
 
@@ -188,6 +190,7 @@ ActiveRecord::Schema.define(version: 2023_11_13_024559) do
     t.datetime "updated_at", precision: 6, null: false
     t.jsonb "discord_servers"
     t.string "avatar"
+    t.string "raw_email"
   end
 
   add_foreign_key "achievement_tokens", "achievements"

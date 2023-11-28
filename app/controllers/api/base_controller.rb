@@ -29,15 +29,16 @@ module Api
             )
 
             email = normalize_email(jwt_payload[0]['email'])
+            raw_email = jwt_payload[0]['email']
             login_public_key = jwt_payload[0]['wallets'][0]['public_key']
 
             user = User.find_by(email: email)
 
             if user.nil?
-              user = User.new(email: email, login_public_key: login_public_key)
+              user = User.new(email: email, login_public_key: login_public_key, raw_email: raw_email)
               user.save!
             else
-              user.update(login_public_key: login_public_key)
+              user.update(login_public_key: login_public_key, raw_email: raw_email)
             end
 
             user.update(username: email.split('@').first) if user.username.blank?

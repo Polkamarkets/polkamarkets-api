@@ -368,6 +368,7 @@ class StatsService
               portfolio_value = 0
               winnings_value = 0
               is_sybil_attacker = { is_attacker: false }
+              bankrupt_data = { bankrupt: false, needs_rescue: false }
               claim_winnings_count = 0
 
               if Rails.application.config_for(:ethereum).fantasy_enabled
@@ -385,6 +386,7 @@ class StatsService
                 winnings_value = winnings[:value]
 
                 is_sybil_attacker = SybilAttackFinderService.new(user, network_id).is_sybil_attacker?
+                bankrupt_data = BankruptcyFinderService.new(user, network_id).is_bankrupt?
               else
                 claim_winnings_count = user_actions.select { |a| a[:action] == 'claim_winnings' }.count
                 winnings_value = volume_by_tx_action['claim_winnings']
@@ -406,6 +408,8 @@ class StatsService
                 upvotes: upvote_actions.select { |action| action[:user] == user }.count,
                 downvotes: downvote_actions.select { |action| action[:user] == user }.count,
                 malicious: is_sybil_attacker[:is_attacker],
+                bankrupt: bankrupt_data[:bankrupt],
+                needs_rescue: bankrupt_data[:needs_rescue]
               }
             end
           ]
@@ -455,8 +459,8 @@ class StatsService
   end
 
   def timestamp_to(timestamp, timeframe)
-    # setting to next 5 minute block if timeframe is all time
-    return (Time.now.to_i / 300 + 1) * 300 if TIMEFRAMES[timeframe] == 'all-time'
+    # setting to next 1-day block if timeframe is all time
+    return (Time.now.to_i / 86400 + 1) * 86400 if TIMEFRAMES[timeframe] == 'all-time'
 
     # weekly timeframe starts on Fridays due to the rewarding system
     args = TIMEFRAMES[timeframe] == 'week' ? [:friday] : []
@@ -471,7 +475,7 @@ class StatsService
   end
 
   def network_verified_market_ids(network_id)
-    return @network_verified_market_ids&.dig(network_id) if @network_verified_market_ids&.dig(network_id).present?
+    return @network_verified_market_ids&.dig(network_id) if !@network_verified_market_ids&.dig(network_id).nil?
 
     @network_verified_market_ids ||= {}
 
