@@ -5,6 +5,14 @@ module Rpc
 
     attr_accessor :version
 
+    EVENT_TOPICS_MAPPING = {
+      '0x57c2e8e67a3a13bc1991cd4ba3ed6733e269f1de098668140234d41dcb145ee4' => 'MarketCreated',
+      '0x67a6457c8912ae1b7a9fbdfa311cbd016ba606b548bf06bc80bc751072d91bbc' => 'MarketResolved',
+      '0x9dcabe311735ed0d65f0c22c5425d1f17331f94c9d0767f59e58473cf95ada61' => 'MarketActionTx',
+      '0xb1bbae7680415a1349ae813ba7d737ca09df07db1f6ce058b3e0812ec15e8886' => 'MarketOutcomeShares',
+      '0x1eca98f266e5348ae38d5d057a4d8e451e76672f69ac6ba4b0e3b31ea9c7eb2b' => 'MarketLiquidity',
+    }
+
     ACTIONS_MAPPING = {
       0 => 'buy',
       1 => 'sell',
