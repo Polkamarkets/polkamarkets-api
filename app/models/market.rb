@@ -35,7 +35,7 @@ class Market < ApplicationRecord
 
     eth_data =
       Rails.cache.fetch("markets:network_#{network_id}:#{eth_market_id}:data", force: true) do
-        Bepro::PredictionMarketContractService.new(network_id: network_id).get_market(eth_market_id)
+        Rpc::PredictionMarketContractService.new(network_id: network_id).get_market(eth_market_id)
       end
 
     # invalid market
@@ -82,7 +82,7 @@ class Market < ApplicationRecord
     return @eth_data if @eth_data.present? && !refresh
 
     Rails.cache.fetch("markets:network_#{network_id}:#{eth_market_id}:data", force: refresh) do
-      @eth_data = Bepro::PredictionMarketContractService.new(network_id: network_id).get_market(eth_market_id)
+      @eth_data = Rpc::PredictionMarketContractService.new(network_id: network_id).get_market(eth_market_id)
     end
   end
 
@@ -191,7 +191,7 @@ class Market < ApplicationRecord
     return -1 if eth_market_id.blank? || !resolved?
 
     Rails.cache.fetch("markets:network_#{network_id}:#{eth_market_id}:resolved_at", force: refresh) do
-      Bepro::PredictionMarketContractService.new(network_id: network_id).get_market_resolved_at(eth_market_id)
+      Rpc::PredictionMarketContractService.new(network_id: network_id).get_market_resolved_at(eth_market_id)
     end
   end
 
@@ -199,7 +199,7 @@ class Market < ApplicationRecord
     return {} if eth_market_id.blank?
 
     Rails.cache.fetch("markets:network_#{network_id}:#{eth_market_id}:prices", force: refresh) do
-      Bepro::PredictionMarketContractService.new(network_id: network_id).get_market_prices(eth_market_id)
+      Rpc::PredictionMarketContractService.new(network_id: network_id).get_market_prices(eth_market_id)
     end
   end
 
@@ -208,7 +208,7 @@ class Market < ApplicationRecord
 
     market_prices =
       Rails.cache.fetch("markets:network_#{network_id}:#{eth_market_id}:events:price", force: refresh) do
-        Bepro::PredictionMarketContractService.new(network_id: network_id).get_price_events(eth_market_id)
+        Rpc::PredictionMarketContractService.new(network_id: network_id).get_price_events(eth_market_id)
       end
 
     market_prices.group_by { |price| price[:outcome_id] }.map do |outcome_id, prices|
@@ -226,7 +226,7 @@ class Market < ApplicationRecord
 
     liquidity_prices =
       Rails.cache.fetch("markets:network_#{network_id}:#{eth_market_id}:events:liquidity", force: refresh) do
-        Bepro::PredictionMarketContractService.new(network_id: network_id).get_liquidity_events(eth_market_id)
+        Rpc::PredictionMarketContractService.new(network_id: network_id).get_liquidity_events(eth_market_id)
       end
 
     chart_data_service = ChartDataService.new(liquidity_prices, :price)
@@ -240,7 +240,7 @@ class Market < ApplicationRecord
 
     market_actions =
       Rails.cache.fetch("markets:network_#{network_id}:#{eth_market_id}:actions", force: refresh) do
-        Bepro::PredictionMarketContractService.new(network_id: network_id).get_action_events(market_id: eth_market_id)
+        Rpc::PredictionMarketContractService.new(network_id: network_id).get_action_events(market_id: eth_market_id)
       end
 
     market_actions.select do |action|
@@ -373,7 +373,7 @@ class Market < ApplicationRecord
   # realitio data
   def question_data(refresh: false)
     Rails.cache.fetch("markets:network_#{network_id}:#{eth_market_id}:question", force: refresh) do
-      question_data = Bepro::RealitioErc20ContractService.new(network_id: network_id).get_question(question_id)
+      question_data = Rpc::RealitioErc20ContractService.new(network_id: network_id).get_question(question_id)
 
       # fetching market dispute id and pending arbitration requests
       arbitration_network_id = Rails.application.config_for(:ethereum).dig(:"network_#{network_id}", :arbitration_network_id)
@@ -386,16 +386,16 @@ class Market < ApplicationRecord
 
       dispute_id = question_data[:is_pending_arbitration] ?
         nil :
-        Bepro::ArbitrationContractService.new(network_id: arbitration_network_id).dispute_id(question_id)
+        Rpc::ArbitrationContractService.new(network_id: arbitration_network_id).dispute_id(question_id)
 
       next question_data.merge(
         dispute_id: dispute_id,
         is_pending_arbitration_request: false
       ) if dispute_id.present? || question_data[:is_pending_arbitration]
 
-      arbitration_requests = Bepro::ArbitrationContractService.new(network_id: arbitration_network_id).arbitration_requests(question_id)
+      arbitration_requests = Rpc::ArbitrationContractService.new(network_id: arbitration_network_id).arbitration_requests(question_id)
 
-      arbitration_requests_rejected = Bepro::ArbitrationProxyContractService.new(network_id: network_id).arbitration_requests_rejected(question_id)
+      arbitration_requests_rejected = Rpc::ArbitrationProxyContractService.new(network_id: network_id).arbitration_requests_rejected(question_id)
 
       question_data.merge(
         dispute_id: dispute_id,
@@ -407,7 +407,7 @@ class Market < ApplicationRecord
   # vote data
   def votes(refresh: false)
     Rails.cache.fetch("markets:network_#{network_id}:#{eth_market_id}:votes", force: refresh) do
-      Bepro::VotingContractService.new(network_id: network_id).get_votes(eth_market_id)
+      Rpc::VotingContractService.new(network_id: network_id).get_votes(eth_market_id)
     end
   end
 
@@ -420,7 +420,7 @@ class Market < ApplicationRecord
       token_address = eth_data[:token_address]
       return if token_address.blank?
 
-      token = Bepro::Erc20ContractService.new(network_id: network_id, contract_address: token_address).token_info
+      token = Rpc::Erc20ContractService.new(network_id: network_id, contract_address: token_address).token_info
       wrapped = token_address.downcase == network_weth_address(network_id).downcase
 
       # TODO: configurable image urls

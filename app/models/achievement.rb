@@ -19,13 +19,13 @@ class Achievement < ApplicationRecord
   def self.create_from_eth_id!(network_id, eth_id)
     raise "Achievement #{eth_id} is already created" if Achievement.where(network_id: network_id, eth_id: eth_id).exists?
 
-    achievement_ids = Bepro::AchievementsContractService.new(network_id: network_id).get_achievement_ids
+    achievement_ids = Rpc::AchievementsContractService.new(network_id: network_id).get_achievement_ids
     # invalid achievement
     raise "Achievement #{eth_id} does not exist" unless achievement_ids.include?(eth_id)
 
     eth_data =
       Rails.cache.fetch("achievements:network_#{network_id}:#{eth_id}", force: true) do
-        Bepro::AchievementsContractService.new(network_id: network_id).get_achievement(eth_id)
+        Rpc::AchievementsContractService.new(network_id: network_id).get_achievement(eth_id)
       end
 
     achievement = Achievement.new(
@@ -56,7 +56,7 @@ class Achievement < ApplicationRecord
 
     @eth_data ||=
       Rails.cache.fetch("achievements:network_#{network_id}:#{eth_id}", force: refresh) do
-        Bepro::AchievementsContractService.new(network_id: network_id).get_achievement(eth_id)
+        Rpc::AchievementsContractService.new(network_id: network_id).get_achievement(eth_id)
       end
   end
 

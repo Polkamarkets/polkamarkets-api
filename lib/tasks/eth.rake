@@ -11,7 +11,7 @@ namespace :eth do
     $redis_store.keys('portfolios:*').each { |key| $redis_store.del key }
 
     Rails.application.config_for(:ethereum).network_ids.each do |network_id|
-      market_ids = Bepro::PredictionMarketContractService.new(network_id: network_id).get_all_market_ids
+      market_ids = Rpc::PredictionMarketContractService.new(network_id: network_id).get_all_market_ids
       market_ids.map { |market_id| Market.create_from_eth_market_id!(network_id, market_id) }
     end
   end

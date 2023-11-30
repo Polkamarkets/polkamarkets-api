@@ -83,7 +83,7 @@ module Api
 
       users = User.pluck(:username, :wallet_address, :avatar)
 
-      achievements_service = Bepro::AchievementsContractService.new(network_id: network_id)
+      achievements_service = Rpc::AchievementsContractService.new(network_id: network_id)
       if achievements_service.contract_address.present?
         # adding achievements to leaderboard data
         achievement_token_users = achievements_service.get_achievement_token_users

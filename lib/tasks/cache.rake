@@ -38,20 +38,20 @@ namespace :cache do
   desc "refreshes cache of network actions"
   task :refresh_actions, [:symbol] => :environment do |task, args|
     Rails.application.config_for(:ethereum).network_ids.map do |network_id|
-      actions = Bepro::PredictionMarketContractService.new(network_id: network_id).get_action_events
+      actions = Rpc::PredictionMarketContractService.new(network_id: network_id).get_action_events
       Rails.cache.write("api:actions:#{network_id}", actions, expires_in: 24.hours)
 
-      bonds = Bepro::RealitioErc20ContractService.new(network_id: network_id).get_bond_events
+      bonds = Rpc::RealitioErc20ContractService.new(network_id: network_id).get_bond_events
       Rails.cache.write("api:bonds:#{network_id}", bonds, expires_in: 24.hours)
 
-      markets_resolved = Bepro::PredictionMarketContractService.new(network_id: network_id).get_market_resolved_events
+      markets_resolved = Rpc::PredictionMarketContractService.new(network_id: network_id).get_market_resolved_events
       Rails.cache.write("api:markets_resolved:#{network_id}", markets_resolved, expires_in: 24.hours)
 
       if Rails.application.config_for(:ethereum).fantasy_enabled
-        burn_events = Bepro::Erc20ContractService.new(network_id: network_id).burn_events
+        burn_events = Rpc::Erc20ContractService.new(network_id: network_id).burn_events
         Rails.cache.write("api:burn_actions:#{network_id}", burn_events, expires_in: 24.hours)
 
-        mint_events = Bepro::Erc20ContractService.new(network_id: network_id).mint_events
+        mint_events = Rpc::Erc20ContractService.new(network_id: network_id).mint_events
         Rails.cache.write("api:mint_actions:#{network_id}", mint_events, expires_in: 24.hours)
       end
 
@@ -74,12 +74,12 @@ namespace :cache do
   task :refresh_erc20_balances, [:symbol] => :environment do |task, args|
     Rails.application.config_for(:ethereum).network_ids.map do |network_id|
       actions = Rails.cache.fetch("api:actions:#{network_id}", expires_in: 24.hours) do
-        Bepro::PredictionMarketContractService.new(network_id: network_id).get_action_events
+        Rpc::PredictionMarketContractService.new(network_id: network_id).get_action_events
       end
 
       addresses = actions.map { |action| action[:address] }.uniq
       addresses.each do |address|
-        balance = Bepro::Erc20ContractService.new(network_id: network_id).balance_of(address)
+        balance = Rpc::Erc20ContractService.new(network_id: network_id).balance_of(address)
         Rails.cache.write("api:erc20_balances:#{network_id}:#{address}", balance, expires_in: 24.hours)
       end
     end
