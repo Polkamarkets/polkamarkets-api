@@ -23,24 +23,22 @@ module Rpc
 
       def subscribe
         EM.run {
-          puts "HERE: #{wss_url}"
-          puts params
-          ws_client = Faye::WebSocket::Client.new(wss_url)
-
           ws_client.on :open do |event|
             ws_client.send(params.to_json)
           end
 
           ws_client.on :message do |event|
-            puts "Received message on service!"
-            puts event.data
+            begin
+              response = JSON.parse(event.data)
+              next unless response['method'] == 'eth_subscription'
 
-            response = JSON.parse(event.data)
-            next unless response['method'] == 'eth_subscription'
+              raise "Invalid response: #{response}" unless response.dig('params', 'result').present?
 
-            raise "Invalid response: #{response}" unless response.dig('params', 'result').present?
-
-            on_message(response.dig('params', 'result'))
+              on_message(response.dig('params', 'result'))
+            rescue => e
+              # should be non-blocking, sending to Sentry
+              Sentry.capture_exception(e)
+            end
           end
 
           ws_client.on :close do |event|
@@ -51,6 +49,20 @@ module Rpc
 
       def on_message(event_data)
         raise 'To be implemented by subclasses'
+      end
+
+      private
+
+      def ws_client
+        @_ws_client ||= Faye::WebSocket::Client.new(wss_url)
+      end
+
+      def market_id_from_topic(topic)
+        topic.to_i(16)
+      end
+
+      def address_from_topic(topic)
+        "0x#{topic[26..-1]}"
       end
     end
   end
