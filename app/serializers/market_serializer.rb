@@ -33,7 +33,8 @@ class MarketSerializer < ActiveModel::Serializer
     :banner_url,
     :news,
     :votes,
-    :users
+    :users,
+    :related_markets
   )
 
   has_many :outcomes, class_name: "MarketOutcome", serializer: MarketOutcomeSerializer
@@ -46,5 +47,11 @@ class MarketSerializer < ActiveModel::Serializer
 
   def question
     object.question_data
+  end
+
+  def related_markets
+    object.related_markets.map do |market|
+      MarketIndexSerializer.new(market).as_json
+    end
   end
 end
