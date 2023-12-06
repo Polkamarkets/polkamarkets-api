@@ -15,6 +15,8 @@ class Market < ApplicationRecord
 
   has_one_attached :image
 
+  has_and_belongs_to_many :tournaments
+
   validates :outcomes, length: { minimum: 2 } # currently supporting only binary markets
 
   accepts_nested_attributes_for :outcomes
@@ -433,6 +435,12 @@ class Market < ApplicationRecord
 
   def users
     action_events.map { |action| action[:address] }.uniq.count
+  end
+
+  def related_markets
+    return [] if tournaments.blank?
+
+    tournaments.order(:position).map(&:markets).flatten.uniq.select { |market| market.id != id }.first(5)
   end
 
   def polkamarkets_web_url
