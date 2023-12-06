@@ -9,7 +9,9 @@ class TournamentSerializer < ActiveModel::Serializer
     :expires_at,
     :users,
     :position,
-    :rank_by
+    :rank_by,
+    :rewards,
+    :rules
   )
 
   has_many :markets, serializer: TournamentMarketSerializer, if: :show_markets?
