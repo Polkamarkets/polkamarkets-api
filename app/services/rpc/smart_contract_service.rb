@@ -1,4 +1,4 @@
-module Bepro
+module Rpc
   class SmartContractService
     SMART_CONTRACTS = [
       'predictionMarket',
@@ -42,13 +42,13 @@ module Bepro
               status: response.status,
               error: response.body.to_s
             )
-            raise "BeproService :: Call Error"
+            raise "SmartContractService :: Call Error"
           end
         rescue => e
           scope.set_tags(
             error: e.message
           )
-          raise "BeproService :: Call Error"
+          raise "SmartContractService :: Call Error"
         end
 
         begin
@@ -77,7 +77,7 @@ module Bepro
               status: response.status,
               error: response.body.to_s
             )
-            raise "BeproService :: Events Error"
+            raise "SmartContractService :: Events Error"
           end
 
           JSON.parse(response.body.to_s)
@@ -85,7 +85,7 @@ module Bepro
           scope.set_tags(
             error: e.message
           )
-          raise "BeproService :: Events Error"
+          raise "SmartContractService :: Events Error"
         end
       end
     end
@@ -107,7 +107,7 @@ module Bepro
               status: response.status,
               error: response.body.to_s
             )
-            raise "BeproService :: Events Error"
+            raise "SmartContractService :: Events Error"
           end
 
           JSON.parse(response.body.to_s)
@@ -115,7 +115,7 @@ module Bepro
           scope.set_tags(
             error: e.message
           )
-          raise "BeproService :: Events Error"
+          raise "SmartContractService :: Events Error"
         end
       end
     end

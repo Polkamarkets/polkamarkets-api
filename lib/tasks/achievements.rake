@@ -4,7 +4,7 @@ namespace :achievements do
     Rails.application.config_for(:ethereum).network_ids.each do |network_id|
       next if Rails.application.config_for(:ethereum)[:"network_#{network_id}"][:achievements_contract_address].blank?
 
-      achievement_ids = Bepro::AchievementsContractService.new(network_id: network_id).get_achievement_ids
+      achievement_ids = Rpc::AchievementsContractService.new(network_id: network_id).get_achievement_ids
       db_achievement_ids = Achievement.where(network_id: network_id).pluck(:eth_id)
 
       (achievement_ids - db_achievement_ids).each do |achievement_id|
@@ -22,7 +22,7 @@ namespace :achievements do
     Rails.application.config_for(:ethereum).network_ids.each do |network_id|
       next if Rails.application.config_for(:ethereum)[:"network_#{network_id}"][:achievements_contract_address].blank?
 
-      token_index = Bepro::AchievementsContractService.new(network_id: network_id).get_achievement_token_index
+      token_index = Rpc::AchievementsContractService.new(network_id: network_id).get_achievement_token_index
       token_ids = (1..token_index).to_a
       db_token_ids = AchievementToken.where(network_id: network_id).pluck(:eth_id)
 

@@ -1,4 +1,4 @@
-module Bepro
+module Rpc
   class PredictionMarketContractService < SmartContractService
     include BigNumberHelper
     include NetworkHelper
@@ -20,7 +20,7 @@ module Bepro
       0 => 'open',
       1 => 'closed',
       2 => 'resolved',
-    }
+    }.freeze
 
     DELIMITER = "\u241f"
 
@@ -36,8 +36,8 @@ module Bepro
             Rails.application.config_for(:ethereum).dig(:"stats_network_#{network_id}", :prediction_market_contract_address),
         api_url:
           api_url ||
-            Rails.application.config_for(:ethereum).dig(:"network_#{network_id}", :bepro_api_url) ||
-            Rails.application.config_for(:ethereum).dig(:"stats_network_#{network_id}", :bepro_api_url),
+            Rails.application.config_for(:ethereum).dig(:"network_#{network_id}", :rpc_api_url) ||
+            Rails.application.config_for(:ethereum).dig(:"stats_network_#{network_id}", :rpc_api_url),
       )
     end
 

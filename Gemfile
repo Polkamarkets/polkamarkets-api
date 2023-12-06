@@ -66,6 +66,7 @@ gem 'active_model_serializers'
 
 # ops / web
 gem 'rack-cors'
+gem 'faye-websocket'
 
 # google spreadsheets
 gem 'googleauth'

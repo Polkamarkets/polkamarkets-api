@@ -4,7 +4,7 @@ namespace :activities do
 
     Rails.application.config_for(:ethereum).network_ids.each do |network_id|
       actions = Rails.cache.fetch("api:actions:#{network_id}", expires_in: 24.hours) do
-        Bepro::PredictionMarketContractService.new(network_id: network_id).get_action_events
+        Rpc::PredictionMarketContractService.new(network_id: network_id).get_action_events
       end
 
       activity_tx_ids = Activity.where(network_id: network_id).pluck(:tx_id).uniq

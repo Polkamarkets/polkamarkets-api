@@ -42,7 +42,7 @@ class Portfolio < ApplicationRecord
 
     @market_actions ||=
       Rails.cache.fetch("portfolios:network_#{network_id}:#{eth_address}:actions", expires_in: 24.hours, force: refresh) do
-        Bepro::PredictionMarketContractService.new(network_id: network_id).get_action_events(address: eth_address)
+        Rpc::PredictionMarketContractService.new(network_id: network_id).get_action_events(address: eth_address)
       end
   end
 
@@ -53,7 +53,7 @@ class Portfolio < ApplicationRecord
 
     @burn_actions ||=
       Rails.cache.fetch("portfolios:network_#{network_id}:#{eth_address}:burn_actions", expires_in: 24.hours, force: refresh) do
-        Bepro::Erc20ContractService.new(network_id: network_id).burn_events(from: eth_address)
+        Rpc::Erc20ContractService.new(network_id: network_id).burn_events(from: eth_address)
       end
   end
 
@@ -188,7 +188,7 @@ class Portfolio < ApplicationRecord
 
     @liquidity_fees_earned ||=
       Rails.cache.fetch("portfolios:network_#{network_id}:#{eth_address}:liquidity_fees", expires_in: 24.hours, force: refresh) do
-        events = Bepro::PredictionMarketContractService.new(network_id: network_id).get_user_liquidity_fees_earned(eth_address)
+        events = Rpc::PredictionMarketContractService.new(network_id: network_id).get_user_liquidity_fees_earned(eth_address)
 
         market_ids = events.map { |event| event[:market_id] }.uniq
         markets = Market.where(eth_market_id: market_ids, network_id: network_id)
@@ -421,7 +421,7 @@ class Portfolio < ApplicationRecord
 
   def erc20_balance
     Rails.cache.fetch("portfolios:network_#{network_id}:#{eth_address}:erc20_balance", expires_in: 24.hours, force: refresh) do
-      Bepro::Erc20ContractService.new(network_id: network_id).balance_of(eth_address)
+      Rpc::Erc20ContractService.new(network_id: network_id).balance_of(eth_address)
     end
   end
 

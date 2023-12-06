@@ -18,20 +18,20 @@ class FeedService
   end
 
   def actions
-    @_actions ||= Bepro::PredictionMarketContractService.new(network_id: network_id)
+    @_actions ||= Rpc::PredictionMarketContractService.new(network_id: network_id)
       .get_action_events(address: address, market_id: market&.eth_market_id)
       .sort_by { |a| -a[:timestamp] }
   end
 
   def vote_actions
-    @_vote_actions ||= Bepro::VotingContractService.new(network_id: network_id)
+    @_vote_actions ||= Rpc::VotingContractService.new(network_id: network_id)
       .get_voting_events(user: address, item_id: market&.eth_market_id)
       .sort_by { |a| -a[:timestamp] }
   end
 
   def create_event_actions
     @_create_event_actions ||=
-      Bepro::PredictionMarketContractService.new(network_id: network_id).get_events(event_name: 'MarketCreated')
+      Rpc::PredictionMarketContractService.new(network_id: network_id).get_events(event_name: 'MarketCreated')
   end
 
   def markets

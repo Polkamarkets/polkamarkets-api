@@ -10,7 +10,7 @@ class AchievementToken < ApplicationRecord
 
     eth_data =
       Rails.cache.fetch("achievement_tokens:network_#{network_id}:#{eth_id}", force: true) do
-        Bepro::AchievementsContractService.new(network_id: network_id).get_achievement_token(eth_id)
+        Rpc::AchievementsContractService.new(network_id: network_id).get_achievement_token(eth_id)
       end
 
     achievement = Achievement.find_by!(network_id: network_id, eth_id: eth_data[:achievement_id])
