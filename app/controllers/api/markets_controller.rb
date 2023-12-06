@@ -25,11 +25,13 @@ module Api
         end
       end
 
-      render json: markets, scope: { simplified_price_charts: true }, each_serializer: MarketIndexSerializer, status: :ok
+      render json: markets,
+        scope: { simplified_price_charts: true, hide_tournament_markets: true },
+        each_serializer: MarketIndexSerializer, status: :ok
     end
 
     def show
-      render json: @market, scope: { show_price_charts: true }, status: :ok
+      render json: @market, scope: { show_price_charts: true, hide_tournament_markets: true }, status: :ok
     end
 
     def create

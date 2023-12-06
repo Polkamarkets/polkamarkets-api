@@ -1,8 +1,8 @@
 class MarketSerializer < ActiveModel::Serializer
   # cache expires_in: 24.hours
 
+  attribute :eth_market_id, key: :id
   attributes(
-    :id,
     :network_id,
     :slug,
     :title,
@@ -34,24 +34,34 @@ class MarketSerializer < ActiveModel::Serializer
     :news,
     :votes,
     :users,
-    :related_markets
   )
+  attribute :related_markets, if: :show_related_markets?
 
   has_many :outcomes, class_name: "MarketOutcome", serializer: MarketOutcomeSerializer
   has_many :comments, serializer: CommentSerializer
-
-  def id
-    # returning eth market id in chain, not db market
-    object.eth_market_id
-  end
+  has_many :tournaments, serializer: TournamentSerializer, if: :show_tournaments?
 
   def question
     object.question_data
   end
 
+  def show_related_markets?
+    # only show related markets for show view
+    show_view?
+  end
+
+  def show_tournaments?
+    # only show tournaments for show view
+    show_view?
+  end
+
+  def show_view?
+    self.class == MarketSerializer
+  end
+
   def related_markets
     object.related_markets.map do |market|
-      MarketIndexSerializer.new(market).as_json
+      MarketIndexSerializer.new(market)
     end
   end
 end

@@ -7,9 +7,4 @@ class MarketIndexSerializer < MarketSerializer
     # not displaying news for index view
     []
   end
-
-  def related_markets
-    # not displaying related markets for index view
-    []
-  end
 end
