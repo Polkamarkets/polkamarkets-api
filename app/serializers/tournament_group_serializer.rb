@@ -5,6 +5,7 @@ class TournamentGroupSerializer < ActiveModel::Serializer
     :title,
     :description,
     :position,
+    :users,
     :image_url,
     :banner_url
   )
