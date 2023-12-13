@@ -49,6 +49,8 @@ class Tournament < ApplicationRecord
   end
 
   def users
-    markets.map(&:action_events).flatten.map { |a| a[:address] }.uniq.count
+    eth_market_ids = markets.map(&:eth_market_id).uniq
+
+    Activity.where(market_id: eth_market_ids, network_id: network_id).distinct.count(:address)
   end
 end
