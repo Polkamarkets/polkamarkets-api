@@ -3,6 +3,12 @@ module Api
     def index
       tournaments = Tournament.order(tournament_group_id: :asc, position: :asc).all
 
+      if params[:token].present?
+        tournaments = tournaments.select do |tournament|
+          tournament.tokens.any? { |token| token[:symbol].downcase == params[:token].downcase }
+        end
+      end
+
       render json: tournaments
     end
 

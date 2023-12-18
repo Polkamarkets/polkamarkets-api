@@ -53,4 +53,8 @@ class Tournament < ApplicationRecord
 
     Activity.where(market_id: eth_market_ids, network_id: network_id).distinct.count(:address)
   end
+
+  def tokens
+    markets.map(&:token).flatten.uniq
+  end
 end

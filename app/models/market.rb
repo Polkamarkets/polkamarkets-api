@@ -425,9 +425,7 @@ class Market < ApplicationRecord
       token = Bepro::Erc20ContractService.new(network_id: network_id, contract_address: token_address).token_info
       wrapped = token_address.downcase == network_weth_address(network_id).downcase
 
-      # TODO: configurable image urls
       token.merge(
-        image_url: "https://dl.dropboxusercontent.com/s/zev7x0zcy0lu8x6/token.png?dl=0",
         wrapped: wrapped
       )
     end
