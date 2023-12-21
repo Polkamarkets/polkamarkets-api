@@ -19,40 +19,76 @@ module Api
     def authenticate_user
       if request.headers['Authorization'].present?
         authenticate_or_request_with_http_token do |token|
+          jwt_payload = nil
+
           begin
             jwt_payload = JWT.decode(
               token,
               nil,
               true, # Verify the signature of this token
               algorithms: ["ES256"],
-              jwks: fetch_jwks,
+              jwks: fetch_jwks_pnp,
             )
+          rescue JWT::ExpiredSignature, JWT::VerificationError, JWT::DecodeError
 
-            email = normalize_email(jwt_payload[0]['email'])
-            raw_email = jwt_payload[0]['email']
-            login_public_key = jwt_payload[0]['wallets'][0]['public_key']
+          end
 
-            user = User.find_by(email: email)
-
-            if user.nil?
-              user = User.new(email: email, login_public_key: login_public_key, raw_email: raw_email)
-              user.save!
-            else
-              user.update(login_public_key: login_public_key, raw_email: raw_email)
-            end
-
-            user.update(username: email.split('@').first) if user.username.blank?
-
-            @current_user_id = user.id
+          begin
+            jwt_payload = JWT.decode(
+              token,
+              nil,
+              true, # Verify the signature of this token
+              algorithms: ["ES256"],
+              jwks: fetch_jwks_core_kit,
+            )
           rescue JWT::ExpiredSignature, JWT::VerificationError, JWT::DecodeError
             head :unauthorized
           end
+
+          jwt_user_data = JWT.decode(
+            params[:oauth_access_token],
+            nil,
+            false,
+            algorithms: ["RS256"],
+          )
+
+          if jwt_payload[0]['email'].blank?
+            email = jwt_user_data[0]['email']
+          else
+            email = normalize_email(jwt_payload[0]['email'])
+          end
+
+          username = jwt_user_data[0]['username']
+          raw_email = jwt_payload[0]['email']
+          login_public_key = jwt_payload[0]['wallets'][0]['address']
+
+          user = User.find_by(email: email)
+
+          if user.nil?
+            user = User.new(email: email, login_public_key: login_public_key, raw_email: raw_email, username: username)
+            user.save!
+          else
+            user.update(login_public_key: login_public_key, raw_email: raw_email, username: username)
+          end
+
+          user.update(username: email.split('@').first) if user.username.blank?
+
+          @current_user_id = user.id
+
         end
       end
     end
 
-    def fetch_jwks
+    def fetch_jwks_pnp
       response = HTTP.get('https://api.openlogin.com/jwks')
+
+      if response.code == 200
+        JSON.parse(response.body.to_s)
+      end
+    end
+
+    def fetch_jwks_core_kit
+      response = HTTP.get('https://authjs.web3auth.io/jwks')
       if response.code == 200
         JSON.parse(response.body.to_s)
       end
