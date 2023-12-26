@@ -57,6 +57,7 @@ module Api
           end
 
           username = jwt_user_data[0]['username'] if jwt_user_data.present?
+          avatar = jwt_user_data[0]['avatar_url'] if jwt_user_data.present?
           raw_email = jwt_payload[0]['email']
           login_public_key = jwt_payload[0]['wallets'][0]['address'] || jwt_payload[0]['wallets'][0]['public_key']
 
@@ -70,6 +71,7 @@ module Api
           end
 
           user.update(username: email.split('@').first) if user.username.blank?
+          user.update(avatar: avatar) if avatar.present?
 
           @current_user_id = user.id
         end
