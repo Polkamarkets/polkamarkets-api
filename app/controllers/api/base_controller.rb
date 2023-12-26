@@ -31,7 +31,7 @@ module Api
                 jwks: fetch_jwks(jwks_provider),
               )
             rescue JWT::ExpiredSignature, JWT::VerificationError, JWT::DecodeError
-              head :unauthorized if index == jwks_providers.length - 1
+              return head :unauthorized if index == jwks_providers.length - 1
             end
 
             break if jwt_payload
