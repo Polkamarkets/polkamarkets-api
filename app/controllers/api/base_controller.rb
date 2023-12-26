@@ -20,6 +20,7 @@ module Api
       if request.headers['Authorization'].present?
         authenticate_or_request_with_http_token do |token|
           jwt_payload = nil
+          jwt_user_data = nil
 
           jwks_providers.each_with_index do |jwks_provider, index|
             begin
@@ -37,20 +38,25 @@ module Api
             break if jwt_payload
           end
 
-          jwt_user_data = JWT.decode(
-            params[:oauth_access_token],
-            nil,
-            false,
-            algorithms: ["RS256"],
-          )
+          begin
+            jwt_user_data = JWT.decode(
+              params[:oauth_access_token],
+              nil,
+              false,
+              algorithms: ["RS256"],
+            )
+          rescue JWT::ExpiredSignature, JWT::VerificationError, JWT::DecodeError
+            # should be non-blocking
+            # TODO: remove after full migration to new auth
+          end
 
-          if jwt_payload[0]['email'].blank?
+          if jwt_payload[0]['email'].blank? && jwt_user_data.present?
             email = jwt_user_data[0]['email']
           else
             email = normalize_email(jwt_payload[0]['email'])
           end
 
-          username = jwt_user_data[0]['username']
+          username = jwt_user_data[0]['username'] if jwt_user_data.present?
           raw_email = jwt_payload[0]['email']
           login_public_key = jwt_payload[0]['wallets'][0]['address'] || jwt_payload[0]['wallets'][0]['public_key']
 
