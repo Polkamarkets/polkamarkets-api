@@ -107,12 +107,18 @@ module Api
       @current_user_id.present?
     end
 
+    def user_from_username
+      @_user_from_username ||=
+        User.where(
+          'lower(slug) = ? OR lower(username) = ? OR lower(wallet_address) = ?',
+          params[:id].to_s.downcase,
+          params[:id].to_s.downcase,
+          params[:id].to_s.downcase
+        ).first
+    end
+
     def address_from_username
-      @_address_from_username ||=
-        User.where('lower(slug) = ? OR lower(username) = ?', params[:id].to_s.downcase, params[:id].to_s.downcase)
-          .first
-          &.wallet_address
-          &.downcase
+      @_address_from_username ||= user_from_username&.wallet_address&.downcase
     end
 
     def allowed_network?
