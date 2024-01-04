@@ -81,7 +81,7 @@ module Api
 
       leaderboard = leaderboards[network_id.to_i] || []
 
-      users = User.pluck(:username, :wallet_address, :avatar)
+      users = User.pluck(:username, :wallet_address, :avatar, :slug)
 
       achievements_service = Bepro::AchievementsContractService.new(network_id: network_id)
       if achievements_service.contract_address.present?
@@ -108,6 +108,7 @@ module Api
 
         user[:username] = user_data ? user_data[0] : nil
         user[:user_image_url] = user_data ? user_data[2] : nil
+        user[:slug] = user_data ? user_data[3] : nil
       end
 
       # removing blacklisted users from leaderboard

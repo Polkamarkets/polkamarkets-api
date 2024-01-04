@@ -108,7 +108,11 @@ module Api
     end
 
     def address_from_username
-      @_address_from_username ||= User.where('lower(username) = ?', params[:id].to_s.downcase).first&.wallet_address&.downcase
+      @_address_from_username ||=
+        User.where('lower(slug) = ? OR lower(username) = ?', params[:id].to_s.downcase, params[:id].to_s.downcase)
+          .first
+          &.wallet_address
+          &.downcase
     end
 
     def allowed_network?
