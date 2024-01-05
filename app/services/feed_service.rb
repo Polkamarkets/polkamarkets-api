@@ -91,6 +91,7 @@ class FeedService
 
       {
         user: user&.username || action[:address],
+        user_slug: user&.slug,
         action: action[:action],
         market_title: action_market.title,
         market_slug: action_market.slug,
