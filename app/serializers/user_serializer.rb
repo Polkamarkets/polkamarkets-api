@@ -1,6 +1,7 @@
 class UserSerializer < ActiveModel::Serializer
   attributes(
     :username,
-    :avatar
+    :avatar,
+    :slug
   )
 end

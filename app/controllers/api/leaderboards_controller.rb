@@ -81,7 +81,7 @@ module Api
 
       leaderboard = leaderboards[network_id.to_i] || []
 
-      users = User.pluck(:username, :wallet_address, :avatar)
+      users = User.pluck(:username, :wallet_address, :avatar, :slug)
 
       achievements_service = Bepro::AchievementsContractService.new(network_id: network_id)
       if achievements_service.contract_address.present?
@@ -108,6 +108,7 @@ module Api
 
         user[:username] = user_data ? user_data[0] : nil
         user[:user_image_url] = user_data ? user_data[2] : nil
+        user[:slug] = user_data ? user_data[3] : nil
       end
 
       # removing blacklisted users from leaderboard
@@ -133,12 +134,12 @@ module Api
       leaderboard
     end
 
-    def get_user_leaderboard(network_id, user)
+    def get_user_leaderboard(network_id, username)
       leaderboard = get_leaderboard(params[:network_id])
 
-      user_leaderboard = leaderboard.find { |l| l[:user].downcase == user.downcase }
+      user_leaderboard = leaderboard.find { |l| l[:user].downcase == username.downcase }
 
-      return user_not_found(user) if user_leaderboard.blank?
+      return user_not_found if user_leaderboard.blank?
 
       # adding the rank per parameter to the user leaderboard
       rank = {
@@ -160,17 +161,27 @@ module Api
       raise "network_id parameter is required" if params[:network_id].blank?
     end
 
-    def user_not_found(user)
+    def user_not_found
       {
-        user: user,
+        user: address_from_username || params[:id],
+        username: user_from_username&.username,
+        user_image_url: user_from_username&.avatar,
+        slug: user_from_username&.slug,
         ens: nil,
         markets_created: 0,
+        verified_markets_created: 0,
         volume_eur: 0,
         tvl_volume_eur: 0,
+        earnings_eur: 0,
         liquidity_eur: 0,
         tvl_liquidity_eur: 0,
         claim_winnings_count: 0,
         transactions: 0,
+        upvotes: 0,
+        downvotes: 0,
+        malicious: false,
+        bankrupt: false,
+        needs_rescue: false,
         achievements: [ ],
         rank: {
           markets_created: 0,

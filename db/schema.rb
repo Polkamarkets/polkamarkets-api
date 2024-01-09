@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2023_12_06_164742) do
+ActiveRecord::Schema.define(version: 2024_01_04_145103) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -193,6 +193,8 @@ ActiveRecord::Schema.define(version: 2023_12_06_164742) do
     t.jsonb "discord_servers"
     t.string "avatar"
     t.string "raw_email"
+    t.string "slug"
+    t.index ["slug"], name: "index_users_on_slug", unique: true
   end
 
   add_foreign_key "achievement_tokens", "achievements"
