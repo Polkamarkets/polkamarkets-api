@@ -5,6 +5,7 @@ class Tournament < ApplicationRecord
   validates_presence_of :title, :description, :network_id
   validate :markets_network_id_validation
   validate :rank_by_validation
+  validate :rewards_validation
 
   has_and_belongs_to_many :markets
   belongs_to :tournament_group, optional: true
@@ -41,6 +42,17 @@ class Tournament < ApplicationRecord
     # allowing multiple criteria, comma separated
     rank_by.split(',').each do |rank_criteria|
       errors.add(:rank_by, "#{rank_criteria} is not a valid rank criteria") unless RANK_CRITERIA.include?(rank_criteria.to_sym)
+    end
+  end
+
+  def rewards_validation
+    return if rewards.blank?
+
+    rewards.each do |reward|
+      errors.add(:rewards, 'reward is not valid') unless reward['from'].present? &&
+        reward['to'].present? &&
+        reward['reward'].present? &&
+        reward['from'] < reward['to']
     end
   end
 

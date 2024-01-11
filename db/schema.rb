@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2024_01_04_145103) do
+ActiveRecord::Schema.define(version: 2024_01_11_124000) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -176,8 +176,8 @@ ActiveRecord::Schema.define(version: 2024_01_04_145103) do
     t.bigint "tournament_group_id"
     t.integer "position"
     t.string "rank_by"
-    t.text "rewards"
     t.text "rules"
+    t.jsonb "rewards", default: []
     t.index ["slug"], name: "index_tournaments_on_slug", unique: true
     t.index ["tournament_group_id"], name: "index_tournaments_on_tournament_group_id"
   end
