@@ -52,7 +52,7 @@ class Tournament < ApplicationRecord
       errors.add(:rewards, 'reward is not valid') unless reward['from'].present? &&
         reward['to'].present? &&
         reward['reward'].present? &&
-        reward['from'] < reward['to']
+        reward['from'] <= reward['to']
     end
   end
 

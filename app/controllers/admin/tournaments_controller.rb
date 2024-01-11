@@ -69,8 +69,8 @@ module Admin
           :network_id,
           :tournament_group_id,
           :rank_by,
-          :rewards,
           :rules,
+          rewards: [:from, :to, :reward],
           market_ids: []
         )
     end
