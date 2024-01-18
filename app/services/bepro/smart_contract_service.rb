@@ -71,16 +71,17 @@ module Bepro
 
         begin
           response = HTTP.get(uri)
+          response_body = response.body.to_json
 
-          unless response.status.success?
+          unless response.status.success? && !response_body.include?('server unavailable')
             scope.set_tags(
               status: response.status,
-              error: response.body.to_s
+              error: response_body.to_s
             )
             raise "BeproService :: Events Error"
           end
 
-          JSON.parse(response.body.to_s)
+          JSON.parse(response_body.to_s)
         rescue => e
           scope.set_tags(
             error: e.message
@@ -101,16 +102,17 @@ module Bepro
 
         begin
           response = HTTP.post(uri)
+          response_body = response.body.to_json
 
-          unless response.status.success?
+          unless response.status.success? && !response_body.include?('server unavailable')
             scope.set_tags(
               status: response.status,
-              error: response.body.to_s
+              error: response_body.to_s
             )
             raise "BeproService :: Events Error"
           end
 
-          JSON.parse(response.body.to_s)
+          JSON.parse(response_body.to_s)
         rescue => e
           scope.set_tags(
             error: e.message
