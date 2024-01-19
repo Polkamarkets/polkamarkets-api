@@ -71,7 +71,7 @@ module Bepro
 
         begin
           response = HTTP.get(uri)
-          response_body = response.body.to_json
+          response_body = response.body.to_s
 
           unless response.status.success? && !response_body.include?('server unavailable')
             scope.set_tags(
@@ -102,7 +102,7 @@ module Bepro
 
         begin
           response = HTTP.post(uri)
-          response_body = response.body.to_json
+          response_body = response.body.to_s
 
           unless response.status.success? && !response_body.include?('server unavailable')
             scope.set_tags(
