@@ -1,0 +1,16 @@
+etherscan: &default
+  ethereum_api_key: <%= ENV['ETHERSCAN_ETHEREUM_API_KEY'] %>
+  gnosis_api_key: <%= ENV['ETHERSCAN_GNOSIS_API_KEY'] %>
+  polygon_api_key: <%= ENV['ETHERSCAN_POLYGON_API_KEY'] %>
+  moonbeam_api_key: <%= ENV['ETHERSCAN_MOONBEAM_API_KEY'] %>
+  moonriver_api_key: <%= ENV['ETHERSCAN_MOONRIVER_API_KEY'] %>
+  mumbai_api_key: <%= ENV['ETHERSCAN_MUMBAI_API_KEY'] %>
+
+production:
+  <<: *default
+
+staging:
+  <<: *default
+
+development:
+  <<: *default
