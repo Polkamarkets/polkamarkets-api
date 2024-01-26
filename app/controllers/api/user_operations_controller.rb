@@ -35,7 +35,7 @@ module Api
         :tx_id,
         :user_operation_hash,
         user_operation: {},
-        user_operation_data: [:contract, :method, :arguments]
+        user_operation_data: [:contract, :method, arguments: []]
       )
     end
   end
