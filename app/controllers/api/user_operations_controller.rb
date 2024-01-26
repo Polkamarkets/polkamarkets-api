@@ -1,5 +1,20 @@
 module Api
   class UserOperationsController < BaseController
+    def index
+      raise 'from param is required' unless params[:from].present?
+
+      # TODO: limit to operations from last 24h
+      user_operations = UserOperation.where(user_address: params[:from])
+
+      render json: user_operations
+    end
+
+    def show
+      user_operation = UserOperation.find_by!(user_operation_hash: params[:id])
+
+      render json: user_operation
+    end
+
     def create
       user_operation = UserOperation.new(user_operation_params)
 
@@ -7,13 +22,9 @@ module Api
         return render json: { errors: user_operation.errors }, status: :unprocessable_entity
       end
 
-      response = BundlerService.new.process_user_operation(user_operation.user_operation, user_operation.network_id)
+      UserOperation::SendToBundlerWorker.set(queue: 'priority').perform_async(user_operation.id)
 
-      if response.dig('error').present?
-        user_operation.update(status: :failed)
-      end
-
-      render json: response
+      head :ok
     end
 
     private
