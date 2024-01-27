@@ -11,7 +11,6 @@ class UserOperation < ApplicationRecord
     failed: 2
   }
 
-  ENTRY_POINT = '0x5ff137d4b0fdcd49dca30c7cf57e578a026d2789'.freeze
   EVENT_TOPIC = '0x49628fd1471006c1482da88028e9ce4dbb080b815c9b0344d39e5a8e6ec1419f'.freeze
 
   def fill_user_address_from_user_operation

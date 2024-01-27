@@ -8,7 +8,7 @@ class UserOperation::CheckStatusWorker
     return if user_operation.success?
 
     user_operation_logs = EtherscanService.new(user_operation.network_id).logs(
-      UserOperation::ENTRY_POINT,
+      Rails.application.config_for(:ethereum).bundler_entry_point,
       [
         UserOperation::EVENT_TOPIC,
         user_operation.user_operation_hash
