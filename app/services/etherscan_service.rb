@@ -31,8 +31,6 @@ class EtherscanService
       uri += "&topic#{index}=#{topic}" if topic.present?
     end
 
-    puts uri
-
     request_etherscan(uri)
   end
 
