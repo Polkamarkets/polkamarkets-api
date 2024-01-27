@@ -1,4 +1,5 @@
 :queues:
+  - priority
   - critical
   - default
   - low
