@@ -8,7 +8,7 @@ class UserOperation::SendToBundlerWorker
     response = BundlerService.new.process_user_operation(user_operation.user_operation, user_operation.network_id)
 
     if response.dig('error').present?
-      user_operation.update(status: :failed)
+      user_operation.update(status: :failed, error_message: "#{response.dig('error', 'code')}: #{response.dig('error', 'message')}")
     end
   end
 end

@@ -22,7 +22,7 @@ class UserOperation::CheckStatusWorker
 
     # setting to failed if user_operation is older than 1h
     if user_operation.created_at < 1.hour.ago
-      user_operation.update(status: :failed)
+      user_operation.update(status: :failed, error_message: 'transaction processing timeout')
     end
   end
 end
