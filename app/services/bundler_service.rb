@@ -10,8 +10,6 @@ class BundlerService
       params: [user_operation, bundler_entry_point]
     }
 
-    puts body
-
     Sentry.with_scope do |scope|
       scope.set_tags(
         uri: uri,
