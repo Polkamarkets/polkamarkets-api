@@ -68,6 +68,10 @@ class UserOperation < ApplicationRecord
     end
   end
 
+  def action
+    user_operation_data.first['method']
+  end
+
   def timestamp
     created_at.to_i
   end

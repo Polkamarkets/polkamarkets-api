@@ -3,6 +3,7 @@ class UserOperationSerializer < ActiveModel::Serializer
     :user,
     :user_operation_hash,
     :status,
+    :action,
     :transaction_hash,
     :market_title,
     :market_slug,
