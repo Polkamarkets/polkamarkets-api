@@ -101,36 +101,6 @@ module Api
         end
       end
 
-      if user.present?
-        user_data = User.where('lower(wallet_address) = ?', user.downcase).first
-
-        user_leaderboard = leaderboard.find { |l| l[:user].downcase == user.downcase }
-
-        return nil if user_leaderboard.blank?
-
-        user_leaderboard[:username] = user_data&.username
-        user_leaderboard[:user_image_url] = user_data&.avatar
-        user_leaderboard[:slug] = user_data&.slug
-
-        return user_leaderboard
-      end
-
-      users = User.pluck(:username, :wallet_address, :avatar, :slug)
-
-      leaderboard.each do |user|
-        user_data = users.find { |data| data[1].present? && data[1].downcase == user[:user].downcase }
-
-        user[:username] = user_data ? user_data[0] : nil
-        user[:user_image_url] = user_data ? user_data[2] : nil
-        user[:slug] = user_data ? user_data[3] : nil
-      end
-
-      # removing blacklisted users from leaderboard
-      leaderboard.reject! { |l| l[:user].in?(Rails.application.config_for(:ethereum).blacklist) }
-
-      # removing users only with upvotes/downvotes
-      leaderboard.reject! { |l| l[:transactions] == 0 }
-
       # sorting leaderboard, when tournament param is present
       if params[:tournament_id].present?
         tournament = Tournament.find(params[:tournament_id])
@@ -151,7 +121,7 @@ module Api
     def get_user_leaderboard(network_id, username)
       leaderboard = get_leaderboard(params[:network_id])
 
-      user_leaderboard = get_leaderboard(params[:network_id], username)
+      user_leaderboard = leaderboard.find { |l| l[:user].downcase == username.downcase }
 
       return user_not_found if user_leaderboard.blank?
 

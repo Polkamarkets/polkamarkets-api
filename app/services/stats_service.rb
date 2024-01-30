@@ -352,8 +352,7 @@ class StatsService
             actions_by_user[user] ||= []
           end
 
-          [
-            network_id.to_i,
+          network_leaderboard =
             actions_by_user.map do |user, user_actions|
               # summing actions values by tx_action
               volume_by_tx_action = TX_ACTIONS.to_h do |action|
@@ -412,6 +411,10 @@ class StatsService
                 needs_rescue: bankrupt_data[:needs_rescue]
               }
             end
+
+          [
+            network_id.to_i,
+            filtered_leaderboard(network_leaderboard)
           ]
         end
       end
@@ -466,6 +469,27 @@ class StatsService
     args = TIMEFRAMES[timeframe] == 'week' ? [:friday] : []
 
     date = Time.at(timestamp).utc.public_send("end_of_#{TIMEFRAMES[timeframe]}", *args).to_i
+  end
+
+  def filtered_leaderboard(leaderboard)
+    # filtering out empty users, blacklist and backfilling user data
+    users = User.pluck(:username, :wallet_address, :avatar, :slug)
+
+    leaderboard.each do |user|
+      user_data = users.find { |data| data[1].present? && data[1].downcase == user[:user].downcase }
+
+      user[:username] = user_data ? user_data[0] : nil
+      user[:user_image_url] = user_data ? user_data[2] : nil
+      user[:slug] = user_data ? user_data[3] : nil
+    end
+
+    # removing blacklisted users from leaderboard
+    leaderboard.reject! { |l| l[:user].in?(Rails.application.config_for(:ethereum).blacklist) }
+
+    # removing users only with upvotes/downvotes
+    leaderboard.reject! { |l| l[:transactions] == 0 }
+
+    leaderboard
   end
 
   private
