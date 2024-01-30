@@ -73,15 +73,13 @@ module Api
 
     private
 
-    def get_leaderboard(network_id)
+    def get_leaderboard(network_id, user = nil)
       leaderboards = StatsService.new.get_leaderboard(
         timeframe: params[:timeframe],
         tournament_id: params[:tournament_id],
       )
 
       leaderboard = leaderboards[network_id.to_i] || []
-
-      users = User.pluck(:username, :wallet_address, :avatar, :slug)
 
       achievements_service = Bepro::AchievementsContractService.new(network_id: network_id)
       if achievements_service.contract_address.present?
@@ -102,6 +100,22 @@ module Api
           user[:achievements] = []
         end
       end
+
+      if user.present?
+        user_data = User.where('lower(wallet_address) = ?', user.downcase).first
+
+        user_leaderboard = leaderboard.find { |l| l[:user].downcase == user.downcase }
+
+        return nil if user_leaderboard.blank?
+
+        user_leaderboard[:username] = user_data&.username
+        user_leaderboard[:user_image_url] = user_data&.avatar
+        user_leaderboard[:slug] = user_data&.slug
+
+        return user_leaderboard
+      end
+
+      users = User.pluck(:username, :wallet_address, :avatar, :slug)
 
       leaderboard.each do |user|
         user_data = users.find { |data| data[1].present? && data[1].downcase == user[:user].downcase }
@@ -137,7 +151,7 @@ module Api
     def get_user_leaderboard(network_id, username)
       leaderboard = get_leaderboard(params[:network_id])
 
-      user_leaderboard = leaderboard.find { |l| l[:user].downcase == username.downcase }
+      user_leaderboard = get_leaderboard(params[:network_id], username)
 
       return user_not_found if user_leaderboard.blank?
 
