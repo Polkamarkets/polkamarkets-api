@@ -7,6 +7,8 @@ namespace :user_operations do
     Rails.application.config_for(:ethereum).network_ids.each do |network_id|
       pending_user_operations = UserOperation.pending.where(network_id: network_id)
       pending_user_operations.each do |user_operation|
+        # awaiting 0.2s between each request due to rate limiting
+        sleep(0.2)
         UserOperation::CheckStatusWorker.set(queue: 'priority').perform_async(user_operation.id)
       end
     end
