@@ -384,8 +384,10 @@ class StatsService
                 claim_winnings_count = winnings[:count]
                 winnings_value = winnings[:value]
 
-                is_sybil_attacker = SybilAttackFinderService.new(user, network_id).is_sybil_attacker?
-                bankrupt_data = BankruptcyFinderService.new(user, network_id).is_bankrupt?
+                if Rails.application.config_for(:ethereum).fantasy_advanced_mode
+                  is_sybil_attacker = SybilAttackFinderService.new(user, network_id).is_sybil_attacker?
+                  bankrupt_data = BankruptcyFinderService.new(user, network_id).is_bankrupt?
+                end
               else
                 claim_winnings_count = user_actions.select { |a| a[:action] == 'claim_winnings' }.count
                 winnings_value = volume_by_tx_action['claim_winnings']
