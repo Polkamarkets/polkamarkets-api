@@ -23,10 +23,10 @@ class UserOperationSerializer < ActiveModel::Serializer
   end
 
   def market_id
-    object.market&.id
+    object.market&.eth_market_id
   end
 
   def outcome_id
-    object.outcome&.id
+    object.outcome&.eth_market_id
   end
 end
