@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2024_01_27_221516) do
+ActiveRecord::Schema.define(version: 2024_01_31_234933) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -193,6 +193,7 @@ ActiveRecord::Schema.define(version: 2024_01_27_221516) do
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
     t.string "error_message"
+    t.integer "retries", default: 0
     t.index ["network_id", "user_address"], name: "index_user_operations_on_network_id_and_user_address"
     t.index ["user_address"], name: "index_user_operations_on_user_address"
     t.index ["user_operation_hash"], name: "index_user_operations_on_user_operation_hash", unique: true
