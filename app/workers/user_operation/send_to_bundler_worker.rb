@@ -13,7 +13,7 @@ class UserOperation::SendToBundlerWorker
       response = BundlerService.new.process_user_operation(user_operation.user_operation, user_operation.network_id)
       break if response.dig('error').blank?
 
-      user_operation.update(retries: user_operation.retries + 1)
+      user_operation.update(retries: user_operation.retries + 1, error_message: "#{response.dig('error', 'code')}: #{response.dig('error', 'message')}")
       sleep 1
     end
 
