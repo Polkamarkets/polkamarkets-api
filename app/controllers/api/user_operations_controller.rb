@@ -3,8 +3,7 @@ module Api
     def index
       raise 'from param is required' unless params[:from].present?
 
-      # TODO: limit to operations from last 24h
-      user_operations = UserOperation.where(user_address: params[:from])
+      user_operations = UserOperation.where(user_address: params[:from]).order(created_at: :desc).limit(50)
 
       render json: user_operations
     end
