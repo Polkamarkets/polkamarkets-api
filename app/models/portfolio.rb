@@ -229,8 +229,51 @@ class Portfolio < ApplicationRecord
 
           # calculating holding value
           market.outcomes.each do |outcome|
-            if holding[:outcome_shares][outcome.eth_market_id] > 0
+            if holding[:outcome_shares][outcome.eth_market_id] > 1e0
               holdings_value_by_market[market.eth_market_id] += holding[:outcome_shares][outcome.eth_market_id] * outcome.price * market.token_rate
+            end
+          end
+        end
+
+        holdings_value_by_market
+      end
+
+    # filtering by market ids if provided
+    holdings_value_by_market.select! { |market_id, value| filter_by_market_ids.include?(market_id) } if !filter_by_market_ids.nil?
+
+    holdings_value_by_market.values.sum
+  end
+
+  def holdings_cost(filter_by_market_ids: nil, refresh: false)
+    value = 0
+
+    holdings_value_by_market =
+      Rails.cache.fetch("portfolios:network_#{network_id}:#{eth_address}:holdings_cost", expires_in: 24.hours, force: refresh) do
+        holdings_value_by_market = Hash.new(0)
+
+        # fetching holdings markets
+        market_ids = holdings.map { |holding| holding[:market_id] }.uniq
+
+        markets = Market.where(eth_market_id: market_ids, network_id: network_id).includes(:outcomes)
+        # ignoring resolved markets
+        markets = markets.to_a.reject { |market| market.resolved? }
+        # filtering by market ids if provided
+        markets.select! { |market| filter_by_market_ids.include?(market.eth_market_id) } if !filter_by_market_ids.nil?
+
+        markets.each do |market|
+          holding = holdings.find { |holding| holding[:market_id] == market.eth_market_id }
+
+          # calculating holding value
+          market.outcomes.each do |outcome|
+            if holding[:outcome_shares][outcome.eth_market_id] > 1e0
+              # fetching average cost
+              outcome_buy_events = action_events.select do |event|
+                event[:market_id] == market.eth_market_id && event[:outcome_id] == outcome.eth_market_id && event[:action] == 'buy'
+              end
+
+              outcome_buy_price = outcome_buy_events.sum { |event| event[:value] } / outcome_buy_events.sum { |event| event[:shares] }
+
+              holdings_value_by_market[market.eth_market_id] += holding[:outcome_shares][outcome.eth_market_id] * outcome_buy_price * market.token_rate
             end
           end
         end
