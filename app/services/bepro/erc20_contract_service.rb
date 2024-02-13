@@ -25,7 +25,7 @@ module Bepro
     end
 
     def decimals
-      call(method: 'decimals')
+      @_decimals ||= call(method: 'decimals')
     end
 
     def token_info
