@@ -365,6 +365,7 @@ class StatsService
               end
 
               portfolio_value = 0
+              portfolio_cost = 0
               winnings_value = 0
               is_sybil_attacker = { is_attacker: false }
               bankrupt_data = { bankrupt: false, needs_rescue: false }
@@ -375,6 +376,7 @@ class StatsService
                 # calculating portfolio value to add to earnings
                 burn_total = burn_actions.select { |action| action[:from] == user }.sum { |action| action[:value] }
                 portfolio_value = portfolio.holdings_value(filter_by_market_ids: tournament_market_ids) - burn_total
+                portfolio_cost = portfolio.holdings_cost(filter_by_market_ids: tournament_market_ids)
 
                 # calculating winnings value to add to earnings
                 winnings = portfolio.closed_markets_winnings(
@@ -401,6 +403,8 @@ class StatsService
                 volume_eur: volume_by_tx_action['buy'] + volume_by_tx_action['sell'],
                 tvl_volume_eur: volume_by_tx_action['buy'] - volume_by_tx_action['sell'],
                 earnings_eur: volume_by_tx_action['sell'] - volume_by_tx_action['buy'] + volume_by_tx_action['claim_voided'] + portfolio_value + winnings_value,
+                earnings_open_eur: portfolio_value - portfolio_cost,
+                earnings_closed_eur: volume_by_tx_action['sell'] - volume_by_tx_action['buy'] + volume_by_tx_action['claim_voided'] + winnings_value + portfolio_cost,
                 liquidity_eur: volume_by_tx_action['add_liquidity'] + volume_by_tx_action['remove_liquidity'],
                 tvl_liquidity_eur: volume_by_tx_action['add_liquidity'] - volume_by_tx_action['remove_liquidity'],
                 bond_volume: bonds.select { |bond| bond[:user] == user }.sum { |bond| bond[:value] },
