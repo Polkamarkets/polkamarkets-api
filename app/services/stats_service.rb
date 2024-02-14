@@ -352,8 +352,7 @@ class StatsService
             actions_by_user[user] ||= []
           end
 
-          [
-            network_id.to_i,
+          network_leaderboard =
             actions_by_user.map do |user, user_actions|
               # summing actions values by tx_action
               volume_by_tx_action = TX_ACTIONS.to_h do |action|
@@ -366,6 +365,7 @@ class StatsService
               end
 
               portfolio_value = 0
+              portfolio_cost = 0
               winnings_value = 0
               is_sybil_attacker = { is_attacker: false }
               bankrupt_data = { bankrupt: false, needs_rescue: false }
@@ -376,6 +376,7 @@ class StatsService
                 # calculating portfolio value to add to earnings
                 burn_total = burn_actions.select { |action| action[:from] == user }.sum { |action| action[:value] }
                 portfolio_value = portfolio.holdings_value(filter_by_market_ids: tournament_market_ids) - burn_total
+                portfolio_cost = portfolio.holdings_cost(filter_by_market_ids: tournament_market_ids)
 
                 # calculating winnings value to add to earnings
                 winnings = portfolio.closed_markets_winnings(
@@ -385,8 +386,10 @@ class StatsService
                 claim_winnings_count = winnings[:count]
                 winnings_value = winnings[:value]
 
-                is_sybil_attacker = SybilAttackFinderService.new(user, network_id).is_sybil_attacker?
-                bankrupt_data = BankruptcyFinderService.new(user, network_id).is_bankrupt?
+                if Rails.application.config_for(:ethereum).fantasy_advanced_mode
+                  is_sybil_attacker = SybilAttackFinderService.new(user, network_id).is_sybil_attacker?
+                  bankrupt_data = BankruptcyFinderService.new(user, network_id).is_bankrupt?
+                end
               else
                 claim_winnings_count = user_actions.select { |a| a[:action] == 'claim_winnings' }.count
                 winnings_value = volume_by_tx_action['claim_winnings']
@@ -400,6 +403,8 @@ class StatsService
                 volume_eur: volume_by_tx_action['buy'] + volume_by_tx_action['sell'],
                 tvl_volume_eur: volume_by_tx_action['buy'] - volume_by_tx_action['sell'],
                 earnings_eur: volume_by_tx_action['sell'] - volume_by_tx_action['buy'] + volume_by_tx_action['claim_voided'] + portfolio_value + winnings_value,
+                earnings_open_eur: portfolio_value - portfolio_cost,
+                earnings_closed_eur: volume_by_tx_action['sell'] - volume_by_tx_action['buy'] + volume_by_tx_action['claim_voided'] + winnings_value + portfolio_cost,
                 liquidity_eur: volume_by_tx_action['add_liquidity'] + volume_by_tx_action['remove_liquidity'],
                 tvl_liquidity_eur: volume_by_tx_action['add_liquidity'] - volume_by_tx_action['remove_liquidity'],
                 bond_volume: bonds.select { |bond| bond[:user] == user }.sum { |bond| bond[:value] },
@@ -412,6 +417,10 @@ class StatsService
                 needs_rescue: bankrupt_data[:needs_rescue]
               }
             end
+
+          [
+            network_id.to_i,
+            filtered_leaderboard(network_leaderboard)
           ]
         end
       end
@@ -466,6 +475,27 @@ class StatsService
     args = TIMEFRAMES[timeframe] == 'week' ? [:friday] : []
 
     date = Time.at(timestamp).utc.public_send("end_of_#{TIMEFRAMES[timeframe]}", *args).to_i
+  end
+
+  def filtered_leaderboard(leaderboard)
+    # filtering out empty users, blacklist and backfilling user data
+    users = User.pluck(:username, :wallet_address, :avatar, :slug)
+
+    leaderboard.each do |user|
+      user_data = users.find { |data| data[1].present? && data[1].downcase == user[:user].downcase }
+
+      user[:username] = user_data ? user_data[0] : nil
+      user[:user_image_url] = user_data ? user_data[2] : nil
+      user[:slug] = user_data ? user_data[3] : nil
+    end
+
+    # removing blacklisted users from leaderboard
+    leaderboard.reject! { |l| l[:user].in?(Rails.application.config_for(:ethereum).blacklist) }
+
+    # removing users only with upvotes/downvotes
+    leaderboard.reject! { |l| l[:transactions] == 0 }
+
+    leaderboard
   end
 
   private

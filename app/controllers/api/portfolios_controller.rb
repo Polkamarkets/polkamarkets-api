@@ -26,7 +26,7 @@ module Api
     def reload
       # forcing cache refresh of market
       portfolio = Portfolio.find_or_create_by!(eth_address: address, network_id: params[:network_id])
-      portfolio.refresh_cache!(queue: 'critical')
+      # portfolio.refresh_cache!(queue: 'critical')
 
       render json: { status: 'ok' }, status: :ok
     end

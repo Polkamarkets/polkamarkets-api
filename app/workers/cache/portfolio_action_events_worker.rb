@@ -10,6 +10,8 @@ class Cache::PortfolioActionEventsWorker
     portfolio.holdings_chart(refresh: true)
     # forcing portfolio holdings_value refresh
     portfolio.holdings_value(refresh: true)
+    # forcing portfolio holdings_cost refresh
+    portfolio.holdings_cost(refresh: true)
     # forcing portfolio closed_markets_winnings refresh
     portfolio.closed_markets_winnings(refresh: true)
   end

@@ -73,15 +73,13 @@ module Api
 
     private
 
-    def get_leaderboard(network_id)
+    def get_leaderboard(network_id, user = nil)
       leaderboards = StatsService.new.get_leaderboard(
         timeframe: params[:timeframe],
         tournament_id: params[:tournament_id],
       )
 
       leaderboard = leaderboards[network_id.to_i] || []
-
-      users = User.pluck(:username, :wallet_address, :avatar, :slug)
 
       achievements_service = Bepro::AchievementsContractService.new(network_id: network_id)
       if achievements_service.contract_address.present?
@@ -102,20 +100,6 @@ module Api
           user[:achievements] = []
         end
       end
-
-      leaderboard.each do |user|
-        user_data = users.find { |data| data[1].present? && data[1].downcase == user[:user].downcase }
-
-        user[:username] = user_data ? user_data[0] : nil
-        user[:user_image_url] = user_data ? user_data[2] : nil
-        user[:slug] = user_data ? user_data[3] : nil
-      end
-
-      # removing blacklisted users from leaderboard
-      leaderboard.reject! { |l| l[:user].in?(Rails.application.config_for(:ethereum).blacklist) }
-
-      # removing users only with upvotes/downvotes
-      leaderboard.reject! { |l| l[:transactions] == 0 }
 
       # sorting leaderboard, when tournament param is present
       if params[:tournament_id].present?

@@ -42,8 +42,8 @@ module Api
 
     def reload
       # cleaning up total market cache
-      @market.destroy_cache!
-      @market.refresh_cache!(queue: 'critical')
+      # @market.destroy_cache!
+      # @market.refresh_cache!(queue: 'critical')
 
       render json: { status: 'ok' }, status: :ok
     end
