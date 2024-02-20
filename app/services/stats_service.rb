@@ -469,7 +469,7 @@ class StatsService
 
   def timestamp_to(timestamp, timeframe)
     # setting to next 1-day block if timeframe is all time
-    return (Time.now.to_i / 86400 + 1) * 86400 if TIMEFRAMES[timeframe] == 'all-time'
+    return (Time.now.to_i / 86400 + 2) * 86400 if TIMEFRAMES[timeframe] == 'all-time'
 
     # weekly timeframe starts on Fridays due to the rewarding system
     args = TIMEFRAMES[timeframe] == 'week' ? [:friday] : []
