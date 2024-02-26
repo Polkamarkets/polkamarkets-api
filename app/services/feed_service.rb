@@ -9,6 +9,8 @@ class FeedService
     'claim_winnings'
   ].freeze
 
+  LIMIT = 250
+
   def initialize(network_id:, address: nil, market_id: nil)
     raise 'cannot initialize FeedService with address + market_id' if address.present? && market_id.present?
 
@@ -21,12 +23,14 @@ class FeedService
     @_actions ||= Bepro::PredictionMarketContractService.new(network_id: network_id)
       .get_action_events(address: address, market_id: market&.eth_market_id)
       .sort_by { |a| -a[:timestamp] }
+      .first(LIMIT)
   end
 
   def vote_actions
     @_vote_actions ||= Bepro::VotingContractService.new(network_id: network_id)
       .get_voting_events(user: address, item_id: market&.eth_market_id)
       .sort_by { |a| -a[:timestamp] }
+      .first(LIMIT)
   end
 
   def create_event_actions
