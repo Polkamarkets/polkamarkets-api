@@ -340,7 +340,7 @@ class Market < ApplicationRecord
 
   def refresh_prices!(queue: 'default')
     Cache::MarketCacheSerializerDeleteWorker.new.perform(id)
-    Cache::MarketPricesWorker.set(queue: queue).perform_async(id)
+    Cache::MarketEthDataWorker.set(queue: queue).perform_async(id)
   end
 
   def refresh_cache_sync!
