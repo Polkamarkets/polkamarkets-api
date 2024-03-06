@@ -7,6 +7,7 @@ class MarketOutcomeSerializer < ActiveModel::Serializer
     :title,
     :shares,
     :price,
+    :closing_price,
     :price_change_24h,
     :image_url
   )

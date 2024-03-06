@@ -74,6 +74,22 @@ class MarketOutcome < ApplicationRecord
     eth_data[:price]
   end
 
+  def closing_price(refresh: false)
+    return nil unless market.resolved?
+
+    Rails.cache.fetch(
+      "markets:network_#{market.network_id}:#{market.eth_market_id}:outcomes:#{eth_market_id}:closing_price",
+      force: refresh
+    ) do
+      outcome_prices = market.market_prices(refresh: refresh).select do |price|
+        price[:timestamp] < market.expires_at.to_i
+        price[:outcome_id] == eth_market_id
+      end
+
+      outcome_prices.blank? ? nil : outcome_prices.last[:price]
+    end
+  end
+
   def price_change_24h(refresh: false)
     Rails.cache.fetch(
       "markets:network_#{market.network_id}:#{market.eth_market_id}:outcomes:#{eth_market_id}:price_change_24h",

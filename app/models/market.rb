@@ -205,15 +205,16 @@ class Market < ApplicationRecord
     end
   end
 
+  def market_prices(refresh: false)
+    Rails.cache.fetch("markets:network_#{network_id}:#{eth_market_id}:events:price", force: refresh) do
+      Bepro::PredictionMarketContractService.new(network_id: network_id).get_price_events(eth_market_id)
+    end
+  end
+
   def outcome_prices(timeframe, candles: 12, refresh: false, end_at_resolved_at: false)
     return {} if eth_market_id.blank?
 
-    market_prices =
-      Rails.cache.fetch("markets:network_#{network_id}:#{eth_market_id}:events:price", force: refresh) do
-        Bepro::PredictionMarketContractService.new(network_id: network_id).get_price_events(eth_market_id)
-      end
-
-    market_prices.group_by { |price| price[:outcome_id] }.map do |outcome_id, prices|
+    market_prices(refresh: refresh).group_by { |price| price[:outcome_id] }.map do |outcome_id, prices|
       # if market is resolved, we only want to show prices until it was resolved
       end_timestamp = (resolved? && end_at_resolved_at) ? resolved_at : nil
 
