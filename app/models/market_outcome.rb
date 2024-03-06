@@ -81,7 +81,7 @@ class MarketOutcome < ApplicationRecord
       "markets:network_#{market.network_id}:#{market.eth_market_id}:outcomes:#{eth_market_id}:closing_price",
       force: refresh
     ) do
-      outcome_prices = market.market_prices.select do |price|
+      outcome_prices = market.market_prices(refresh: refresh).select do |price|
         price[:timestamp] < market.expires_at.to_i
         price[:outcome_id] == eth_market_id
       end
