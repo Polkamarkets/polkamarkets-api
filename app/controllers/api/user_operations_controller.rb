@@ -33,6 +33,7 @@ module Api
         :network_id,
         :tx_id,
         :user_operation_hash,
+        :user_method_call_data,
         user_operation: {},
         user_operation_data: [:contract, :method, arguments: []]
       )
