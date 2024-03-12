@@ -79,3 +79,8 @@ gem 'aws-sdk-s3'
 
 # Discord
 gem 'discordrb'
+
+gem 'omniauth'
+gem 'omniauth-google-oauth2'
+
+gem 'devise'
