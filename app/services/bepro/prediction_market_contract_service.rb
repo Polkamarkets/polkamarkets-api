@@ -24,12 +24,12 @@ module Bepro
 
     DELIMITER = "\u241f"
 
-    def initialize(network_id: nil, api_url: nil, contract_address: nil, version: 2)
-      @version = version
+    def initialize(network_id: nil, api_url: nil, contract_address: nil)
+      @version = Rails.application.config_for(:ethereum).dig(:prediction_market_contract_version) || 2
 
       super(
         network_id: network_id,
-        contract_name: version == 2 ? 'predictionMarketV2' : 'predictionMarket',
+        contract_name: version > 1 ? "predictionMarketV#{@version}" : 'predictionMarket',
         contract_address:
           contract_address ||
             Rails.application.config_for(:ethereum).dig(:"network_#{network_id}", :prediction_market_contract_address) ||
@@ -141,7 +141,7 @@ module Bepro
       {
         liquidity_price: from_big_number_to_float(market_prices[0]),
         outcome_shares:
-          version == 2 ?
+          version > 1 ?
             market_prices[1].each_with_index.map { |price, i| from_big_number_to_float(price) } :
             {
               0 => from_big_number_to_float(market_prices[1]),
@@ -159,7 +159,7 @@ module Bepro
         address: address,
         liquidity_shares: from_big_number_to_float(user_data[0], network_market_erc20_decimals(network_id, market_id)),
         outcome_shares:
-          version == 2 ?
+          version > 1 ?
             user_data[1].each_with_index.map do |share, i|
               [i, from_big_number_to_float(share, network_market_erc20_decimals(network_id, market_id))]
             end.to_h :
@@ -215,7 +215,7 @@ module Bepro
     end
 
     def get_price_events(market_id)
-      if version == 2
+      if version > 1
         events = get_events(
           event_name: 'MarketOutcomeShares',
           filter: {

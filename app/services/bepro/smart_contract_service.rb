@@ -3,6 +3,7 @@ module Bepro
     SMART_CONTRACTS = [
       'predictionMarket',
       'predictionMarketV2',
+      'predictionMarketV3',
       'erc20',
       'realitio',
       'achievements',
