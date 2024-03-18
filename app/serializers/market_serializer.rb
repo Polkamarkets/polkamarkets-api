@@ -51,8 +51,7 @@ class MarketSerializer < ActiveModel::Serializer
   end
 
   def show_tournaments?
-    # only show tournaments for show view
-    show_view?
+    true
   end
 
   def show_view?
