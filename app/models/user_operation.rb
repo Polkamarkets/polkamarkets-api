@@ -20,7 +20,7 @@ class UserOperation < ApplicationRecord
   def market
     return @_market if @_market.present?
 
-    return nil unless ['buy', 'sell'].include?(user_operation_data.first['method'])
+    return nil unless ['buy', 'sell', 'claimWinnings'].include?(user_operation_data.first['method'])
 
     eth_market_id = user_operation_data.first['arguments'].first
 
