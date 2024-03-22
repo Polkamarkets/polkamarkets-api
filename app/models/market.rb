@@ -437,14 +437,18 @@ class Market < ApplicationRecord
     end
   end
 
-  def users
-    action_events.map { |action| action[:address] }.uniq.count
+  def users(refresh: false)
+    Rails.cache.fetch("markets:network_#{network_id}:#{eth_market_id}:users", force: refresh) do
+      action_events.map { |action| action[:address] }.uniq.count
+    end
   end
 
-  def related_markets
+  def related_markets(refresh: false)
     return [] if tournaments.blank?
 
-    tournaments.order(:position).map(&:markets).flatten.uniq.select { |market| market.id != id }.first(5)
+    Rails.cache.fetch("markets:network_#{network_id}:#{eth_market_id}:related_markets", force: refresh) do
+      tournaments.order(:position).map(&:markets).flatten.uniq.select { |market| market.id != id }.first(5)
+    end
   end
 
   def polkamarkets_web_url

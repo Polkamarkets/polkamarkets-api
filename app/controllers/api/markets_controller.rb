@@ -3,7 +3,12 @@ module Api
     before_action :get_market, only: %i[show reload feed]
 
     def index
-      markets = Market.published.order(created_at: :desc).includes(:outcomes).with_attached_image
+      markets = Market
+        .published
+        .order(created_at: :desc)
+        .includes(:outcomes)
+        .includes(:tournaments)
+        .includes(:comments)
 
       if params[:id]
         ids = params[:id].split(',').map(&:to_i)

@@ -60,10 +60,13 @@ class Tournament < ApplicationRecord
     markets.map(&:expires_at).max
   end
 
-  def users
-    eth_market_ids = markets.map(&:eth_market_id).uniq
+  def users(refresh: false)
+    # TODO: store counter in postgres
+    Rails.cache.fetch("tournaments:#{id}:users", expires_in: 24.hours, force: refresh) do
+      eth_market_ids = markets.map(&:eth_market_id).uniq
 
-    Activity.where(market_id: eth_market_ids, network_id: network_id).distinct.count(:address)
+      Activity.where(market_id: eth_market_ids, network_id: network_id).distinct.count(:address)
+    end
   end
 
   def tokens
