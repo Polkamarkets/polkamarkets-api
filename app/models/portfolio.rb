@@ -113,13 +113,13 @@ class Portfolio < ApplicationRecord
               winnings_by_market[market.eth_market_id] += holding[:outcome_shares][market.resolved_outcome_id] * market.token_rate
             else
               # fetching average cost
-              outcome_buy_events = action_events.select do |event|
-                event[:market_id] == market.eth_market_id && event[:outcome_id] == outcome.eth_market_id && event[:action] == 'buy'
-              end
+              # outcome_buy_events = action_events.select do |event|
+              #   event[:market_id] == market.eth_market_id && event[:outcome_id] == outcome.eth_market_id && event[:action] == 'buy'
+              # end
 
-              outcome_buy_price = outcome_buy_events.sum { |event| event[:value] } / outcome_buy_events.sum { |event| event[:shares] }
+              # outcome_buy_price = outcome_buy_events.sum { |event| event[:value] } / outcome_buy_events.sum { |event| event[:shares] }
 
-              winnings_by_market[market.eth_market_id] -= holding[:outcome_shares][outcome.eth_market_id] * outcome_buy_price * market.token_rate
+              # winnings_by_market[market.eth_market_id] -= holding[:outcome_shares][outcome.eth_market_id] * outcome_buy_price * market.token_rate
             end
           end
         end
