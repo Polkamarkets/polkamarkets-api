@@ -1,0 +1,14 @@
+default: &default
+  api_url: <%= ENV['PARTICLE_API_URL'] %>
+  project_id: <%= ENV['PARTICLE_PROJECT_ID'] %>
+  client_key: <%= ENV['PARTICLE_CLIENT_KEY'] %>
+
+
+production:
+  <<: *default
+
+staging:
+  <<: *default
+
+development:
+  <<: *default
