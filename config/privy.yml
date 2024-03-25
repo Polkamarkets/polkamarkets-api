@@ -1,0 +1,15 @@
+default: &default
+  api_url: <%= ENV['PRIVY_API_URL'] %>
+  jwks_url: <%= ENV['PRIVY_JWKS_URL'] %>
+  app_id: <%= ENV['PRIVY_APP_ID'] %>
+  app_secret: <%= ENV['PRIVY_APP_SECRET'] %>
+
+
+production:
+  <<: *default
+
+staging:
+  <<: *default
+
+development:
+  <<: *default

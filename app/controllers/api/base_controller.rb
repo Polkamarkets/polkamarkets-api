@@ -20,46 +20,28 @@ module Api
       if request.headers['Authorization'].present?
         authenticate_or_request_with_http_token do |token|
           jwt_payload = nil
-          jwt_user_data = nil
-
-          jwks_providers.each_with_index do |jwks_provider, index|
-            begin
-              jwt_payload = JWT.decode(
-                token,
-                nil,
-                true, # Verify the signature of this token
-                algorithms: ["ES256"],
-                jwks: fetch_jwks(jwks_provider),
-              )
-            rescue JWT::ExpiredSignature, JWT::VerificationError, JWT::DecodeError
-              return head :unauthorized if index == jwks_providers.length - 1
-            end
-
-            break if jwt_payload
-          end
 
           begin
-            jwt_user_data = JWT.decode(
-              params[:oauth_access_token],
+            jwt_payload = JWT.decode(
+              token,
               nil,
-              false,
-              algorithms: ["RS256"],
+              true, # Verify the signature of this token
+              algorithms: ["ES256"],
+              jwks: fetch_jwks(),
             )
           rescue JWT::ExpiredSignature, JWT::VerificationError, JWT::DecodeError
-            # should be non-blocking
-            # TODO: remove after full migration to new auth
+            return head :unauthorized
           end
 
-          if jwt_payload[0]['email'].blank? && jwt_user_data.present?
-            email = jwt_user_data[0]['email']
-          else
-            email = normalize_email(jwt_payload[0]['email'])
-          end
+          privy_service = PrivyService.new
+          privy_user_data = privy_service.get_user_data(user_id: jwt_payload[0]['sub'])
 
-          username = jwt_user_data[0]['username'] if jwt_user_data.present?
-          avatar = jwt_user_data[0]['avatar_url'] if jwt_user_data.present?
-          raw_email = jwt_payload[0]['email']
-          login_public_key = jwt_payload[0]['wallets'][0]['address'] || jwt_payload[0]['wallets'][0]['public_key']
+          email = privy_user_data[:email] || privy_user_data[:username] || privy_user_data[:address] + '@login_type.com'
+          username = privy_user_data[:username]
+          avatar = privy_user_data[:avatar]
+          raw_email = privy_user_data[:email]
+          login_public_key = privy_user_data[:address]
+          login_type = privy_user_data[:login_type]
 
           user = User.find_by(email: email)
 
@@ -72,25 +54,19 @@ module Api
 
           user.update(username: email.split('@').first) if user.username.blank?
           user.update(avatar: avatar) if avatar.present?
+          user.update(login_type: login_type) if login_type.present?
 
           @current_user_id = user.id
         end
       end
     end
 
-    def fetch_jwks(url)
-      response = HTTP.get(url)
+    def fetch_jwks()
+      response = HTTP.get(Rails.application.config_for(:privy).jwks_url)
 
       if response.code == 200
         JSON.parse(response.body.to_s)
       end
-    end
-
-    def jwks_providers
-      [
-        'https://authjs.web3auth.io/jwks',
-        'https://api.openlogin.com/jwks'
-      ]
     end
 
     def authenticate_user!(options = {})
