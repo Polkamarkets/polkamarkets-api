@@ -392,7 +392,7 @@ class StatsService
                 end
               else
                 claim_winnings_count = user_actions.select { |a| a[:action] == 'claim_winnings' }.count
-                winnings_value = volume_by_tx_action['claim_winnings']
+                winnings_value = volume_by_tx_action['claim_winnings'] + volume_by_tx_action['claim_voided']
               end
 
               {
@@ -402,9 +402,9 @@ class StatsService
                 verified_markets_created: create_market_actions.select { |action| action[:address] == user && network_verified_market_ids(network_id).include?(action[:market_id]) }.count,
                 volume_eur: volume_by_tx_action['buy'] + volume_by_tx_action['sell'],
                 tvl_volume_eur: volume_by_tx_action['buy'] - volume_by_tx_action['sell'],
-                earnings_eur: volume_by_tx_action['sell'] - volume_by_tx_action['buy'] + volume_by_tx_action['claim_voided'] + portfolio_value + winnings_value,
+                earnings_eur: volume_by_tx_action['sell'] - volume_by_tx_action['buy'] + portfolio_value + winnings_value,
                 earnings_open_eur: portfolio_value - portfolio_cost,
-                earnings_closed_eur: volume_by_tx_action['sell'] - volume_by_tx_action['buy'] + volume_by_tx_action['claim_voided'] + winnings_value + portfolio_cost,
+                earnings_closed_eur: volume_by_tx_action['sell'] - volume_by_tx_action['buy'] + winnings_value + portfolio_cost,
                 liquidity_eur: volume_by_tx_action['add_liquidity'] + volume_by_tx_action['remove_liquidity'],
                 tvl_liquidity_eur: volume_by_tx_action['add_liquidity'] - volume_by_tx_action['remove_liquidity'],
                 bond_volume: bonds.select { |bond| bond[:user] == user }.sum { |bond| bond[:value] },

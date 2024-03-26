@@ -111,6 +111,8 @@ class Portfolio < ApplicationRecord
 
             if outcome.eth_market_id == market.resolved_outcome_id
               winnings_by_market[market.eth_market_id] += holding[:outcome_shares][market.resolved_outcome_id] * market.token_rate
+            elsif market.voided
+              winnings_by_market[market.eth_market_id] += holding[:outcome_shares][outcome.eth_market_id] * market.token_rate * outcome.price
             else
               # fetching average cost
               # outcome_buy_events = action_events.select do |event|
