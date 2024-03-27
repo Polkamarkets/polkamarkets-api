@@ -102,8 +102,6 @@ class Portfolio < ApplicationRecord
         markets = markets.to_a.select { |market| market.resolved? }
 
         markets.each do |market|
-          next if market.voided
-
           holding = holdings.find { |holding| holding[:market_id] == market.eth_market_id }
 
           market.outcomes.each do |outcome|
