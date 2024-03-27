@@ -4,6 +4,8 @@ class TournamentGroupSerializer < ActiveModel::Serializer
     :slug,
     :title,
     :description,
+    :token,
+    :created_at,
     :position,
     :users,
     :image_url,

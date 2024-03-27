@@ -72,4 +72,8 @@ class Tournament < ApplicationRecord
   def tokens
     markets.map(&:token).flatten.uniq
   end
+
+  def token
+    tokens.first
+  end
 end
