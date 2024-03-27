@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2024_01_31_234933) do
+ActiveRecord::Schema.define(version: 2024_03_27_103048) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -162,6 +162,8 @@ ActiveRecord::Schema.define(version: 2024_01_31_234933) do
     t.datetime "updated_at", precision: 6, null: false
     t.string "image_url"
     t.string "banner_url"
+    t.jsonb "tags", default: []
+    t.jsonb "social_urls", default: {}
     t.index ["slug"], name: "index_tournament_groups_on_slug", unique: true
   end
 
