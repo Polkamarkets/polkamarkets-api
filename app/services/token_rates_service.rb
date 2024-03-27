@@ -69,7 +69,7 @@ class TokenRatesService
 
   def get_token_price_history(token, currency)
     Rails.cache.fetch("rates:#{token}:#{currency}:history", expires_in: 24.hours) do
-      uri = "https://api.coingecko.com/api/v3/coins/#{token}/market_chart?vs_currency=#{currency}&interval=daily&days=max"
+      uri = "https://api.coingecko.com/api/v3/coins/#{token}/market_chart?vs_currency=#{currency}&interval=daily&days=365"
 
       response = HTTP.get(uri)
 
