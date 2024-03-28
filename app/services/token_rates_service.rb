@@ -38,7 +38,7 @@ class TokenRatesService
     # fetching first rate right before timestamp
     rate = rates.reverse.find { |r| r[0] <= timestamp }
 
-    rate[1] || rates.last[1]
+    rate&[1] || rates.last[1]
   end
 
   def get_token_price_history(token, currency)
