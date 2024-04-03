@@ -157,6 +157,8 @@ module Api
         volume_eur: 0,
         tvl_volume_eur: 0,
         earnings_eur: 0,
+        earnings_open_eur: 0,
+        earnings_closed_eur: 0,
         liquidity_eur: 0,
         tvl_liquidity_eur: 0,
         claim_winnings_count: 0,
