@@ -66,6 +66,9 @@ module Bepro
       past_events = []
       events = []
 
+      # stringifying filter
+      filter.deep_stringify_keys!
+
       uri = api_url + "/events?contract=#{contract_name}&address=#{contract_address}&eventName=#{event_name}"
       uri << "&filter=#{filter.to_json}" if filter.present?
 
