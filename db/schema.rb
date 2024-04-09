@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2024_03_27_103048) do
+ActiveRecord::Schema.define(version: 2024_04_04_154600) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -90,6 +90,53 @@ ActiveRecord::Schema.define(version: 2024_03_27_103048) do
     t.index ["market_id"], name: "index_comments_on_market_id"
     t.index ["parent_id"], name: "index_comments_on_parent_id"
     t.index ["user_id"], name: "index_comments_on_user_id"
+  end
+
+  create_table "eth_events", force: :cascade do |t|
+    t.string "contract_name", null: false
+    t.integer "network_id", null: false
+    t.string "event", null: false
+    t.string "address", null: false
+    t.string "block_hash"
+    t.integer "block_number", null: false
+    t.integer "log_index", null: false
+    t.boolean "removed"
+    t.string "transaction_hash", null: false
+    t.integer "transaction_index"
+    t.string "signature"
+    t.jsonb "data"
+    t.jsonb "raw_data"
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["address"], name: "index_eth_events_on_address"
+    t.index ["block_number"], name: "index_eth_events_on_block_number"
+    t.index ["contract_name"], name: "index_eth_events_on_contract_name"
+    t.index ["event"], name: "index_eth_events_on_event"
+    t.index ["network_id", "transaction_hash", "log_index"], name: "index_eth_events_on_network_id_transaction_hash_log_index", unique: true
+    t.index ["network_id"], name: "index_eth_events_on_network_id"
+  end
+
+  create_table "eth_events_queries", id: false, force: :cascade do |t|
+    t.bigint "eth_event_id", null: false
+    t.bigint "eth_query_id", null: false
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["eth_event_id", "eth_query_id"], name: "index_eth_events_queries_on_eth_event_id_and_eth_query_id", unique: true
+  end
+
+  create_table "eth_queries", force: :cascade do |t|
+    t.string "contract_name", null: false
+    t.integer "network_id", null: false
+    t.string "event", null: false
+    t.string "filter"
+    t.integer "last_block_number"
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["contract_name"], name: "index_eth_queries_on_contract_name"
+    t.index ["event"], name: "index_eth_queries_on_event"
+    t.index ["last_block_number"], name: "index_eth_queries_on_last_block_number"
+    t.index ["network_id", "contract_name", "event", "filter"], name: "index_eth_queries_on_network_id_contract_name_event_filter", unique: true
+    t.index ["network_id"], name: "index_eth_queries_on_network_id"
   end
 
   create_table "group_leaderboards", force: :cascade do |t|
