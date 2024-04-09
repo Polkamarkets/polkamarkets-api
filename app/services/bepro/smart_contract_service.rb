@@ -115,7 +115,7 @@ module Bepro
         args = [network_id, contract_name, contract_address, api_url, event_name, filter]
 
         # only enqueue backfill job if no same current job is running
-        if !SidekiqJobFinderService.new.pending_job_running?('EthEventsWorker', args)
+        if !SidekiqJobFinderService.new.pending_job?('EthEventsWorker', args)
           EthEventsWorker.perform_async(*args)
         end
 
