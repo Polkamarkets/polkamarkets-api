@@ -174,10 +174,12 @@ module Bepro
       events = get_events(
         event_name: 'MarketActionTx',
         filter: {
+          marketId: '',
           user: address,
-          action: 6
         }
       )
+
+      events.select! { |event| event['returnValues']['action'].to_i == 6 }
 
       events.map do |event|
         {
