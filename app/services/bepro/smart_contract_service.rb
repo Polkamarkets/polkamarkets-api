@@ -127,7 +127,7 @@ module Bepro
 
       current_block_number = all_events.map { |event| event['blockNumber'] }.max
 
-      events.each do |event|
+      events.each_with_index do |event, index|
         eth_event = EthEvent.find_or_initialize_by(
           event: event_name,
           contract_name: contract_name,
@@ -146,6 +146,10 @@ module Bepro
           raw_data: event['raw'],
         )
         eth_query.eth_events << eth_event if eth_query.eth_event_ids.exclude?(eth_event.id)
+
+        # periodically updating the last block number
+        eth_query.last_block_number = event['blockNumber'] if event['blockNumber'] > eth_query.reload.last_block_number
+        eth_query.save! if index % 1000 == 0
       end
 
       eth_query.last_block_number = current_block_number + 1 if current_block_number.present?
