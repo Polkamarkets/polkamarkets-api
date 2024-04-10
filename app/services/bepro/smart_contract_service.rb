@@ -148,8 +148,10 @@ module Bepro
         eth_query.eth_events << eth_event if eth_query.eth_event_ids.exclude?(eth_event.id)
 
         # periodically updating the last block number
-        eth_query.last_block_number = event['blockNumber'] if event['blockNumber'] > eth_query.reload.last_block_number
-        eth_query.save! if index % 1000 == 0
+        if index % 1000 == 0 &&
+          (eth_query.reload.last_block_number.blank? || event['blockNumber'] > eth_query.last_block_number)
+          eth_query.update!(last_block_number: event['blockNumber'])
+        end
       end
 
       eth_query.last_block_number = current_block_number + 1 if current_block_number.present?
