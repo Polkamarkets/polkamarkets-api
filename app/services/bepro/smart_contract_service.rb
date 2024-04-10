@@ -76,7 +76,9 @@ module Bepro
         contract_name: contract_name,
         network_id: network_id,
         event: event_name,
-        filter: filter.to_json
+        filter: filter.to_json,
+        contract_address: contract_address,
+        api_url: api_url
       )
 
       if eth_query.last_block_number.present?
@@ -118,7 +120,7 @@ module Bepro
         args = [network_id, contract_name, contract_address, api_url, event_name, filter]
 
         # only enqueue backfill job if no same current job is running
-        if !SidekiqJobFinderService.new.pending_job?('EthEventsWorker', args)
+        if !eth_query.pending_index_running?
           EthEventsWorker.perform_async(*args)
         end
 

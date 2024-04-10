@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2024_04_04_154600) do
+ActiveRecord::Schema.define(version: 2024_04_10_134542) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -132,10 +132,12 @@ ActiveRecord::Schema.define(version: 2024_04_04_154600) do
     t.integer "last_block_number"
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
+    t.string "contract_address", null: false
+    t.string "api_url", null: false
     t.index ["contract_name"], name: "index_eth_queries_on_contract_name"
     t.index ["event"], name: "index_eth_queries_on_event"
     t.index ["last_block_number"], name: "index_eth_queries_on_last_block_number"
-    t.index ["network_id", "contract_name", "event", "filter"], name: "index_eth_queries_on_network_id_contract_name_event_filter", unique: true
+    t.index ["network_id", "contract_name", "event", "filter", "contract_address", "api_url"], name: "index_eth_queries_on_network_id_cn_ca_api_url_event_filter", unique: true
     t.index ["network_id"], name: "index_eth_queries_on_network_id"
   end
 
