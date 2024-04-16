@@ -10,7 +10,9 @@ module Api
         update_data['login_type'] = params[:login_type]
       end
 
-      if current_user.wallet_address.nil?
+      if params[:legacy].present?
+        update_data['wallet_address'] = params[:wallet_address] if params[:wallet_address].present?
+      elsif current_user.wallet_address.nil?
         if current_user.login_type == 'wallet'
           update_data['wallet_address'] = current_user.login_public_key
         else
