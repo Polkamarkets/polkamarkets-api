@@ -61,7 +61,7 @@ class Tournament < ApplicationRecord
   end
 
   def closed?
-    expires_at < Time.now + 1.day
+    expires_at < Time.now - 1.day
   end
 
   def users(refresh: false)
