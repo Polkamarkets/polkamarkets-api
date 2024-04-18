@@ -60,6 +60,10 @@ class Tournament < ApplicationRecord
     markets.map(&:expires_at).max
   end
 
+  def closed?
+    expires_at < Time.now + 1.day
+  end
+
   def users(refresh: false)
     # TODO: store counter in postgres
     Rails.cache.fetch("tournaments:#{id}:users", expires_in: 24.hours, force: refresh) do
