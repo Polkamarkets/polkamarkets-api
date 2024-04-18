@@ -2,6 +2,7 @@ default: &default
   networks:
     "100":
       "0x8469e67116bae54b40ce128b05bb9ff0e536c247": "voz"
+      "0x1997c21c3488741a399e0aec6d856876573c223c": "pcl"
     "137":
       "0x7595e10C45CDd68cAb85F32Bc9d52EAD31da8965": "tween"
       "0x3f5C62b07a38BCE116fB5fCc61cBc262B43A3364": "pcl"
