@@ -11,6 +11,8 @@ class EthEvent < ApplicationRecord
 
   has_and_belongs_to_many :eth_queries
 
+  scope :except_raw_data, -> { select(self.column_names.map(&:to_sym) - [:raw_data]) }
+
   def serialize_as_eth_log
     {
       address: address,
@@ -22,7 +24,7 @@ class EthEvent < ApplicationRecord
       transactionIndex: transaction_index,
       signature: signature,
       returnValues: data,
-      raw: raw_data,
+      # raw: raw_data, # not used at the moment
       event: event
     }.deep_stringify_keys
   end

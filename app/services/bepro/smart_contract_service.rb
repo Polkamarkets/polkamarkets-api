@@ -83,7 +83,10 @@ module Bepro
 
       if eth_query.last_block_number.present?
         uri << "&fromBlock=#{eth_query.last_block_number}"
-        past_events = eth_query.eth_events.map(&:serialize_as_eth_log)
+        # batching for optimization purposes
+        eth_query.eth_events.except_raw_data.find_each(batch_size: 10000) do |event|
+          past_events << event.serialize_as_eth_log
+        end
       end
 
       Sentry.with_scope do |scope|
