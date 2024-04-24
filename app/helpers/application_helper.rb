@@ -4,7 +4,6 @@ module ApplicationHelper
   end
 
   def normalize_email(email)
-    # stripping down dots and plus signs
-    email.downcase.gsub(/(\+).+@/, "@").gsub(/(\.)(?=.*@)/, "").strip
+    email.downcase.strip
   end
 end
