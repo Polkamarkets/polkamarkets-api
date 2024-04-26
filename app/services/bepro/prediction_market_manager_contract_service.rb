@@ -23,10 +23,19 @@ module Bepro
     def get_land_admins(token_address)
       return [] if contract_address.blank?
 
+      land_created_events = get_events(event_name: 'LandCreated', filter: { token: token_address })
       admin_added_events = get_events(event_name: 'LandAdminAdded', filter: { token: token_address })
       admin_removed_events = get_events(event_name: 'LandAdminRemoved', filter: { token: token_address })
 
       admins = []
+
+      land_created_events.each do |event|
+        admin = event['returnValues']['user']
+
+        next if admin_removed_events.any? { |e| e['returnValues']['admin'] == admin && e['blockNumber'] > event['blockNumber'] }
+
+        admins << admin
+      end
 
       admin_added_events.each do |event|
         admin = event['returnValues']['admin']
