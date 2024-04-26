@@ -64,7 +64,7 @@ module Api
     private
 
     def tournament_group_params
-      params.require(:tournament_group).permit(:id, :title, :description, :slug, :image_url, :banner_url)
+      params.require(:land).permit(:id, :title, :description, :slug, :image_url, :banner_url)
     end
   end
 end

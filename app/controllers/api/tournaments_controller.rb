@@ -22,7 +22,8 @@ module Api
     end
 
     def create
-      create_params = tournament_params.except(:market_ids)
+      create_params = tournament_params.except(:market_ids, :land_id)
+      create_params[:tournament_group_id] = tournament_params[:land_id] if tournament_params[:land_id]
 
       # converting market_ids to markets
       if !tournament_params[:market_ids].nil?
@@ -44,7 +45,8 @@ module Api
     def update
       tournament = Tournament.friendly.find(params[:id])
 
-      update_params = tournament_params.except(:market_ids)
+      update_params = tournament_params.except(:market_ids, :land_id)
+      update_params[:tournament_group_id] = tournament_params[:land_id] if tournament_params[:land_id]
 
       # converting market_ids to markets
       if !tournament_params[:market_ids].nil?
@@ -92,7 +94,7 @@ module Api
           :description,
           :image_url,
           :network_id,
-          :tournament_group_id,
+          :land_id,
           :rank_by,
           :rules,
           rewards: [:from, :to, :reward],
