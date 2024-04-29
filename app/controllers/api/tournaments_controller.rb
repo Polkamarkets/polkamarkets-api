@@ -97,7 +97,7 @@ module Api
           :land_id,
           :rank_by,
           :rules,
-          rewards: [:from, :to, :reward],
+          rewards: [:from, :to, :reward, :title, :description],
           market_ids: []
         )
     end

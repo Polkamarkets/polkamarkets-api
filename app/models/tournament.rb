@@ -51,7 +51,7 @@ class Tournament < ApplicationRecord
     rewards.each do |reward|
       errors.add(:rewards, 'reward is not valid') unless reward['from'].present? &&
         reward['to'].present? &&
-        reward['reward'].present? &&
+        (reward['reward'].present? || reward['title'].present?) && # TODO: remove reward['reward'] legacy
         reward['from'] <= reward['to']
     end
   end
