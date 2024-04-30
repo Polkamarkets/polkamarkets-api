@@ -97,6 +97,7 @@ module Api
           :land_id,
           :rank_by,
           :rules,
+          :expires_at,
           rewards: [:from, :to, :reward, :title, :description],
           topics: [],
           market_ids: []
