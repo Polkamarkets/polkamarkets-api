@@ -98,6 +98,7 @@ module Api
           :rank_by,
           :rules,
           rewards: [:from, :to, :reward, :title, :description],
+          topics: [],
           market_ids: []
         )
     end
