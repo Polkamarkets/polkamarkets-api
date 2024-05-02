@@ -98,6 +98,8 @@ module Api
           :rank_by,
           :rules,
           :expires_at,
+          :published,
+          :comments_enabled,
           rewards: [:from, :to, :reward, :title, :description],
           topics: [],
           market_ids: []
