@@ -114,6 +114,18 @@ class Market < ApplicationRecord
     eth_data[:resolution_source]
   end
 
+  def resolution_title
+    return nil if eth_data.blank?
+
+    eth_data[:resolution_title]
+  end
+
+  def topics
+    return [] if eth_data.blank?
+
+    eth_data[:topics] || []
+  end
+
   def state
     return nil if eth_data.blank?
 
