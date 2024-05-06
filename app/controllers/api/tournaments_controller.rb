@@ -48,10 +48,12 @@ module Api
       update_params = tournament_params.except(:market_ids, :land_id)
       update_params[:tournament_group_id] = tournament_params[:land_id] if tournament_params[:land_id]
 
+      network_id = tournament_params[:network_id] || tournament.network_id
+
       # converting market_ids to markets
       if !tournament_params[:market_ids].nil?
         update_params[:market_ids] = tournament_params[:market_ids].map do |market_id|
-          market = Market.find_by!(eth_market_id: market_id, network_id: tournament_params[:network_id])
+          market = Market.find_by!(eth_market_id: market_id, network_id: network_id)
           market.id
         end
       end
