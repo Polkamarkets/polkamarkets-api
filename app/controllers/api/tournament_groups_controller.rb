@@ -68,9 +68,12 @@ module Api
         :id,
         :title,
         :description,
+        :short_description,
         :slug,
         :image_url,
         :banner_url,
+        :website_url,
+        :published,
         tags: [],
         social_urls: {},
       )

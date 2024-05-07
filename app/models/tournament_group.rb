@@ -11,7 +11,7 @@ class TournamentGroup < ApplicationRecord
 
   acts_as_list
 
-  SOCIALS = %w[homepage instagram twitter telegram facebook youtube linkedin medium discord].freeze
+  SOCIALS = %w[instagram twitter telegram facebook youtube linkedin medium discord].freeze
 
   def network_id_validation
     # checking all tournaments have the same network id

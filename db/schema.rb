@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2024_05_02_150946) do
+ActiveRecord::Schema.define(version: 2024_05_07_091628) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -213,6 +213,9 @@ ActiveRecord::Schema.define(version: 2024_05_02_150946) do
     t.string "banner_url"
     t.jsonb "tags", default: []
     t.jsonb "social_urls", default: {}
+    t.string "short_description"
+    t.string "website_url"
+    t.boolean "published", default: false
     t.index ["slug"], name: "index_tournament_groups_on_slug", unique: true
   end
 

@@ -4,6 +4,7 @@ class TournamentGroupSerializer < ActiveModel::Serializer
     :slug,
     :title,
     :description,
+    :short_description,
     :token,
     :created_at,
     :position,
@@ -12,7 +13,9 @@ class TournamentGroupSerializer < ActiveModel::Serializer
     :banner_url,
     :tags,
     :social_urls,
-    :admins
+    :admins,
+    :published,
+    :website_url
   )
 
   has_many :tournaments, serializer: TournamentSerializer, if: :show_tournaments?
