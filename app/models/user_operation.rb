@@ -78,4 +78,46 @@ class UserOperation < ApplicationRecord
   def ticker
     market&.token&.dig(:symbol)
   end
+
+  def logs(paginate: false)
+    @_logs ||=
+      case network_id
+      when 10200
+        blockscout_logs(paginate: paginate)
+      else
+        etherscan_logs
+      end
+  end
+
+  def logs_tx_hash
+    return nil if logs.blank?
+
+    case network_id
+    when 10200
+      logs.first['tx_hash']
+    else
+      logs.first['transactionHash']
+    end
+  end
+
+  def etherscan_logs
+    EtherscanService.new(network_id).logs(
+      Rails.application.config_for(:ethereum).bundler_entry_point,
+      [
+        EVENT_TOPIC,
+        user_operation_hash
+      ]
+    )
+  end
+
+  def blockscout_logs(paginate: false)
+    all_logs = BlockscoutService.new(network_id).logs(
+      Rails.application.config_for(:ethereum).bundler_entry_point,
+      paginate: paginate
+    )
+
+    all_logs.select do |log|
+      log['topics'].include?(EVENT_TOPIC) && log['topics'].include?(user_operation_hash)
+    end
+  end
 end
