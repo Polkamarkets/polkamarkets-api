@@ -11,6 +11,9 @@ class TournamentGroup < ApplicationRecord
 
   acts_as_list
 
+  scope :published, -> { where(published: true) }
+  scope :unpublished, -> { where(published: false) }
+
   SOCIALS = %w[instagram twitter telegram facebook youtube linkedin medium discord].freeze
 
   def network_id_validation

@@ -6,15 +6,23 @@ module Api
     def index
       tournament_groups = TournamentGroup.order(position: :asc).all
 
-      if params[:token].present?
-        tournament_groups = tournament_groups.select do |tournament_group|
-          tournament_group.tokens.any? { |token| token[:symbol].downcase == params[:token].downcase }
-        end
-      end
-
       if params[:admin].present?
         tournament_groups = tournament_groups.select do |tournament_group|
           tournament_group.admins.any? { |admin| admin.downcase == params[:admin].downcase }
+        end
+      elsif params[:publish_status].present?
+        if params[:publish_status] == 'published'
+          tournament_groups = tournament_groups.published
+        elsif params[:publish_status] == 'unpublished'
+          tournament_groups = tournament_groups.unpublished
+        end
+      else
+        tournament_groups = tournament_groups.published
+      end
+
+      if params[:token].present?
+        tournament_groups = tournament_groups.select do |tournament_group|
+          tournament_group.tokens.any? { |token| token[:symbol].downcase == params[:token].downcase }
         end
       end
 

@@ -12,6 +12,9 @@ class Tournament < ApplicationRecord
 
   acts_as_list scope: :tournament_group
 
+  scope :published, -> { where(published: true) }
+  scope :unpublished, -> { where(published: false) }
+
   RANK_CRITERIA = [
     :markets_created,
     :volume_eur,
