@@ -12,6 +12,12 @@ module Api
         end
       end
 
+      if params[:admin].present?
+        tournament_groups = tournament_groups.select do |tournament_group|
+          tournament_group.admins.any? { |admin| admin.downcase == params[:admin].downcase }
+        end
+      end
+
       render json: tournament_groups, scope: { show_tournaments: true }
     end
 
