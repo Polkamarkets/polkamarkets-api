@@ -81,6 +81,9 @@ module Bepro
       # decoding question from event. format from realitio
       # https://reality.eth.link/app/docs/html/contracts.html#how-questions-are-structured
       question = events[0]['returnValues']['question'].split(DELIMITER)
+      # replacing all "\\n" and "\\"" occurrences with "\n" and "\""
+      question = question.map { |q| q.gsub(/\\n/, "\n").gsub(/\\\"/, "\"") }
+
       title = question[0].split(';').first
       description = question[0].split(';')[1..-1].join(';')
       category = question[-1].split(';').first
