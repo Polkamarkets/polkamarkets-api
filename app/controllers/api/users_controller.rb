@@ -7,9 +7,16 @@ module Api
       raise 'Email is invalid' unless params[:email] =~ URI::MailTo::EMAIL_REGEXP
       raise 'Name not found' if params[:name].blank?
 
+      if User.find_by(email: params[:email])
+        return render json: { error: 'Email already registered' }, status: :bad_request
+      end
+
       # register email to brevo
       brevo_service = BrevoService.new
       brevo_service.register_contact(email: params[:email], name: params[:name])
+
+      # create user
+      User.create!(email: params[:email], username: params[:name])
 
       render json: { success: true }, status: :ok
     end
