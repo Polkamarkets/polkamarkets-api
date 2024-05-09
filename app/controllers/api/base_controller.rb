@@ -46,6 +46,7 @@ module Api
           raw_email = privy_user_data[:email]
           login_public_key = privy_user_data[:address]
           login_type = privy_user_data[:login_type]
+          origin = privy_user_data[:origin]
 
           user = User.find_by(email: email)
 
@@ -59,6 +60,7 @@ module Api
           user.update(username: email.split('@').first) if user.username.blank?
           user.update(avatar: avatar) if avatar.present?
           user.update(login_type: login_type) if login_type.present?
+          user.update(origin: origin) if origin.present?
 
           @current_user_id = user.id
         end
