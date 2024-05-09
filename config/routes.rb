@@ -44,6 +44,8 @@ Rails.application.routes.draw do
     end
 
     put 'users' => 'users#update'
+    post 'users/register' => 'users#register_waitlist'
+    post 'users/redeem' => 'users#redeem_code'
 
     resources :articles, only: [:index]
     resources :whitelist, only: [:index]

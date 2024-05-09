@@ -1,0 +1,14 @@
+default: &default
+  api_key: <%= ENV['BREVO_API_KEY'] %>
+  contact_list_id: <%= ENV['BREVO_CONTACT_LIST_ID'] %>
+  template_id: <%= ENV['BREVO_TEMPLATE_ID'] %>
+  redirection_url: <%= ENV['BREVO_REDIRECTION_URL'] %>
+
+production:
+  <<: *default
+
+staging:
+  <<: *default
+
+development:
+  <<: *default
