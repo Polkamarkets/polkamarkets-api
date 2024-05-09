@@ -29,7 +29,7 @@ class TournamentGroup < ApplicationRecord
     return if social_urls.blank?
 
     social_urls.each do |key, value|
-      errors.add(:social_urls, "#{key} is not a valid social url") unless SOCIALS.include?(key.to_s)
+      # errors.add(:social_urls, "#{key} is not a valid social url") unless SOCIALS.include?(key.to_s)
       errors.add(:social_urls, "#{value} is not a valid url") unless value =~ URI::DEFAULT_PARSER.make_regexp
     end
   end
