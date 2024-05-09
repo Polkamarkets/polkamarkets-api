@@ -6,5 +6,6 @@ class Cache::MarketActionEventsWorker
     return if market.blank?
 
     market.action_events(refresh: true)
+    market.users(refresh: true)
   end
 end
