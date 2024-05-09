@@ -6,6 +6,11 @@ module Api
       # checking if an address is whitelist for beta testing
       is_whitelisted = WhitelistService.new.is_whitelisted?(params[:item])
 
+      if !is_whitelisted
+        # also checking db
+        is_whitelisted = !!User.find_by(email: params[:item])&.whitelisted
+      end
+
       render json: { is_whitelisted: is_whitelisted }, status: :ok
     end
   end
