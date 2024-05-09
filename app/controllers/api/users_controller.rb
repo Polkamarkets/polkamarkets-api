@@ -1,6 +1,6 @@
 module Api
   class UsersController < BaseController
-    before_action :authenticate_user!, except: [:register_waitlist]
+    before_action :authenticate_user!, except: [:register_waitlist, :redeem_code]
 
     def register_waitlist
       raise 'Email not found' if params[:email].blank?
@@ -10,6 +10,19 @@ module Api
       # register email to brevo
       brevo_service = BrevoService.new
       brevo_service.register_contact(email: params[:email], name: params[:name])
+
+      render json: { success: true }, status: :ok
+    end
+
+    def redeem_code
+      raise 'Redeem code not found' if params[:code].blank?
+
+      user = User.find_by!(redeem_code: params[:code])
+      if user.whitelisted
+        return render json: { error: 'User already whitelisted' }, status: :bad_request
+      end
+
+      user.update(whitelisted: true)
 
       render json: { success: true }, status: :ok
     end
