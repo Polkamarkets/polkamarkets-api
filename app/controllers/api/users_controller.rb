@@ -1,6 +1,18 @@
 module Api
   class UsersController < BaseController
-    before_action :authenticate_user!
+    before_action :authenticate_user!, except: [:register_waitlist]
+
+    def register_waitlist
+      raise 'Email not found' if params[:email].blank?
+      raise 'Email is invalid' unless params[:email] =~ URI::MailTo::EMAIL_REGEXP
+      raise 'Name not found' if params[:name].blank?
+
+      # register email to brevo
+      brevo_service = BrevoService.new
+      brevo_service.register_contact(email: params[:email], name: params[:name])
+
+      render json: { success: true }, status: :ok
+    end
 
     def update
       # create dictionary of params to update
