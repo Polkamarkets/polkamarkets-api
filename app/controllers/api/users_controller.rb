@@ -44,6 +44,10 @@ module Api
         discord_service.revoke_token(token: params[:oauth_access_token])
       end
 
+      if params[:origin].present?
+        update_data['origin'] = params[:origin]
+      end
+
       current_user.update(update_data)
 
       render json: { user: current_user }, status: :ok
