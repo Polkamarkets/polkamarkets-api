@@ -80,7 +80,9 @@ class Tournament < ApplicationRecord
     markets.map(&:token).flatten.uniq
   end
 
-  def token
-    tokens.first
+  def token(refresh: false)
+    return tokens.first if tournament_group&.token_address.blank?
+
+    tournament_group&.token(refresh: refresh)
   end
 end

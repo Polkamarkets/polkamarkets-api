@@ -1,4 +1,5 @@
 class TournamentGroup < ApplicationRecord
+  include NetworkHelper
   extend FriendlyId
   friendly_id :title, use: :slugged
 
@@ -51,8 +52,17 @@ class TournamentGroup < ApplicationRecord
     markets.map(&:token).flatten.uniq
   end
 
-  def token
-    tokens.first
+  def token(refresh: false)
+    return tokens.first if token_address.blank?
+
+    Rails.cache.fetch("tournament_groups:#{id}:token", expires_in: 24.hours, force: refresh) do
+      token = Bepro::Erc20ContractService.new(network_id: network_id, contract_address: token_address).token_info
+      wrapped = token_address.downcase == network_weth_address(network_id).downcase
+
+      token.merge(
+        wrapped: wrapped
+      )
+    end
   end
 
   def admins(refresh: false)
