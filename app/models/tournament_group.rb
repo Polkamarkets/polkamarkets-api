@@ -36,6 +36,9 @@ class TournamentGroup < ApplicationRecord
   end
 
   def network_id
+    # TODO: improve this
+    return self[:network_id] if self[:network_id].present?
+
     @_network_id ||= tournaments.first&.network_id
   end
 
