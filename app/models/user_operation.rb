@@ -76,7 +76,24 @@ class UserOperation < ApplicationRecord
   end
 
   def ticker
-    market&.token&.dig(:symbol)
+    # TODO: save in db
+    if action == 'claimAndApproveTokens'
+      # checking in useroperation if it's a fantasy token
+      Rails.application.config_for(:ethereum).fantasy_tokens.each do |token|
+        if user_operation.to_s.downcase.include?(token[2..-1].downcase)
+          # fetching token symbol from smart contract
+          return Rails.cache.fetch("fantasy_tokens:#{token}") do
+            token_info = Bepro::Erc20ContractService.new(network_id: network_id, contract_address: token).token_info
+
+            token_info[:symbol]
+          end
+        end
+      end
+
+      nil
+    else
+      market&.token&.dig(:symbol)
+    end
   end
 
   def logs(paginate: false)
