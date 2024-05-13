@@ -93,10 +93,10 @@ class TokenRatesService
   end
 
   def fantasy_token?(address, network_id)
-    network_tokens = Rails.application.config_for(:fantasy_tokens)['networks'].dig(network_id.to_s.to_sym) || {}
+    fantasy_tokens = Rails.application.config_for(:ethereum).fantasy_tokens
 
     # case insensitive search by key
-    token_obj = network_tokens.find { |k, v| k.to_s.downcase == address.to_s.downcase }
+    token_obj = fantasy_tokens.find { |t| t.to_s.downcase == address.to_s.downcase }
 
     token_obj ? true : false
   end
