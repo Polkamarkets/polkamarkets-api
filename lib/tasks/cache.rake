@@ -44,6 +44,14 @@ namespace :cache do
     end
   end
 
+  desc "refreshes cache of tournament_groups"
+  task :refresh_tournament_group_stats, [:symbol] => :environment do |task, args|
+    TournamentGroup.all.each do |tournament_group|
+      next if tournament_group.whitelabel?
+
+      StatsService.new.get_leaderboard(timeframe: 'at', refresh: true, tournament_group_id: tournament_group.id)
+    end
+  end
 
   desc "refreshes cache of network actions"
   task :refresh_actions, [:symbol] => :environment do |task, args|

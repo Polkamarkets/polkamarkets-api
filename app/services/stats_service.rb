@@ -269,13 +269,21 @@ class StatsService
     stats_by_timeframe
   end
 
-  def get_leaderboard(timeframe:, refresh: false, timestamp: Time.now.to_i, tournament_id: nil)
+  def get_leaderboard(
+    timeframe:,
+    refresh: false,
+    timestamp: Time.now.to_i,
+    tournament_id: nil,
+    tournament_group_id: nil
+  )
     raise "Invalid timeframe: #{timeframe}" unless TIMEFRAMES.key?(timeframe)
 
     from = timestamp_from(timestamp, timeframe)
     to = timestamp_to(timestamp, timeframe)
 
     tournament = Tournament.find_by(id: tournament_id)
+    tournament_group = TournamentGroup.find_by(id: tournament_group_id)
+    tournament_market_ids = nil
 
     leaderboard =
       networks.to_h do |network|
@@ -283,6 +291,7 @@ class StatsService
 
         key = "api:leaderboard:#{timeframe}:#{from}:#{to}:#{network_id}"
         key << ":#{tournament_id}" if tournament.present? && tournament.network_id == network_id.to_i
+        key << ":land_#{tournament_group_id}" if tournament_group.present? && tournament_group.network_id == network_id.to_i
 
         Rails.cache.fetch(key, expires_in: 24.hours, force: refresh) do
           actions = network_actions(network_id)
@@ -291,7 +300,11 @@ class StatsService
           burn_actions = network_burn_actions(network_id)
           markets_resolved = network_markets_resolved(network_id)
 
-          tournament_market_ids = tournament.markets.map(&:eth_market_id) if tournament.present? && tournament.network_id == network_id.to_i
+          if tournament.present? && tournament.network_id == network_id.to_i
+            tournament_market_ids = tournament.markets.map(&:eth_market_id)
+          elsif tournament_group.present? && tournament_group.network_id == network_id.to_i
+            tournament_market_ids = tournament_group.markets.map(&:eth_market_id)
+          end
 
           market_ids = actions.map { |action| action[:market_id] }.uniq
           market_ids = market_ids & tournament_market_ids if tournament_market_ids.present?
