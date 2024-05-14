@@ -11,12 +11,12 @@ module Api
         return render json: { error: 'Email already registered' }, status: :bad_request
       end
 
+      # create user
+      user = User.create!(email: params[:email], username: params[:name])
+
       # register email to brevo
       brevo_service = BrevoService.new
-      brevo_service.register_contact(email: params[:email], name: params[:name])
-
-      # create user
-      User.create!(email: params[:email], username: params[:name])
+      brevo_service.register_contact(email: params[:email], name: params[:name], redeem_code: user.redeem_code)
 
       render json: { success: true }, status: :ok
     end

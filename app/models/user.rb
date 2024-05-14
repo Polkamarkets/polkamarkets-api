@@ -24,4 +24,8 @@ class User < ApplicationRecord
       [:username, SecureRandom.uuid.split('-').first]
     ]
   end
+
+  def send_invitation
+    BrevoService.new.send_invitation(email: email)
+  end
 end
