@@ -13,13 +13,14 @@ class BrevoService
     raise 'BrevoService :: Redirection URL not found' if @redirection_url.blank?
   end
 
-  def register_contact(email:, name:)
+  def register_contact(email:, name:, redeem_code:)
     raise 'BrevoService :: Email not found' if email.blank?
 
     uri = "#{base_uri}/contacts/doubleOptinConfirmation"
     body = {
       "attributes" => {
-        'FULLNAME' => name
+        'FULLNAME' => name,
+        'REDEEMCODE' => redeem_code
       },
       "email" => email,
       "includeListIds" => [contact_list_id],
