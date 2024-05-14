@@ -1,4 +1,5 @@
 class TournamentGroup < ApplicationRecord
+  include NetworkHelper
   extend FriendlyId
   friendly_id :title, use: :slugged
 
@@ -11,7 +12,10 @@ class TournamentGroup < ApplicationRecord
 
   acts_as_list
 
-  SOCIALS = %w[homepage instagram twitter telegram facebook youtube linkedin medium discord].freeze
+  scope :published, -> { where(published: true) }
+  scope :unpublished, -> { where(published: false) }
+
+  SOCIALS = %w[instagram twitter telegram facebook youtube linkedin medium discord].freeze
 
   def network_id_validation
     # checking all tournaments have the same network id
@@ -26,12 +30,15 @@ class TournamentGroup < ApplicationRecord
     return if social_urls.blank?
 
     social_urls.each do |key, value|
-      errors.add(:social_urls, "#{key} is not a valid social url") unless SOCIALS.include?(key.to_s)
+      # errors.add(:social_urls, "#{key} is not a valid social url") unless SOCIALS.include?(key.to_s)
       errors.add(:social_urls, "#{value} is not a valid url") unless value =~ URI::DEFAULT_PARSER.make_regexp
     end
   end
 
   def network_id
+    # TODO: improve this
+    return self[:network_id] if self[:network_id].present?
+
     @_network_id ||= tournaments.first&.network_id
   end
 
@@ -48,8 +55,17 @@ class TournamentGroup < ApplicationRecord
     markets.map(&:token).flatten.uniq
   end
 
-  def token
-    tokens.first
+  def token(refresh: false)
+    return tokens.first if token_address.blank?
+
+    Rails.cache.fetch("tournament_groups:#{id}:token", expires_in: 24.hours, force: refresh) do
+      token = Bepro::Erc20ContractService.new(network_id: network_id, contract_address: token_address).token_info
+      wrapped = token_address.downcase == network_weth_address(network_id).downcase
+
+      token.merge(
+        wrapped: wrapped
+      )
+    end
   end
 
   def admins(refresh: false)

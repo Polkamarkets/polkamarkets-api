@@ -77,6 +77,7 @@ module Api
       leaderboards = StatsService.new.get_leaderboard(
         timeframe: params[:timeframe],
         tournament_id: params[:tournament_id],
+        tournament_group_id: params[:land_id] || params[:tournament_group_id]
       )
 
       leaderboard = leaderboards[network_id.to_i] || []

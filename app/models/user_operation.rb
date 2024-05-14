@@ -76,6 +76,65 @@ class UserOperation < ApplicationRecord
   end
 
   def ticker
-    market&.token&.dig(:symbol)
+    # TODO: save in db
+    if action == 'claimAndApproveTokens'
+      # checking in useroperation if it's a fantasy token
+      Rails.application.config_for(:ethereum).fantasy_tokens.each do |token|
+        if user_operation.to_s.downcase.include?(token[2..-1].downcase)
+          # fetching token symbol from smart contract
+          return Rails.cache.fetch("fantasy_tokens:#{token}") do
+            token_info = Bepro::Erc20ContractService.new(network_id: network_id, contract_address: token).token_info
+
+            token_info[:symbol]
+          end
+        end
+      end
+
+      nil
+    else
+      market&.token&.dig(:symbol)
+    end
+  end
+
+  def logs(paginate: false)
+    @_logs ||=
+      case network_id
+      when 10200
+        blockscout_logs(paginate: paginate)
+      else
+        etherscan_logs
+      end
+  end
+
+  def logs_tx_hash
+    return nil if logs.blank?
+
+    case network_id
+    when 10200
+      logs.first['tx_hash']
+    else
+      logs.first['transactionHash']
+    end
+  end
+
+  def etherscan_logs
+    EtherscanService.new(network_id).logs(
+      Rails.application.config_for(:ethereum).bundler_entry_point,
+      [
+        EVENT_TOPIC,
+        user_operation_hash
+      ]
+    )
+  end
+
+  def blockscout_logs(paginate: false)
+    all_logs = BlockscoutService.new(network_id).logs(
+      Rails.application.config_for(:ethereum).bundler_entry_point,
+      paginate: paginate
+    )
+
+    all_logs.select do |log|
+      log['topics'].include?(EVENT_TOPIC) && log['topics'].include?(user_operation_hash)
+    end
   end
 end

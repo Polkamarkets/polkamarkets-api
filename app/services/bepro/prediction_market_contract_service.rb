@@ -86,9 +86,12 @@ module Bepro
 
       title = question[0].split(';').first
       description = question[0].split(';')[1..-1].join(';')
+      # category/legacy are kept for legacy reasons
       category = question[-1].split(';').first
       subcategory = question[-1].split(';').second
-      resolution_source = question[-1].split(';')[2..-1].join(';') if question[-1].split(';')[2..-1].present?
+      topics = category.split(',')
+      resolution_source = question[-1].split(';')[2]
+      resolution_title = question[-1].split(';')[3]
       outcome_titles = JSON.parse("[#{question[-2]}]")
       outcomes.each_with_index { |outcome, i| outcome[:title] = outcome_titles[i] }
       image_hash = events[0]['returnValues']['image'].split(DELIMITER)[0]
@@ -104,7 +107,9 @@ module Bepro
         description: description,
         category: category,
         subcategory: subcategory,
+        topics: topics,
         resolution_source: resolution_source.presence || nil,
+        resolution_title: resolution_title.presence || nil,
         image_hash: image_hash,
         state: STATES_MAPPING[market_data[0].to_i],
         expires_at: Time.at(market_data[1].to_i).to_datetime,

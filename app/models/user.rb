@@ -1,6 +1,6 @@
 class User < ApplicationRecord
   extend FriendlyId
-  friendly_id :username, use: :slugged
+  friendly_id :slug_candidates, use: :slugged
 
   validates :email, presence: true, uniqueness: true
 
@@ -16,5 +16,12 @@ class User < ApplicationRecord
     end
 
     self.redeem_code = redeem_code
+  end
+
+  def slug_candidates
+    [
+      :username,
+      [:username, SecureRandom.uuid.split('-').first]
+    ]
   end
 end

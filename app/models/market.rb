@@ -95,7 +95,7 @@ class Market < ApplicationRecord
   def closed?
     return false if eth_data.blank?
 
-    eth_data[:expires_at] < DateTime.now
+    eth_data[:state] == 'resolved' || eth_data[:expires_at] < DateTime.now
   end
 
   def resolved?
@@ -112,6 +112,18 @@ class Market < ApplicationRecord
     return nil if eth_data.blank?
 
     eth_data[:resolution_source]
+  end
+
+  def resolution_title
+    return nil if eth_data.blank?
+
+    eth_data[:resolution_title]
+  end
+
+  def topics
+    return [] if eth_data.blank?
+
+    eth_data[:topics] || []
   end
 
   def state

@@ -12,6 +12,9 @@ class Tournament < ApplicationRecord
 
   acts_as_list scope: :tournament_group
 
+  scope :published, -> { where(published: true) }
+  scope :unpublished, -> { where(published: false) }
+
   RANK_CRITERIA = [
     :markets_created,
     :volume_eur,
@@ -51,13 +54,13 @@ class Tournament < ApplicationRecord
     rewards.each do |reward|
       errors.add(:rewards, 'reward is not valid') unless reward['from'].present? &&
         reward['to'].present? &&
-        reward['reward'].present? &&
+        (reward['reward'].present? || reward['title'].present?) && # TODO: remove reward['reward'] legacy
         reward['from'] <= reward['to']
     end
   end
 
   def expires_at
-    markets.map(&:expires_at).max
+    self[:expires_at] || markets.map(&:expires_at).max
   end
 
   def closed?
@@ -77,7 +80,9 @@ class Tournament < ApplicationRecord
     markets.map(&:token).flatten.uniq
   end
 
-  def token
-    tokens.first
+  def token(refresh: false)
+    return tokens.first if tournament_group&.token_address.blank?
+
+    tournament_group&.token(refresh: refresh)
   end
 end

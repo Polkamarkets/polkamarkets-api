@@ -13,7 +13,10 @@ class TournamentSerializer < ActiveModel::Serializer
     :position,
     :rank_by,
     :rewards,
-    :rules
+    :rules,
+    :topics,
+    :published,
+    :comments_enabled
   )
 
   has_many :markets, serializer: TournamentMarketSerializer, if: :show_markets?

@@ -7,7 +7,7 @@ class EthEvent < ApplicationRecord
     :log_index,
     :transaction_hash
 
-  validates_uniqueness_of :transaction_hash, scope: [:network_id, :log_index]
+  validates_uniqueness_of :transaction_hash, scope: [:network_id, :log_index, :contract_name]
 
   has_and_belongs_to_many :eth_queries
 
