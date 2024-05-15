@@ -88,6 +88,7 @@ module Api
         :banner_url,
         :website_url,
         :published,
+        :onboarded,
         tags: [],
         social_urls: {},
       )

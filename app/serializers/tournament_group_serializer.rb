@@ -16,7 +16,8 @@ class TournamentGroupSerializer < ActiveModel::Serializer
     :admins,
     :published,
     :website_url,
-    :whitelabel
+    :whitelabel,
+    :onboarded
   )
 
   has_many :tournaments, serializer: TournamentSerializer, if: :show_tournaments?
