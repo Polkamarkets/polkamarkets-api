@@ -5,6 +5,7 @@ module Api
     def index
       markets = Market
         .published
+        .where(network_id: Rails.application.config_for(:ethereum).network_ids)
         .order(created_at: :desc)
         .includes(:outcomes)
         .includes(:tournaments)
