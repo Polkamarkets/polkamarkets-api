@@ -23,6 +23,6 @@ class TournamentGroupSerializer < ActiveModel::Serializer
   has_many :tournaments, serializer: TournamentSerializer, if: :show_tournaments?
 
   def show_tournaments?
-    !!scope&.dig(:show_tournaments)
+    !!instance_options[:show_tournaments]
   end
 end

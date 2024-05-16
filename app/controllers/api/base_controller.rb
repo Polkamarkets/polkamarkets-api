@@ -34,7 +34,8 @@ module Api
               jwks: fetch_jwks(Rails.application.config_for(:privy).jwks_url),
             )
           rescue JWT::ExpiredSignature, JWT::VerificationError, JWT::DecodeError
-            return head :unauthorized
+            # should be non-blocking
+            return
           end
 
           privy_service = PrivyService.new

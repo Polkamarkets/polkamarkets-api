@@ -26,13 +26,13 @@ module Api
         end
       end
 
-      render json: tournament_groups, scope: { show_tournaments: true }
+      render json: tournament_groups, show_tournaments: true
     end
 
     def show
       tournament_group = TournamentGroup.friendly.find(params[:id])
 
-      render json: tournament_group, scope: { show_tournaments: true }
+      render json: tournament_group, show_tournaments: true
     end
 
     def create

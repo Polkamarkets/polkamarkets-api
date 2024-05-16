@@ -5,6 +5,7 @@ module Api
     def index
       markets = Market
         .published
+        .where(network_id: Rails.application.config_for(:ethereum).network_ids)
         .order(created_at: :desc)
         .includes(:outcomes)
         .includes(:tournaments)
@@ -31,12 +32,14 @@ module Api
       end
 
       render json: markets,
-        scope: { simplified_price_charts: true, hide_tournament_markets: true },
-        each_serializer: MarketIndexSerializer, status: :ok
+        simplified_price_charts: true,
+        hide_tournament_markets: true,
+        each_serializer: MarketIndexSerializer,
+        status: :ok
     end
 
     def show
-      render json: @market, scope: { show_price_charts: true, hide_tournament_markets: true }, status: :ok
+      render json: @market, show_price_charts: true, hide_tournament_markets: true, status: :ok
     end
 
     def create
