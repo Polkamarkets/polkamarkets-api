@@ -26,10 +26,10 @@ class TournamentSerializer < ActiveModel::Serializer
   belongs_to :tournament_group, key: :land, if: :show_tournament_group?
 
   def show_tournament_group?
-    !scope&.dig(:show_tournaments)
+    !instance_options[:show_tournaments]
   end
 
   def show_markets?
-    !scope&.dig(:hide_tournament_markets)
+    !instance_options[:hide_tournament_markets]
   end
 end
