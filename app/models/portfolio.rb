@@ -89,7 +89,6 @@ class Portfolio < ApplicationRecord
   def closed_markets_winnings(filter_by_market_ids: nil, refresh: false)
     value = 0
     count = 0
-    voided_market_ids = []
 
     winnings_by_market =
       Rails.cache.fetch("portfolios:network_#{network_id}:#{eth_address}:closed_markets_winnings", expires_in: 24.hours, force: refresh) do
@@ -112,7 +111,6 @@ class Portfolio < ApplicationRecord
               winnings_by_market[market.eth_market_id] += holding[:outcome_shares][market.resolved_outcome_id] * market.token_rate
             elsif market.voided
               winnings_by_market[market.eth_market_id] += holding[:outcome_shares][outcome.eth_market_id] * market.token_rate * outcome.price
-              voided_market_ids << market.eth_market_id
             else
               # fetching average cost
               # outcome_buy_events = action_events.select do |event|
@@ -131,6 +129,11 @@ class Portfolio < ApplicationRecord
 
     # filtering by market ids if provided
     winnings_by_market.select! { |market_id, value| filter_by_market_ids.include?(market_id) } if !filter_by_market_ids.nil?
+
+    voided_market_ids = Market
+      .where(eth_market_id: winnings_by_market.keys, network_id: network_id)
+      .select { |market| market.voided }
+      .map(&:eth_market_id)
 
     {
       value: winnings_by_market.values.sum,
