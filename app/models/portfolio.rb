@@ -89,6 +89,7 @@ class Portfolio < ApplicationRecord
   def closed_markets_winnings(filter_by_market_ids: nil, refresh: false)
     value = 0
     count = 0
+    voided_market_ids = []
 
     winnings_by_market =
       Rails.cache.fetch("portfolios:network_#{network_id}:#{eth_address}:closed_markets_winnings", expires_in: 24.hours, force: refresh) do
@@ -96,7 +97,6 @@ class Portfolio < ApplicationRecord
 
         # fetching holdings markets
         market_ids = holdings.map { |holding| holding[:market_id] }.uniq
-        voided_market_ids = []
 
         markets = Market.where(eth_market_id: market_ids, network_id: network_id).includes(:outcomes)
         # filtering holdings by resolved by markets
