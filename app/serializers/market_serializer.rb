@@ -37,6 +37,7 @@ class MarketSerializer < ActiveModel::Serializer
     :votes,
     :users,
     :liked,
+    :likes
   )
   attribute :related_markets, if: :show_related_markets?
 
@@ -71,5 +72,9 @@ class MarketSerializer < ActiveModel::Serializer
     return false unless current_user
 
     object.likes.where(user: current_user).exists?
+  end
+
+  def likes
+    object.likes.count
   end
 end

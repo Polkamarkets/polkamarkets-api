@@ -4,7 +4,8 @@ class CommentSerializer < ActiveModel::Serializer
     :body,
     :timestamp,
     :user,
-    :liked
+    :liked,
+    :likes
   )
 
   belongs_to :user, serializer: ::UserSerializer
@@ -13,5 +14,9 @@ class CommentSerializer < ActiveModel::Serializer
     return false unless current_user
 
     object.likes.where(user: current_user).exists?
+  end
+
+  def likes
+    object.likes.count
   end
 end
