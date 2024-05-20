@@ -80,7 +80,11 @@ Rails.application.routes.draw do
     end
 
     resources :reports, only: [:create]
-    resources :likes, only: [:create, :destroy]
+    resources :likes, only: [:create] do
+      collection do
+        delete '/', to: 'likes#destroy'
+      end
+    end
 
     get 'achievement_tokens/:network/:id', to: 'achievement_tokens#show'
 
