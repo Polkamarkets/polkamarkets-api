@@ -1,4 +1,6 @@
 class Comment < ApplicationRecord
+  include Reportable
+
   belongs_to :user
   belongs_to :market
 

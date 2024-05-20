@@ -1,5 +1,7 @@
 class Tournament < ApplicationRecord
   extend FriendlyId
+  include Reportable
+
   friendly_id :title, use: :slugged
 
   validates_presence_of :title, :description, :network_id
