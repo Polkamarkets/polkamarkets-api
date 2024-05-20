@@ -465,7 +465,7 @@ class Market < ApplicationRecord
     end
   end
 
-  def polkamarkets_web_url
-    "#{Rails.application.config_for(:polkamarkets).web_url}/markets/#{slug}"
+  def public_url
+    "#{Rails.application.config_for(:polkamarkets).web_url}/questions/#{slug}"
   end
 end
