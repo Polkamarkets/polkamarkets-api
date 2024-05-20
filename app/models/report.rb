@@ -4,6 +4,8 @@ class Report < ApplicationRecord
 
   validates_presence_of :content
 
+  after_create :notify!
+
   ALLOWED_REPORTABLE_TYPES = %w[Market TournamentGroup Tournament Comment].freeze
   # temporary while types are not migrated
   REPORTABLE_MAPPINGS = {
@@ -41,5 +43,11 @@ class Report < ApplicationRecord
 
   def reportable_title
     reportable.content_title
+  end
+
+  def notify!
+    return if reported?
+
+    NotifyReportWorker.perform_async(id)
   end
 end
