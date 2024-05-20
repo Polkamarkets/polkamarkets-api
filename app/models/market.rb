@@ -12,6 +12,8 @@ class Market < ApplicationRecord
   has_many :outcomes, -> { order('eth_market_id ASC, created_at ASC') }, class_name: "MarketOutcome", dependent: :destroy, inverse_of: :market
 
   has_many :comments, -> { includes :user }, dependent: :destroy
+  has_many :likes, as: :likeable, dependent: :destroy
+  has_many :reports, as: :reportable, dependent: :destroy
 
   has_one_attached :image
 

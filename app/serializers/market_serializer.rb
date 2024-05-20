@@ -1,5 +1,5 @@
 class MarketSerializer < ActiveModel::Serializer
-  cache expires_in: 1.hours
+  cache expires_in: 1.hours, except: [:liked, :comments]
 
   attribute :eth_market_id, key: :id
   attributes(
@@ -36,6 +36,7 @@ class MarketSerializer < ActiveModel::Serializer
     :news,
     :votes,
     :users,
+    :liked,
   )
   attribute :related_markets, if: :show_related_markets?
 
@@ -64,5 +65,11 @@ class MarketSerializer < ActiveModel::Serializer
     object.related_markets.map do |market|
       MarketIndexSerializer.new(market)
     end
+  end
+
+  def liked
+    return false unless current_user
+
+    object.likes.where(user: current_user).exists?
   end
 end
