@@ -1,5 +1,5 @@
 class MarketIndexSerializer < MarketSerializer
-  cache expires_in: 24.hours
+  cache expires_in: 24.hours, except: [:liked, :comments]
 
   has_many :outcomes, class_name: "MarketOutcome", serializer: MarketOutcomeIndexSerializer
 
