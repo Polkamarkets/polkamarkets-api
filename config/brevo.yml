@@ -4,6 +4,7 @@ default: &default
   template_id: <%= ENV['BREVO_TEMPLATE_ID'] %>
   invite_template_id: <%= ENV['BREVO_INVITE_TEMPLATE_ID'] %>
   redirection_url: <%= ENV['BREVO_REDIRECTION_URL'] %>
+  sender_id: <%= ENV['BREVO_SENDER_ID'] %>
 
 production:
   <<: *default
