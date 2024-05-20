@@ -10,7 +10,7 @@ class Report < ApplicationRecord
   # temporary while types are not migrated
   REPORTABLE_MAPPINGS = {
     'Market' => 'Question',
-    'TournamentGroup' => 'ContestGroup',
+    'TournamentGroup' => 'Land',
     'Tournament' => 'Contest',
     'Comment' => 'Comment'
   }.freeze
