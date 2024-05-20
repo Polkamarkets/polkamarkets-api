@@ -1,4 +1,4 @@
-class MinifiedMarketSerializer < ActiveModel::Serializer
+class MinifiedMarketSerializer < BaseSerializer
   attributes(
     :id,
     :network_id,

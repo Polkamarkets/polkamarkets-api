@@ -1,4 +1,4 @@
-class TournamentGroupSerializer < ActiveModel::Serializer
+class TournamentGroupSerializer < BaseSerializer
   attributes(
     :id,
     :slug,
