@@ -31,6 +31,19 @@ module Api
       render json: tournament
     end
 
+    def show_markets
+      tournament = Tournament.friendly.find(params[:id])
+
+      markets = tournament.markets
+      markets = markets.select { |market| market.state == params[:state] } if params[:state]
+
+      render json: markets,
+        simplified_price_charts: true,
+        hide_tournament_markets: true,
+        each_serializer: MarketIndexSerializer,
+        status: :ok
+    end
+
     def create
       create_params = tournament_params.except(:market_ids, :land_id)
       create_params[:tournament_group_id] = tournament_params[:land_id] if tournament_params[:land_id]

@@ -67,6 +67,7 @@ Rails.application.routes.draw do
       member do
         post :move_up
         post :move_down
+        get :markets, to: 'tournaments#show_markets'
       end
     end
     # TODO remove; legacy
