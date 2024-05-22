@@ -38,7 +38,7 @@ namespace :cache do
   desc "refreshes cache of open tournaments"
   task :refresh_tournament_stats, [:symbol] => :environment do |task, args|
     Tournament.all.each do |tournament|
-      next if tournament.closed?
+      next if tournament.closed? || tournament.markets.blank?
 
       StatsService.new.get_leaderboard(timeframe: 'at', refresh: true, tournament_id: tournament.id)
     end

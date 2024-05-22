@@ -307,7 +307,7 @@ class StatsService
           end
 
           market_ids = actions.map { |action| action[:market_id] }.uniq
-          market_ids = market_ids & tournament_market_ids if tournament_market_ids.present?
+          market_ids = market_ids & tournament_market_ids if !tournament_market_ids.nil?
 
           create_market_actions = market_ids.map do |market_id|
             # first action represents market creation
@@ -318,7 +318,7 @@ class StatsService
           actions.select! do |action|
             (!from || action[:timestamp] >= from) &&
               (!to || action[:timestamp] <= to) &&
-              (tournament_market_ids.blank? || tournament_market_ids.include?(action[:market_id]))
+              (tournament_market_ids.nil? || tournament_market_ids.include?(action[:market_id]))
           end
 
           bonds.select! do |bond|
@@ -335,20 +335,20 @@ class StatsService
             action[:action] == 'upvote' &&
               (!from || action[:timestamp] >= from) &&
               (!to || action[:timestamp] <= to) &&
-              (tournament_market_ids.blank? || tournament_market_ids.include?(action[:item_id]))
+              (tournament_market_ids.nil? || tournament_market_ids.include?(action[:item_id]))
           end
 
           downvote_actions = votes.select do |action|
             action[:action] == 'downvote' &&
               (!from || action[:timestamp] >= from) &&
               (!to || action[:timestamp] <= to) &&
-              (tournament_market_ids.blank? || tournament_market_ids.include?(action[:item_id]))
+              (tournament_market_ids.nil? || tournament_market_ids.include?(action[:item_id]))
           end
 
           markets_resolved.select! do |action|
             (!from || action[:timestamp] >= from) &&
               (!to || action[:timestamp] <= to) &&
-              (tournament_market_ids.blank? || tournament_market_ids.include?(action[:market_id]))
+              (tournament_market_ids.nil? || tournament_market_ids.include?(action[:market_id]))
           end
 
           # grouping actions by intervals
