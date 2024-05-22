@@ -481,8 +481,8 @@ class StatsService
   end
 
   def timestamp_to(timestamp, timeframe)
-    # setting to next 1-day block if timeframe is all time
-    return (Time.now.to_i / 86400 + 2) * 86400 if TIMEFRAMES[timeframe] == 'all-time'
+    # setting to a far away date if timeframe is all time
+    return DateTime.parse('2030-01-01').to_i if TIMEFRAMES[timeframe] == 'all-time'
 
     # weekly timeframe starts on Fridays due to the rewarding system
     args = TIMEFRAMES[timeframe] == 'week' ? [:friday] : []
