@@ -1,4 +1,4 @@
-class CommentSerializer < ActiveModel::Serializer
+class CommentSerializer < BaseSerializer
   attributes(
     :id,
     :body,

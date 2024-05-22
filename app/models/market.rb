@@ -1,6 +1,7 @@
 class Market < ApplicationRecord
   include NetworkHelper
   include Immutable
+  include Reportable
   extend FriendlyId
   friendly_id :title, use: :slugged
 
@@ -13,7 +14,6 @@ class Market < ApplicationRecord
 
   has_many :comments, -> { includes :user }, dependent: :destroy
   has_many :likes, as: :likeable, dependent: :destroy
-  has_many :reports, as: :reportable, dependent: :destroy
 
   has_one_attached :image
 
@@ -463,9 +463,5 @@ class Market < ApplicationRecord
     Rails.cache.fetch("markets:network_#{network_id}:#{eth_market_id}:related_markets", force: refresh) do
       tournaments.order(:position).map(&:markets).flatten.uniq.select { |market| market.id != id }.first(5)
     end
-  end
-
-  def polkamarkets_web_url
-    "#{Rails.application.config_for(:polkamarkets).web_url}/markets/#{slug}"
   end
 end

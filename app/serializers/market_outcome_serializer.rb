@@ -1,4 +1,4 @@
-class MarketOutcomeSerializer < ActiveModel::Serializer
+class MarketOutcomeSerializer < BaseSerializer
   cache expires_in: 24.hours
 
   attributes(

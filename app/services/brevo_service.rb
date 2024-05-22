@@ -1,5 +1,5 @@
 class BrevoService
-  attr_accessor :api_key, :contact_list_id, :template_id, :invite_template_id, :redirection_url
+  attr_accessor :api_key, :contact_list_id, :template_id, :invite_template_id, :redirection_url, :sender_id
 
   def initialize
     @api_key = Rails.application.config_for(:brevo).api_key
@@ -7,6 +7,7 @@ class BrevoService
     @template_id = Rails.application.config_for(:brevo).template_id
     @invite_template_id = Rails.application.config_for(:brevo).invite_template_id
     @redirection_url = Rails.application.config_for(:brevo).redirection_url
+    @sender_id = Rails.application.config_for(:brevo).sender_id
 
     raise 'BrevoService :: API Key not found' if @api_key.blank?
     raise 'BrevoService :: Contact List not found' if @contact_list_id.blank?
@@ -91,6 +92,20 @@ class BrevoService
       "to" => [
         { 'email' => email }
       ]
+    }
+
+    request_post_brevo(uri, body)
+  end
+
+  def send_raw_email(email:, subject:, html_content:, custom_sender_id: nil)
+    uri = "#{base_uri}/smtp/email"
+    body = {
+      "subject" => subject,
+      "htmlContent" => html_content,
+      "to" => [
+        { 'email' => email }
+      ],
+      "sender": { 'id' => custom_sender_id || sender_id }
     }
 
     request_post_brevo(uri, body)

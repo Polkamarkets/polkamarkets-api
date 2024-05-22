@@ -8,12 +8,18 @@ module Api
       like.likeable = likeable
       like.save!
 
+      # destroying likeable cache
+      likeable.destroy_cache! if likeable.respond_to?(:destroy_cache!)
+
       render json: like
     end
 
     def destroy
       like = Like.find_by!(likeable: likeable, user: current_user)
       like.destroy!
+
+      # destroying likeable cache
+      likeable.destroy_cache! if likeable.respond_to?(:destroy_cache!)
 
       render json: like
     end

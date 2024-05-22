@@ -1,4 +1,4 @@
-class TournamentMarketSerializer < ActiveModel::Serializer
+class TournamentMarketSerializer < BaseSerializer
   attribute :eth_market_id, key: :id
   attributes(
     :title,

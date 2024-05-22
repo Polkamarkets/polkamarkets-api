@@ -1,4 +1,4 @@
-class UserOperationSerializer < ActiveModel::Serializer
+class UserOperationSerializer < BaseSerializer
   attributes(
     :network_id,
     :user,

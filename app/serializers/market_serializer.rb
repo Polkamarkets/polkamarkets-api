@@ -1,4 +1,4 @@
-class MarketSerializer < ActiveModel::Serializer
+class MarketSerializer < BaseSerializer
   cache expires_in: 1.hours, except: [:liked, :comments]
 
   attribute :eth_market_id, key: :id

@@ -1,4 +1,4 @@
-class TournamentSerializer < ActiveModel::Serializer
+class TournamentSerializer < BaseSerializer
   attributes(
     :id,
     :network_id,

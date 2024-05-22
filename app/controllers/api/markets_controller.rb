@@ -21,15 +21,7 @@ module Api
         markets = markets.where(network_id: params[:network_id])
       end
 
-      if params[:state]
-        # when open, using database field to filter, otherwise using eth data
-        case params[:state]
-        when 'open'
-          markets = markets.open
-        else
-          markets = markets.select { |market| market.state == params[:state] }
-        end
-      end
+      markets = markets.select { |market| market.state == params[:state] } if params[:state]
 
       render json: markets,
         simplified_price_charts: true,

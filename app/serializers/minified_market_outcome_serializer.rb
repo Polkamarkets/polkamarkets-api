@@ -1,4 +1,4 @@
-class MinifiedMarketOutcomeSerializer < ActiveModel::Serializer
+class MinifiedMarketOutcomeSerializer < BaseSerializer
   attributes(
     :id,
     :market_id,
