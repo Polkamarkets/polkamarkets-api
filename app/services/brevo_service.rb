@@ -24,7 +24,7 @@ class BrevoService
   end
 
   def get_all_contacts
-    uri = "#{base_uri}/contacts"
+    uri = "#{base_uri}/contacts?limit=1000"
 
     response = request_get_brevo(uri)
 
