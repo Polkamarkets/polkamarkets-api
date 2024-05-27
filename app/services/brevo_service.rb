@@ -23,6 +23,14 @@ class BrevoService
     request_get_brevo(uri)
   end
 
+  def get_all_contacts
+    uri = "#{base_uri}/contacts?limit=1000"
+
+    response = request_get_brevo(uri)
+
+    response['contacts']
+  end
+
   def register_contact(email:, name:, redeem_code:)
     raise 'BrevoService :: Email not found' if email.blank?
 
@@ -41,7 +49,7 @@ class BrevoService
     request_post_brevo(uri, body)
   end
 
-  def register_contact_without_optin(email:, name:, redeem_code:)
+  def register_contact_without_optin(email:, name: nil, redeem_code: nil)
     raise 'BrevoService :: Email not found' if email.blank?
 
     uri = "#{base_uri}/contacts"
@@ -56,6 +64,32 @@ class BrevoService
     }
 
     request_post_brevo(uri, body)
+  end
+
+  def sync_contact_redeem_code(brevo_contact)
+    return if brevo_contact.blank? || brevo_contact.dig('email').blank?
+
+    email = brevo_contact.dig('email')
+    redeem_code = brevo_contact.dig('attributes', 'REDEEMCODE')
+
+    user = User.find_by(email: email)
+
+    if user.blank?
+      if redeem_code.blank?
+        user = User.create!(email: email)
+        register_contact_without_optin(email: user.email, redeem_code: user.redeem_code)
+      else
+        user = User.create!(email: email, redeem_code: redeem_code)
+      end
+    else
+      if redeem_code.blank?
+        user.generate_redeem_code if user.redeem_code.blank?
+        register_contact_without_optin(email: user.email, redeem_code: user.redeem_code)
+      else
+        user.redeem_code = redeem_code
+        user.save!
+      end
+    end
   end
 
   def send_invitation(email:, name: nil)

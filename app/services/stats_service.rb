@@ -302,7 +302,7 @@ class StatsService
 
           if tournament.present? && tournament.network_id == network_id.to_i
             tournament_market_ids = tournament.markets.map(&:eth_market_id)
-          elsif tournament_group.present? && tournament_group.network_id == network_id.to_i
+          elsif tournament_group.present? && tournament_group.network_id.to_i == network_id.to_i
             tournament_market_ids = tournament_group.markets.map(&:eth_market_id)
           end
 
