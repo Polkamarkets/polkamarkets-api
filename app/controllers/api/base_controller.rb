@@ -4,8 +4,6 @@ module Api
 
     include ActionController::HttpAuthentication::Token::ControllerMethods
 
-    before_action :authenticate_user
-
     rescue_from ActiveRecord::RecordNotFound, with: :render_not_found
 
     # TODO: authentication
@@ -144,6 +142,8 @@ module Api
     end
 
     def authenticate_user!(options = {})
+      authenticate_user
+
       head :unauthorized unless signed_in?
     end
 

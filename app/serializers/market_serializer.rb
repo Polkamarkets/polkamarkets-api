@@ -66,10 +66,10 @@ class MarketSerializer < BaseSerializer
   def liked
     return false unless current_user
 
-    object.likes.where(user: current_user).exists?
+    object.like_ids.include?(current_user.id)
   end
 
   def likes
-    object.likes.size
+    object.like_ids.count
   end
 end

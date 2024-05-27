@@ -1,6 +1,6 @@
 module Api
   class LikesController < BaseController
-    # before_action :authenticate_user!
+    before_action :authenticate_user!, only: %i[create destroy]
 
     def create
       like = Like.new
