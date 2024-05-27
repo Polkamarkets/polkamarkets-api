@@ -1,4 +1,6 @@
 class CommentSerializer < BaseSerializer
+  cache expires_in: 24.hours, except: %i[liked]
+
   attributes(
     :id,
     :body,
