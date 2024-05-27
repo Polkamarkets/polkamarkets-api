@@ -171,6 +171,12 @@ module Api
       @_address_from_username ||= user_from_username&.wallet_address&.downcase
     end
 
+    def serializable_scope
+      return User.find_by(id: params[:requester_id]) if params[:requester_id]
+
+      current_user
+    end
+
     def allowed_network?
       Rails.application.config_for(:ethereum).network_ids.include?(params[:network_id].to_s)
     end

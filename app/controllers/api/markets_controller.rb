@@ -63,11 +63,5 @@ module Api
     def get_market
       @market = Market.find_by_slug_or_eth_market_id!(params[:id], params[:network_id])
     end
-
-    def serializable_scope
-      return User.find_by(id: params[:requester_id]) if params[:requester_id]
-
-      current_user
-    end
   end
 end
