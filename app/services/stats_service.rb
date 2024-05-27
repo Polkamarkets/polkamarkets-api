@@ -127,7 +127,7 @@ class StatsService
     raise "Invalid timeframe: #{timeframe}" unless TIMEFRAMES.key?(timeframe)
 
     stats_by_timeframe =
-      Rails.cache.fetch("api:stats:#{timeframe}", expires_in: 24.hours, force: refresh) do
+      Rails.cache.fetch("api:stats:#{timeframe}", force: refresh) do
         stats = {}
         all_actions = []
 
@@ -293,7 +293,7 @@ class StatsService
         key << ":#{tournament_id}" if tournament.present? && tournament.network_id == network_id.to_i
         key << ":land_#{tournament_group_id}" if tournament_group.present? && tournament_group.network_id == network_id.to_i
 
-        Rails.cache.fetch(key, expires_in: 24.hours, force: refresh) do
+        Rails.cache.fetch(key, force: refresh) do
           actions = network_actions(network_id)
           bonds = network_bonds(network_id)
           votes = network_votes(network_id)
