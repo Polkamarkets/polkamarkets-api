@@ -290,8 +290,8 @@ class StatsService
         network_id = network[:network_id]
 
         key = "api:leaderboard:#{timeframe}:#{from}:#{to}:#{network_id}"
-        key << ":#{tournament_id}" if tournament.present? && tournament.network_id == network_id.to_i
-        key << ":land_#{tournament_group_id}" if tournament_group.present? && tournament_group.network_id == network_id.to_i
+        key << ":#{tournament_id}" if tournament.present? && tournament.network_id.to_i == network_id.to_i
+        key << ":land_#{tournament_group_id}" if tournament_group.present? && tournament_group.network_id.to_i == network_id.to_i
 
         Rails.cache.fetch(key, force: refresh) do
           actions = network_actions(network_id)
@@ -300,7 +300,7 @@ class StatsService
           burn_actions = network_burn_actions(network_id)
           markets_resolved = network_markets_resolved(network_id)
 
-          if tournament.present? && tournament.network_id == network_id.to_i
+          if tournament.present? && tournament.network_id.to_i == network_id.to_i
             tournament_market_ids = tournament.markets.map(&:eth_market_id)
           elsif tournament_group.present? && tournament_group.network_id.to_i == network_id.to_i
             tournament_market_ids = tournament_group.markets.map(&:eth_market_id)
