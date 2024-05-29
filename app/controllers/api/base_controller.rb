@@ -55,6 +55,15 @@ module Api
             user.update(login_public_key: login_public_key, raw_email: raw_email, username: username || user.username)
           end
 
+          if params[:redeem_code].present? && !user.whitelisted?
+            # checking for tournament group with redeem code
+            tournament_group = TournamentGroup.find_by(redeem_code: params[:redeem_code])
+
+            if tournament_group.present?
+              user.update(whitelisted: true, redeem_code: params[:redeem_code])
+            end
+          end
+
           user.update(username: email.split('@').first) if user.username.blank?
           user.update(avatar: avatar) if avatar.present?
           user.update(login_type: login_type) if login_type.present?
