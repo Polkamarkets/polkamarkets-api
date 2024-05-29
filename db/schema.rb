@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2024_05_20_164420) do
+ActiveRecord::Schema.define(version: 2024_05_29_152829) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -242,6 +242,7 @@ ActiveRecord::Schema.define(version: 2024_05_20_164420) do
     t.boolean "whitelabel", default: false
     t.string "network_id"
     t.boolean "onboarded", default: false, null: false
+    t.string "redeem_code"
     t.index ["slug"], name: "index_tournament_groups_on_slug", unique: true
   end
 
