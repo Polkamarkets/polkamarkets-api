@@ -1,4 +1,6 @@
 class CommentSerializer < BaseSerializer
+  cache expires_in: 24.hours, except: %i[liked]
+
   attributes(
     :id,
     :body,
@@ -13,10 +15,10 @@ class CommentSerializer < BaseSerializer
   def liked
     return false unless current_user
 
-    object.likes.where(user: current_user).exists?
+    object.likes.map(&:user_id).include?(current_user.id)
   end
 
   def likes
-    object.likes.count
+    object.likes.size
   end
 end

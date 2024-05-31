@@ -24,6 +24,9 @@ module Api
     def redeem_code
       raise 'Redeem code not found' if params[:code].blank?
 
+      tournament_group = TournamentGroup.find_by(redeem_code: params[:code])
+      return render json: { success: true }, status: :ok if tournament_group.present?
+
       user = User.find_by!(redeem_code: params[:code])
       if user.whitelisted
         return render json: { error: 'User already whitelisted' }, status: :bad_request

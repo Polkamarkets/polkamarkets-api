@@ -10,6 +10,7 @@ module Api
         .includes(:outcomes)
         .includes(:tournaments)
         .includes(:comments)
+        .includes(:likes)
 
       if params[:id]
         ids = params[:id].split(',').map(&:to_i)
@@ -26,12 +27,17 @@ module Api
       render json: markets,
         simplified_price_charts: true,
         hide_tournament_markets: true,
-        each_serializer: MarketIndexSerializer,
+        scope: serializable_scope,
         status: :ok
     end
 
     def show
-      render json: @market, show_price_charts: true, hide_tournament_markets: true, status: :ok
+      render json: @market,
+        show_price_charts: true,
+        hide_tournament_markets: true,
+        show_related_markets: true,
+        scope: serializable_scope,
+        status: :ok
     end
 
     def create

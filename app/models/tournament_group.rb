@@ -1,6 +1,7 @@
 class TournamentGroup < ApplicationRecord
   include NetworkHelper
   include Reportable
+  include Redeemable
   extend FriendlyId
 
   friendly_id :title, use: :slugged

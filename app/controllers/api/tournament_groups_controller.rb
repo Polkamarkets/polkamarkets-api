@@ -39,12 +39,16 @@ module Api
       tournament_group = TournamentGroup.friendly.find(params[:id])
 
       markets = tournament_group.markets
+        .includes(:outcomes)
+        .includes(:tournaments)
+        .includes(:comments)
+        .includes(:likes)
       markets = markets.select { |market| market.state == params[:state] } if params[:state]
 
       render json: markets,
         simplified_price_charts: true,
         hide_tournament_markets: true,
-        each_serializer: MarketIndexSerializer,
+        scope: serializable_scope,
         status: :ok
     end
 

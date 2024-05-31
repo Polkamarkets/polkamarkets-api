@@ -4,8 +4,6 @@ module Api
 
     include ActionController::HttpAuthentication::Token::ControllerMethods
 
-    before_action :authenticate_user
-
     rescue_from ActiveRecord::RecordNotFound, with: :render_not_found
 
     # TODO: authentication
@@ -55,6 +53,15 @@ module Api
             user.save!
           else
             user.update(login_public_key: login_public_key, raw_email: raw_email, username: username || user.username)
+          end
+
+          if params[:redeem_code].present? && !user.whitelisted?
+            # checking for tournament group with redeem code
+            tournament_group = TournamentGroup.find_by(redeem_code: params[:redeem_code])
+
+            if tournament_group.present?
+              user.update(whitelisted: true, redeem_code: params[:redeem_code])
+            end
           end
 
           user.update(username: email.split('@').first) if user.username.blank?
@@ -144,6 +151,8 @@ module Api
     end
 
     def authenticate_user!(options = {})
+      authenticate_user
+
       head :unauthorized unless signed_in?
     end
 
@@ -169,6 +178,12 @@ module Api
 
     def address_from_username
       @_address_from_username ||= user_from_username&.wallet_address&.downcase
+    end
+
+    def serializable_scope
+      return User.find_by(id: params[:requester_id]) if params[:requester_id]
+
+      current_user
     end
 
     def allowed_network?

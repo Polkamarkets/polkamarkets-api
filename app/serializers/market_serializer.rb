@@ -1,5 +1,5 @@
 class MarketSerializer < BaseSerializer
-  cache expires_in: 1.hours, except: [:liked, :comments]
+  cache expires_in: 24.hours, except: [:liked, :comments, :related_markets]
 
   attribute :eth_market_id, key: :id
   attributes(
@@ -50,31 +50,26 @@ class MarketSerializer < BaseSerializer
   end
 
   def show_related_markets?
-    # only show related markets for show view
-    show_view?
+    instance_options[:show_related_markets]
   end
 
   def show_tournaments?
     true
   end
 
-  def show_view?
-    self.class == MarketSerializer
-  end
-
   def related_markets
     object.related_markets.map do |market|
-      MarketIndexSerializer.new(market)
+      MarketSerializer.new(market, show_related_markets: false, show_tournaments: false)
     end
   end
 
   def liked
     return false unless current_user
 
-    object.likes.where(user: current_user).exists?
+    object.likes.map(&:user_id).include?(current_user.id)
   end
 
   def likes
-    object.likes.count
+    object.likes.size
   end
 end

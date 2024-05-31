@@ -1,5 +1,5 @@
 class MarketOutcomeSerializer < BaseSerializer
-  cache expires_in: 24.hours
+  cache expires_in: 24.hours, except: %i[price_charts]
 
   attributes(
     :id,

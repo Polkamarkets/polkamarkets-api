@@ -1,4 +1,6 @@
 class TournamentSerializer < BaseSerializer
+  cache expires_in: 24.hours
+
   attributes(
     :id,
     :network_id,
