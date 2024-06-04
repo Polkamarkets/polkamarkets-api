@@ -1,6 +1,7 @@
 class Market < ApplicationRecord
   include NetworkHelper
   include Immutable
+  include Reportable
   extend FriendlyId
   friendly_id :title, use: :slugged
 
@@ -12,6 +13,7 @@ class Market < ApplicationRecord
   has_many :outcomes, -> { order('eth_market_id ASC, created_at ASC') }, class_name: "MarketOutcome", dependent: :destroy, inverse_of: :market
 
   has_many :comments, -> { includes :user }, dependent: :destroy
+  has_many :likes, as: :likeable, dependent: :destroy
 
   has_one_attached :image
 
@@ -95,7 +97,7 @@ class Market < ApplicationRecord
   def closed?
     return false if eth_data.blank?
 
-    eth_data[:expires_at] < DateTime.now
+    eth_data[:state] == 'resolved' || eth_data[:expires_at] < DateTime.now
   end
 
   def resolved?
@@ -112,6 +114,18 @@ class Market < ApplicationRecord
     return nil if eth_data.blank?
 
     eth_data[:resolution_source]
+  end
+
+  def resolution_title
+    return nil if eth_data.blank?
+
+    eth_data[:resolution_title]
+  end
+
+  def topics
+    return [] if eth_data.blank?
+
+    eth_data[:topics] || []
   end
 
   def state
@@ -318,7 +332,7 @@ class Market < ApplicationRecord
 
   def should_refresh_cache?
     # TODO: figure out caching system from closed (and unresolved) markets
-    !(resolved? && resolved_at < 1.day.ago.to_i)
+    !((resolved? && resolved_at < 1.day.ago.to_i) || (closed? && expires_at < 1.day.ago))
   end
 
   def destroy_cache!
@@ -449,9 +463,5 @@ class Market < ApplicationRecord
     Rails.cache.fetch("markets:network_#{network_id}:#{eth_market_id}:related_markets", force: refresh) do
       tournaments.order(:position).map(&:markets).flatten.uniq.select { |market| market.id != id }.first(5)
     end
-  end
-
-  def polkamarkets_web_url
-    "#{Rails.application.config_for(:polkamarkets).web_url}/markets/#{slug}"
   end
 end

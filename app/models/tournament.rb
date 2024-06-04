@@ -1,5 +1,7 @@
 class Tournament < ApplicationRecord
   extend FriendlyId
+  include Reportable
+
   friendly_id :title, use: :slugged
 
   validates_presence_of :title, :description, :network_id
@@ -11,6 +13,9 @@ class Tournament < ApplicationRecord
   belongs_to :tournament_group, optional: true
 
   acts_as_list scope: :tournament_group
+
+  scope :published, -> { where(published: true) }
+  scope :unpublished, -> { where(published: false) }
 
   RANK_CRITERIA = [
     :markets_created,
@@ -51,13 +56,17 @@ class Tournament < ApplicationRecord
     rewards.each do |reward|
       errors.add(:rewards, 'reward is not valid') unless reward['from'].present? &&
         reward['to'].present? &&
-        reward['reward'].present? &&
+        (reward['reward'].present? || reward['title'].present?) && # TODO: remove reward['reward'] legacy
         reward['from'] <= reward['to']
     end
   end
 
   def expires_at
-    markets.map(&:expires_at).max
+    self[:expires_at] || markets.map(&:expires_at).max
+  end
+
+  def closed?
+    expires_at < Time.now - 1.day
   end
 
   def users(refresh: false)
@@ -71,5 +80,11 @@ class Tournament < ApplicationRecord
 
   def tokens
     markets.map(&:token).flatten.uniq
+  end
+
+  def token(refresh: false)
+    return tokens.first if tournament_group&.token_address.blank?
+
+    tournament_group&.token(refresh: refresh)
   end
 end

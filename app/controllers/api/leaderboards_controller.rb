@@ -77,6 +77,7 @@ module Api
       leaderboards = StatsService.new.get_leaderboard(
         timeframe: params[:timeframe],
         tournament_id: params[:tournament_id],
+        tournament_group_id: params[:land_id] || params[:tournament_group_id]
       )
 
       leaderboard = leaderboards[network_id.to_i] || []
@@ -125,6 +126,9 @@ module Api
 
       return user_not_found if user_leaderboard.blank?
 
+      # filtering leaderboard by users with same origin
+      leaderboard.select! { |user| user[:origin] == user_leaderboard[:origin] }
+
       # adding the rank per parameter to the user leaderboard
       rank = {
         markets_created: leaderboard.sort_by { |user| -user[:markets_created] }.index(user_leaderboard) + 1,
@@ -157,6 +161,8 @@ module Api
         volume_eur: 0,
         tvl_volume_eur: 0,
         earnings_eur: 0,
+        earnings_open_eur: 0,
+        earnings_closed_eur: 0,
         liquidity_eur: 0,
         tvl_liquidity_eur: 0,
         claim_winnings_count: 0,

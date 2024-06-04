@@ -11,7 +11,7 @@ class Discord::PublishMarketCreatedWorker
 
     bot = Discord::Bot.new
 
-    message = I18n.t('market.discord.market_created', title: market.title, url: market.polkamarkets_web_url, network: network_name(market.network_id))
+    message = I18n.t('market.discord.market_created', title: market.title, url: market.public_url, network: network_name(market.network_id))
     bot.send_message_to_channel(Rails.application.config_for(:discord).channel_id, message)
   end
 end

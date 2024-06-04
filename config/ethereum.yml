@@ -3,6 +3,7 @@ default: &default
     network_<%= network_id %>:
       bepro_api_url: <%= ENV["ETHEREUM_NETWORK_#{network_id}_BEPRO_API_URL"] %>
       prediction_market_contract_address: "<%= ENV["ETHEREUM_NETWORK_#{network_id}_PREDICTION_MARKET_CONTRACT_ADDRESS"].to_s %>"
+      prediction_market_manager_contract_address: "<%= ENV["ETHEREUM_NETWORK_#{network_id}_PREDICTION_MARKET_MANAGER_CONTRACT_ADDRESS"].to_s %>"
       realitio_contract_address: "<%= ENV["ETHEREUM_NETWORK_#{network_id}_REALITIO_ERC20_CONTRACT_ADDRESS"].to_s %>"
       achievements_contract_address: "<%= ENV["ETHEREUM_NETWORK_#{network_id}_ACHIEVEMENTS_CONTRACT_ADDRESS"].to_s %>"
       voting_contract_address: "<%= ENV["ETHEREUM_NETWORK_#{network_id}_VOTING_CONTRACT_ADDRESS"].to_s %>"
@@ -27,6 +28,7 @@ default: &default
     %>
     fantasy_enabled: <%= ENV["ETHEREUM_FANTASY_ENABLED"] == 'true' %>
     fantasy_advanced_mode: <%= ENV["ETHEREUM_FANTASY_ADVANCED_MODE"] == 'true' %>
+    fantasy_tokens: <%= ENV["ETHEREUM_FANTASY_TOKENS"].to_s.split(',') %>
     stats_network_ids: <%= ENV["STATS_NETWORK_IDS"].to_s.split(',') %>
     cache_ttl_seconds: <%= ENV["ETHEREUM_CACHE_TTL"] %>
     voting_delta: <%= ENV["ETHEREUM_VOTING_DELTA"] || 3 %>

@@ -1,4 +1,4 @@
-class PortfolioSerializer < ActiveModel::Serializer
+class PortfolioSerializer < BaseSerializer
   attributes(
     :address,
     :network_id,

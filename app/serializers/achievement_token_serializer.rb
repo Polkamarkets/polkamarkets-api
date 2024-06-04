@@ -1,4 +1,4 @@
-class AchievementTokenSerializer < ActiveModel::Serializer
+class AchievementTokenSerializer < BaseSerializer
   attributes(
     :id,
     :name,

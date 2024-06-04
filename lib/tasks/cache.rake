@@ -35,6 +35,24 @@ namespace :cache do
     end
   end
 
+  desc "refreshes cache of open tournaments"
+  task :refresh_tournament_stats, [:symbol] => :environment do |task, args|
+    Tournament.all.each do |tournament|
+      next if tournament.closed? || tournament.markets.blank?
+
+      StatsService.new.get_leaderboard(timeframe: 'at', refresh: true, tournament_id: tournament.id)
+    end
+  end
+
+  desc "refreshes cache of tournament_groups"
+  task :refresh_tournament_group_stats, [:symbol] => :environment do |task, args|
+    TournamentGroup.all.each do |tournament_group|
+      next if tournament_group.whitelabel?
+
+      StatsService.new.get_leaderboard(timeframe: 'at', refresh: true, tournament_group_id: tournament_group.id)
+    end
+  end
+
   desc "refreshes cache of network actions"
   task :refresh_actions, [:symbol] => :environment do |task, args|
     Rails.application.config_for(:ethereum).network_ids.map do |network_id|

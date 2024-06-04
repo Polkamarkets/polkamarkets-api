@@ -4,8 +4,6 @@ module Api
 
     include ActionController::HttpAuthentication::Token::ControllerMethods
 
-    before_action :authenticate_user
-
     rescue_from ActiveRecord::RecordNotFound, with: :render_not_found
 
     # TODO: authentication
@@ -17,12 +15,71 @@ module Api
     private
 
     def authenticate_user
+      if params[:legacy].present?
+        return authenticate_user_legacy
+      end
+
+      if request.headers['Authorization'].present?
+        authenticate_or_request_with_http_token do |token|
+          jwt_payload = nil
+
+          begin
+            jwt_payload = JWT.decode(
+              token,
+              nil,
+              true, # Verify the signature of this token
+              algorithms: ["ES256"],
+              jwks: fetch_jwks(Rails.application.config_for(:privy).jwks_url),
+            )
+          rescue JWT::ExpiredSignature, JWT::VerificationError, JWT::DecodeError
+            # should be non-blocking
+            return
+          end
+
+          privy_service = PrivyService.new
+          privy_user_data = privy_service.get_user_data(user_id: jwt_payload[0]['sub'])
+
+          email = privy_user_data[:email] || privy_user_data[:username] || privy_user_data[:address] + '@login_type.com'
+          username = privy_user_data[:username]
+          avatar = privy_user_data[:avatar]
+          raw_email = privy_user_data[:email]
+          login_public_key = privy_user_data[:address]
+          login_type = privy_user_data[:login_type]
+
+          user = User.find_by(email: email)
+
+          if user.nil?
+            user = User.new(email: email, login_public_key: login_public_key, raw_email: raw_email, username: username)
+            user.save!
+          else
+            user.update(login_public_key: login_public_key, raw_email: raw_email, username: username || user.username)
+          end
+
+          if params[:redeem_code].present? && !user.whitelisted?
+            # checking for tournament group with redeem code
+            tournament_group = TournamentGroup.find_by(redeem_code: params[:redeem_code])
+
+            if tournament_group.present?
+              user.update(whitelisted: true, redeem_code: params[:redeem_code])
+            end
+          end
+
+          user.update(username: email.split('@').first) if user.username.blank?
+          user.update(avatar: avatar) if avatar.present?
+          user.update(login_type: login_type) if login_type.present?
+
+          @current_user_id = user.id
+        end
+      end
+    end
+
+    def authenticate_user_legacy
       if request.headers['Authorization'].present?
         authenticate_or_request_with_http_token do |token|
           jwt_payload = nil
           jwt_user_data = nil
 
-          jwks_providers.each_with_index do |jwks_provider, index|
+          legacy_jwks_providers.each_with_index do |jwks_provider, index|
             begin
               jwt_payload = JWT.decode(
                 token,
@@ -86,14 +143,16 @@ module Api
       end
     end
 
-    def jwks_providers
+    def legacy_jwks_providers
       [
         'https://authjs.web3auth.io/jwks',
-        'https://api.openlogin.com/jwks'
-      ]
+        'https://api.openlogin.com/jwks',
+      ].compact
     end
 
     def authenticate_user!(options = {})
+      authenticate_user
+
       head :unauthorized unless signed_in?
     end
 
@@ -119,6 +178,12 @@ module Api
 
     def address_from_username
       @_address_from_username ||= user_from_username&.wallet_address&.downcase
+    end
+
+    def serializable_scope
+      return User.find_by(id: params[:requester_id]) if params[:requester_id]
+
+      current_user
     end
 
     def allowed_network?

@@ -15,7 +15,7 @@ class Discord::PublishArbitrationRequestedWorker
 
     bot = Discord::Bot.new
 
-    message = I18n.t('market.discord.arbitration_requested', title: market.title, url: market.polkamarkets_web_url, network: network_name(market.network_id), max_previous: max_previous)
+    message = I18n.t('market.discord.arbitration_requested', title: market.title, url: market.public_url, network: network_name(market.network_id), max_previous: max_previous)
     bot.send_message_to_channel(Rails.application.config_for(:discord).arbitration_channel_id, message)
 
     # writing to cache

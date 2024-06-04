@@ -1,3 +1,5 @@
+require 'open-uri'
+
 class IpfsService
   def self.image_url_from_hash(hash)
     return nil if hash.blank?
@@ -9,6 +11,11 @@ class IpfsService
 
   def self.hosting_url
     Rails.application.config_for(:infura).ipfs_project_gateway || "https://infura-ipfs.io/ipfs/"
+  end
+
+  def add_from_url(url)
+    file = URI.open(url)
+    add(file)
   end
 
   def add(file)

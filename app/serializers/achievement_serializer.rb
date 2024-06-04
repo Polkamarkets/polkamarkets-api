@@ -1,4 +1,4 @@
-class AchievementSerializer < ActiveModel::Serializer
+class AchievementSerializer < BaseSerializer
   attributes(
     :id,
     :network_id,

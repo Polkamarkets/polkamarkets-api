@@ -1,22 +1,16 @@
 class UserOperation::CheckStatusWorker
   include Sidekiq::Worker
 
-  def perform(user_operation_id)
+  def perform(user_operation_id, paginate = false)
     user_operation = UserOperation.find_by(id: user_operation_id)
     return if user_operation.blank?
 
     return if user_operation.success?
 
-    user_operation_logs = EtherscanService.new(user_operation.network_id).logs(
-      Rails.application.config_for(:ethereum).bundler_entry_point,
-      [
-        UserOperation::EVENT_TOPIC,
-        user_operation.user_operation_hash
-      ]
-    )
+    logs = user_operation.logs(paginate: paginate)
 
-    if user_operation_logs.present?
-      transaction_hash = user_operation_logs.first['transactionHash']
+    if logs.present?
+      transaction_hash = user_operation.logs_tx_hash
       return user_operation.update(status: :success, transaction_hash: transaction_hash)
     end
 

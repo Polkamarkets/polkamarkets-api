@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2024_01_31_234933) do
+ActiveRecord::Schema.define(version: 2024_05_29_152829) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -92,6 +92,55 @@ ActiveRecord::Schema.define(version: 2024_01_31_234933) do
     t.index ["user_id"], name: "index_comments_on_user_id"
   end
 
+  create_table "eth_events", force: :cascade do |t|
+    t.string "contract_name", null: false
+    t.integer "network_id", null: false
+    t.string "event", null: false
+    t.string "address", null: false
+    t.string "block_hash"
+    t.integer "block_number", null: false
+    t.integer "log_index", null: false
+    t.boolean "removed"
+    t.string "transaction_hash", null: false
+    t.integer "transaction_index"
+    t.string "signature"
+    t.jsonb "data"
+    t.jsonb "raw_data"
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["address"], name: "index_eth_events_on_address"
+    t.index ["block_number"], name: "index_eth_events_on_block_number"
+    t.index ["contract_name"], name: "index_eth_events_on_contract_name"
+    t.index ["event"], name: "index_eth_events_on_event"
+    t.index ["network_id", "transaction_hash", "log_index"], name: "index_eth_events_on_network_id_transaction_hash_log_index", unique: true
+    t.index ["network_id"], name: "index_eth_events_on_network_id"
+  end
+
+  create_table "eth_events_queries", id: false, force: :cascade do |t|
+    t.bigint "eth_event_id", null: false
+    t.bigint "eth_query_id", null: false
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["eth_event_id", "eth_query_id"], name: "index_eth_events_queries_on_eth_event_id_and_eth_query_id", unique: true
+  end
+
+  create_table "eth_queries", force: :cascade do |t|
+    t.string "contract_name", null: false
+    t.integer "network_id", null: false
+    t.string "event", null: false
+    t.string "filter"
+    t.integer "last_block_number"
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.string "contract_address", null: false
+    t.string "api_url", null: false
+    t.index ["contract_name"], name: "index_eth_queries_on_contract_name"
+    t.index ["event"], name: "index_eth_queries_on_event"
+    t.index ["last_block_number"], name: "index_eth_queries_on_last_block_number"
+    t.index ["network_id", "contract_name", "event", "filter", "contract_address", "api_url"], name: "index_eth_queries_on_network_id_cn_ca_api_url_event_filter", unique: true
+    t.index ["network_id"], name: "index_eth_queries_on_network_id"
+  end
+
   create_table "group_leaderboards", force: :cascade do |t|
     t.string "title", null: false
     t.string "slug"
@@ -102,6 +151,16 @@ ActiveRecord::Schema.define(version: 2024_01_31_234933) do
     t.string "image_hash"
     t.string "banner_url"
     t.index ["slug"], name: "index_group_leaderboards_on_slug", unique: true
+  end
+
+  create_table "likes", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.string "likeable_type", null: false
+    t.bigint "likeable_id", null: false
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["likeable_type", "likeable_id"], name: "index_likes_on_likeable_type_and_likeable_id"
+    t.index ["user_id"], name: "index_likes_on_user_id"
   end
 
   create_table "market_outcomes", force: :cascade do |t|
@@ -153,6 +212,18 @@ ActiveRecord::Schema.define(version: 2024_01_31_234933) do
     t.index ["eth_address", "network_id"], name: "index_portfolios_on_eth_address_and_network_id", unique: true
   end
 
+  create_table "reports", force: :cascade do |t|
+    t.bigint "user_id"
+    t.string "reportable_type", null: false
+    t.bigint "reportable_id", null: false
+    t.text "content"
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.boolean "reported", default: false
+    t.index ["reportable_type", "reportable_id"], name: "index_reports_on_reportable_type_and_reportable_id"
+    t.index ["user_id"], name: "index_reports_on_user_id"
+  end
+
   create_table "tournament_groups", force: :cascade do |t|
     t.string "title", null: false
     t.string "description", null: false
@@ -162,6 +233,16 @@ ActiveRecord::Schema.define(version: 2024_01_31_234933) do
     t.datetime "updated_at", precision: 6, null: false
     t.string "image_url"
     t.string "banner_url"
+    t.jsonb "tags", default: []
+    t.jsonb "social_urls", default: {}
+    t.string "short_description"
+    t.string "website_url"
+    t.boolean "published", default: false
+    t.string "token_address"
+    t.boolean "whitelabel", default: false
+    t.string "network_id"
+    t.boolean "onboarded", default: false, null: false
+    t.string "redeem_code"
     t.index ["slug"], name: "index_tournament_groups_on_slug", unique: true
   end
 
@@ -178,6 +259,10 @@ ActiveRecord::Schema.define(version: 2024_01_31_234933) do
     t.string "rank_by"
     t.text "rules"
     t.jsonb "rewards", default: []
+    t.jsonb "topics", default: []
+    t.datetime "expires_at"
+    t.boolean "published", default: false
+    t.boolean "comments_enabled", default: true
     t.index ["slug"], name: "index_tournaments_on_slug", unique: true
     t.index ["tournament_group_id"], name: "index_tournaments_on_tournament_group_id"
   end
@@ -211,6 +296,9 @@ ActiveRecord::Schema.define(version: 2024_01_31_234933) do
     t.string "avatar"
     t.string "raw_email"
     t.string "slug"
+    t.string "origin"
+    t.boolean "whitelisted", default: false
+    t.string "redeem_code"
     t.index ["slug"], name: "index_users_on_slug", unique: true
   end
 
@@ -219,6 +307,8 @@ ActiveRecord::Schema.define(version: 2024_01_31_234933) do
   add_foreign_key "comments", "comments", column: "parent_id"
   add_foreign_key "comments", "markets"
   add_foreign_key "comments", "users"
+  add_foreign_key "likes", "users"
   add_foreign_key "market_outcomes", "markets"
+  add_foreign_key "reports", "users"
   add_foreign_key "tournaments", "tournament_groups"
 end

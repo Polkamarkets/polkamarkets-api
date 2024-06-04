@@ -5,10 +5,12 @@ module Api
     def index
       markets = Market
         .published
+        .where(network_id: Rails.application.config_for(:ethereum).network_ids)
         .order(created_at: :desc)
         .includes(:outcomes)
         .includes(:tournaments)
         .includes(:comments)
+        .includes(:likes)
 
       if params[:id]
         ids = params[:id].split(',').map(&:to_i)
@@ -20,23 +22,22 @@ module Api
         markets = markets.where(network_id: params[:network_id])
       end
 
-      if params[:state]
-        # when open, using database field to filter, otherwise using eth data
-        case params[:state]
-        when 'open'
-          markets = markets.open
-        else
-          markets = markets.select { |market| market.state == params[:state] }
-        end
-      end
+      markets = markets.select { |market| market.state == params[:state] } if params[:state]
 
       render json: markets,
-        scope: { simplified_price_charts: true, hide_tournament_markets: true },
-        each_serializer: MarketIndexSerializer, status: :ok
+        simplified_price_charts: true,
+        hide_tournament_markets: true,
+        scope: serializable_scope,
+        status: :ok
     end
 
     def show
-      render json: @market, scope: { show_price_charts: true, hide_tournament_markets: true }, status: :ok
+      render json: @market,
+        show_price_charts: true,
+        hide_tournament_markets: true,
+        show_related_markets: true,
+        scope: serializable_scope,
+        status: :ok
     end
 
     def create
@@ -48,7 +49,7 @@ module Api
     def reload
       # cleaning up total market cache
       # @market.destroy_cache!
-      @market.refresh_prices!(queue: 'critical')
+      @market.refresh_cache!(queue: 'critical')
 
       render json: { status: 'ok' }, status: :ok
     end

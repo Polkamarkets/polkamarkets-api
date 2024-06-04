@@ -44,6 +44,8 @@ Rails.application.routes.draw do
     end
 
     put 'users' => 'users#update'
+    post 'users/register' => 'users#register_waitlist'
+    post 'users/redeem' => 'users#redeem_code'
 
     resources :articles, only: [:index]
     resources :whitelist, only: [:index]
@@ -61,10 +63,30 @@ Rails.application.routes.draw do
       end
     end
 
-    resources :tournaments, only: [:index, :show]
+    resources :tournaments, only: [:index, :show, :create, :update, :destroy] do
+      member do
+        post :move_up
+        post :move_down
+        get :markets, to: 'tournaments#show_markets'
+      end
+    end
     # TODO remove; legacy
     resources :tournament_groups, only: [:index, :show]
-    resources :lands, controller: :tournament_groups, only: [:index, :show]
+
+    resources :lands, controller: :tournament_groups, only: [:index, :show, :create, :update, :destroy] do
+      member do
+        post :move_up
+        post :move_down
+        get :markets, to: 'tournament_groups#show_markets'
+      end
+    end
+
+    resources :reports, only: [:create]
+    resources :likes, only: [:create] do
+      collection do
+        delete '/', to: 'likes#destroy'
+      end
+    end
 
     get 'achievement_tokens/:network/:id', to: 'achievement_tokens#show'
 

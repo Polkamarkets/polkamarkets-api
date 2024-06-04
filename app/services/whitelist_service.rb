@@ -34,7 +34,7 @@ class WhitelistService
         {
           username: row[0].to_s.gsub("*", ""),
           email: normalize_email(row[1].to_s),
-          avatar: row[5].to_s
+          avatar: row[4].to_s
         }
       end
     end

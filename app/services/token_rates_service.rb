@@ -64,12 +64,12 @@ class TokenRatesService
     # fetching first rate right before timestamp
     rate = rates.reverse.find { |r| r[0] <= timestamp }
 
-    rate[1] || rates.last[1]
+    rate.present? ? rate[1] : rates.last[1]
   end
 
   def get_token_price_history(token, currency)
     Rails.cache.fetch("rates:#{token}:#{currency}:history", expires_in: 24.hours) do
-      uri = "https://api.coingecko.com/api/v3/coins/#{token}/market_chart?vs_currency=#{currency}&interval=daily&days=max"
+      uri = "https://api.coingecko.com/api/v3/coins/#{token}/market_chart?vs_currency=#{currency}&interval=daily&days=365"
 
       response = HTTP.get(uri)
 
@@ -93,10 +93,10 @@ class TokenRatesService
   end
 
   def fantasy_token?(address, network_id)
-    network_tokens = Rails.application.config_for(:fantasy_tokens)['networks'].dig(network_id.to_s.to_sym) || {}
+    fantasy_tokens = Rails.application.config_for(:ethereum).fantasy_tokens
 
     # case insensitive search by key
-    token_obj = network_tokens.find { |k, v| k.to_s.downcase == address.to_s.downcase }
+    token_obj = fantasy_tokens.find { |t| t.to_s.downcase == address.to_s.downcase }
 
     token_obj ? true : false
   end

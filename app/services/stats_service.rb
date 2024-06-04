@@ -127,7 +127,7 @@ class StatsService
     raise "Invalid timeframe: #{timeframe}" unless TIMEFRAMES.key?(timeframe)
 
     stats_by_timeframe =
-      Rails.cache.fetch("api:stats:#{timeframe}", expires_in: 24.hours, force: refresh) do
+      Rails.cache.fetch("api:stats:#{timeframe}", force: refresh) do
         stats = {}
         all_actions = []
 
@@ -269,32 +269,45 @@ class StatsService
     stats_by_timeframe
   end
 
-  def get_leaderboard(timeframe:, refresh: false, timestamp: Time.now.to_i, tournament_id: nil)
+  def get_leaderboard(
+    timeframe:,
+    refresh: false,
+    timestamp: Time.now.to_i,
+    tournament_id: nil,
+    tournament_group_id: nil
+  )
     raise "Invalid timeframe: #{timeframe}" unless TIMEFRAMES.key?(timeframe)
 
     from = timestamp_from(timestamp, timeframe)
     to = timestamp_to(timestamp, timeframe)
 
     tournament = Tournament.find_by(id: tournament_id)
+    tournament_group = TournamentGroup.find_by(id: tournament_group_id)
+    tournament_market_ids = nil
 
     leaderboard =
       networks.to_h do |network|
         network_id = network[:network_id]
 
         key = "api:leaderboard:#{timeframe}:#{from}:#{to}:#{network_id}"
-        key << ":#{tournament_id}" if tournament.present? && tournament.network_id == network_id.to_i
+        key << ":#{tournament_id}" if tournament.present? && tournament.network_id.to_i == network_id.to_i
+        key << ":land_#{tournament_group_id}" if tournament_group.present? && tournament_group.network_id.to_i == network_id.to_i
 
-        Rails.cache.fetch(key, expires_in: 24.hours, force: refresh) do
+        Rails.cache.fetch(key, force: refresh) do
           actions = network_actions(network_id)
           bonds = network_bonds(network_id)
           votes = network_votes(network_id)
           burn_actions = network_burn_actions(network_id)
           markets_resolved = network_markets_resolved(network_id)
 
-          tournament_market_ids = tournament.markets.map(&:eth_market_id) if tournament.present? && tournament.network_id == network_id.to_i
+          if tournament.present? && tournament.network_id.to_i == network_id.to_i
+            tournament_market_ids = tournament.markets.map(&:eth_market_id)
+          elsif tournament_group.present? && tournament_group.network_id.to_i == network_id.to_i
+            tournament_market_ids = tournament_group.markets.map(&:eth_market_id)
+          end
 
           market_ids = actions.map { |action| action[:market_id] }.uniq
-          market_ids = market_ids & tournament_market_ids if tournament_market_ids.present?
+          market_ids = market_ids & tournament_market_ids if !tournament_market_ids.nil?
 
           create_market_actions = market_ids.map do |market_id|
             # first action represents market creation
@@ -305,7 +318,7 @@ class StatsService
           actions.select! do |action|
             (!from || action[:timestamp] >= from) &&
               (!to || action[:timestamp] <= to) &&
-              (tournament_market_ids.blank? || tournament_market_ids.include?(action[:market_id]))
+              (tournament_market_ids.nil? || tournament_market_ids.include?(action[:market_id]))
           end
 
           bonds.select! do |bond|
@@ -322,20 +335,20 @@ class StatsService
             action[:action] == 'upvote' &&
               (!from || action[:timestamp] >= from) &&
               (!to || action[:timestamp] <= to) &&
-              (tournament_market_ids.blank? || tournament_market_ids.include?(action[:item_id]))
+              (tournament_market_ids.nil? || tournament_market_ids.include?(action[:item_id]))
           end
 
           downvote_actions = votes.select do |action|
             action[:action] == 'downvote' &&
               (!from || action[:timestamp] >= from) &&
               (!to || action[:timestamp] <= to) &&
-              (tournament_market_ids.blank? || tournament_market_ids.include?(action[:item_id]))
+              (tournament_market_ids.nil? || tournament_market_ids.include?(action[:item_id]))
           end
 
           markets_resolved.select! do |action|
             (!from || action[:timestamp] >= from) &&
               (!to || action[:timestamp] <= to) &&
-              (tournament_market_ids.blank? || tournament_market_ids.include?(action[:market_id]))
+              (tournament_market_ids.nil? || tournament_market_ids.include?(action[:market_id]))
           end
 
           # grouping actions by intervals
@@ -392,7 +405,7 @@ class StatsService
                 end
               else
                 claim_winnings_count = user_actions.select { |a| a[:action] == 'claim_winnings' }.count
-                winnings_value = volume_by_tx_action['claim_winnings']
+                winnings_value = volume_by_tx_action['claim_winnings'] + volume_by_tx_action['claim_voided']
               end
 
               {
@@ -402,9 +415,9 @@ class StatsService
                 verified_markets_created: create_market_actions.select { |action| action[:address] == user && network_verified_market_ids(network_id).include?(action[:market_id]) }.count,
                 volume_eur: volume_by_tx_action['buy'] + volume_by_tx_action['sell'],
                 tvl_volume_eur: volume_by_tx_action['buy'] - volume_by_tx_action['sell'],
-                earnings_eur: volume_by_tx_action['sell'] - volume_by_tx_action['buy'] + volume_by_tx_action['claim_voided'] + portfolio_value + winnings_value,
+                earnings_eur: volume_by_tx_action['sell'] - volume_by_tx_action['buy'] + portfolio_value + winnings_value,
                 earnings_open_eur: portfolio_value - portfolio_cost,
-                earnings_closed_eur: volume_by_tx_action['sell'] - volume_by_tx_action['buy'] + volume_by_tx_action['claim_voided'] + winnings_value + portfolio_cost,
+                earnings_closed_eur: volume_by_tx_action['sell'] - volume_by_tx_action['buy'] + winnings_value + portfolio_cost,
                 liquidity_eur: volume_by_tx_action['add_liquidity'] + volume_by_tx_action['remove_liquidity'],
                 tvl_liquidity_eur: volume_by_tx_action['add_liquidity'] - volume_by_tx_action['remove_liquidity'],
                 bond_volume: bonds.select { |bond| bond[:user] == user }.sum { |bond| bond[:value] },
@@ -468,8 +481,8 @@ class StatsService
   end
 
   def timestamp_to(timestamp, timeframe)
-    # setting to next 1-day block if timeframe is all time
-    return (Time.now.to_i / 86400 + 2) * 86400 if TIMEFRAMES[timeframe] == 'all-time'
+    # setting to a far away date if timeframe is all time
+    return DateTime.parse('2030-01-01').to_i if TIMEFRAMES[timeframe] == 'all-time'
 
     # weekly timeframe starts on Fridays due to the rewarding system
     args = TIMEFRAMES[timeframe] == 'week' ? [:friday] : []
@@ -479,7 +492,7 @@ class StatsService
 
   def filtered_leaderboard(leaderboard)
     # filtering out empty users, blacklist and backfilling user data
-    users = User.pluck(:username, :wallet_address, :avatar, :slug)
+    users = User.pluck(:username, :wallet_address, :avatar, :slug, :origin)
 
     leaderboard.each do |user|
       user_data = users.find { |data| data[1].present? && data[1].downcase == user[:user].downcase }
@@ -487,6 +500,7 @@ class StatsService
       user[:username] = user_data ? user_data[0] : nil
       user[:user_image_url] = user_data ? user_data[2] : nil
       user[:slug] = user_data ? user_data[3] : nil
+      user[:origin] = user_data ? user_data[4] : nil
     end
 
     # removing blacklisted users from leaderboard

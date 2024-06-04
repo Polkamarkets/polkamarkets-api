@@ -102,8 +102,6 @@ class Portfolio < ApplicationRecord
         markets = markets.to_a.select { |market| market.resolved? }
 
         markets.each do |market|
-          next if market.voided
-
           holding = holdings.find { |holding| holding[:market_id] == market.eth_market_id }
 
           market.outcomes.each do |outcome|
@@ -111,6 +109,8 @@ class Portfolio < ApplicationRecord
 
             if outcome.eth_market_id == market.resolved_outcome_id
               winnings_by_market[market.eth_market_id] += holding[:outcome_shares][market.resolved_outcome_id] * market.token_rate
+            elsif market.voided
+              winnings_by_market[market.eth_market_id] += holding[:outcome_shares][outcome.eth_market_id] * market.token_rate * outcome.price
             else
               # fetching average cost
               # outcome_buy_events = action_events.select do |event|
@@ -130,9 +130,15 @@ class Portfolio < ApplicationRecord
     # filtering by market ids if provided
     winnings_by_market.select! { |market_id, value| filter_by_market_ids.include?(market_id) } if !filter_by_market_ids.nil?
 
+    voided_market_ids = Market
+      .where(eth_market_id: winnings_by_market.keys, network_id: network_id)
+      .select { |market| market.voided }
+      .map(&:eth_market_id)
+
     {
       value: winnings_by_market.values.sum,
-      count: winnings_by_market.count,
+      # filtering out winnings from voided markets for count
+      count: winnings_by_market.keys.count { |market_id| !voided_market_ids.include?(market_id) }
     }
   end
 
