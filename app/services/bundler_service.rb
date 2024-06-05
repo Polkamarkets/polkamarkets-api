@@ -4,8 +4,7 @@ class BundlerService
   end
 
   def process_user_operation(user_operation, network_id)
-
-    if bundler_use_pimlico
+    if use_pimlico?(network_id)
       uri = bundler_pimlico_url + "/#{network_id}/rpc?apikey=#{bundler_pimlico_api_key}"
       body = {
         method: 'eth_sendUserOperation',
@@ -17,7 +16,7 @@ class BundlerService
       uri = bundler_url + "/rpc?chainId=#{network_id}"
       body = {
         method: 'eth_sendUserOperation',
-        params: [user_operation, bundler_entry_point],
+        params: [user_operation, bundler_entry_point]
       }
     end
 
@@ -55,16 +54,16 @@ class BundlerService
     Rails.application.config_for(:ethereum).bundler_url
   end
 
+  def use_pimlico?(network_id)
+    Rails.application.config_for(:ethereum).bundler_pimlico_network_ids.include?(network_id.to_i)
+  end
+
   def bundler_pimlico_url
     Rails.application.config_for(:ethereum).bundler_pimlico_url
   end
 
   def bundler_pimlico_api_key
     Rails.application.config_for(:ethereum).bundler_pimlico_api_key
-  end
-
-  def bundler_use_pimlico
-    Rails.application.config_for(:ethereum).bundler_use_pimlico
   end
 
   def bundler_entry_point

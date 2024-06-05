@@ -34,10 +34,10 @@ default: &default
     voting_delta: <%= ENV["ETHEREUM_VOTING_DELTA"] || 3 %>
     blacklist: <%= ENV["ETHEREUM_BLACKLIST"].to_s.split(',') %>
     bundler_url: <%= ENV["ETHEREUM_BUNDLER_URL"] %>
+    bundler_entry_point: "<%= ENV["ETHEREUM_BUNDLER_ENTRY_POINT"].to_s %>"
     bundler_pimlico_url: <%= ENV["ETHEREUM_BUNDLER_PIMLICO_URL"] %>
     bundler_pimlico_api_key: <%= ENV["ETHEREUM_BUNDLER_PIMLICO_API_KEY"] %>
-    bundler_entry_point: "<%= ENV["ETHEREUM_BUNDLER_ENTRY_POINT"].to_s %>"
-    bundler_use_pimlico: <%= ENV["ETHEREUM_BUNDLER_USE_PIMLICO"] == 'true' %>
+    bundler_pimlico_network_ids: <%= ENV["ETHEREUM_BUNDLER_PIMLICO_NETWORK_IDS"].to_s.split(',').map(&:to_i) %>
     prediction_market_contract_version: <%= (ENV["ETHEREUM_PREDICTION_MARKET_CONTRACT_VERSION"] || 2).to_i %>
 
 production:
