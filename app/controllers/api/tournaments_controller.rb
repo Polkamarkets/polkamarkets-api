@@ -4,7 +4,10 @@ module Api
     # before_action :authenticate_user!, only: %i[create update destroy move_up move_down]
 
     def index
-      tournaments = Tournament.order(tournament_group_id: :asc, position: :asc).all
+      # sorting by tournament_group position and tournament position
+      tournaments = Tournament
+        .includes(:tournament_group)
+        .order('tournament_groups.position ASC, tournaments.position ASC')
 
       if params[:publish_status].present?
         if params[:publish_status] == 'published'
