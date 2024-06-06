@@ -2,6 +2,8 @@ module Api
   class UsersController < BaseController
     before_action :authenticate_user!, except: [:register_waitlist, :redeem_code]
 
+    before_action :set_paper_trail_whodunnit
+
     def register_waitlist
       raise 'Email not found' if params[:email].blank?
       raise 'Email is invalid' unless params[:email] =~ URI::MailTo::EMAIL_REGEXP
@@ -69,6 +71,7 @@ module Api
         :login_type,
         :avatar,
         :origin,
+        :email,
         :description,
         :website_url,
         :google_connected,
