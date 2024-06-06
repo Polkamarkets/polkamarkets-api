@@ -64,6 +64,12 @@ module Api
       render json: { user: current_user }, status: :ok
     end
 
+    def destroy
+      current_user.destroy
+
+      render json: { success: true }, status: :ok
+    end
+
     private
 
     def user_params

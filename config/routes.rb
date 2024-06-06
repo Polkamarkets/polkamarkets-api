@@ -44,6 +44,7 @@ Rails.application.routes.draw do
     end
 
     put 'users' => 'users#update'
+    delete 'users' => 'users#destroy'
     post 'users/register' => 'users#register_waitlist'
     post 'users/redeem' => 'users#redeem_code'
 
