@@ -1,6 +1,6 @@
 module Api
   class UsersController < BaseController
-    before_action :authenticate_user!, except: [:register_waitlist, :redeem_code]
+    before_action :authenticate_user!, except: [:register_waitlist, :redeem_code, :check_slug]
 
     before_action :set_paper_trail_whodunnit
 
@@ -68,6 +68,16 @@ module Api
       current_user.destroy
 
       render json: { success: true }, status: :ok
+    end
+
+    def check_slug
+      slug = params[:slug]
+
+      if User.friendly.exists?(slug)
+        render json: { error: 'Slug already taken' }, status: :bad_request
+      else
+        render json: { success: true }, status: :ok
+      end
     end
 
     private

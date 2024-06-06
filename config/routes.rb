@@ -47,6 +47,7 @@ Rails.application.routes.draw do
     delete 'users' => 'users#destroy'
     post 'users/register' => 'users#register_waitlist'
     post 'users/redeem' => 'users#redeem_code'
+    get 'users/check_slug' => 'users#check_slug'
 
     resources :articles, only: [:index]
     resources :whitelist, only: [:index]
