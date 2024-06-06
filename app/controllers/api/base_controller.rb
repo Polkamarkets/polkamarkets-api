@@ -52,7 +52,7 @@ module Api
             user = User.new(email: email, login_public_key: login_public_key, raw_email: raw_email, username: username)
             user.save!
           else
-            user.update(login_public_key: login_public_key, raw_email: raw_email)
+            user.update(login_public_key: login_public_key, raw_email: raw_email, email: email)
           end
 
           if params[:redeem_code].present? && !user.whitelisted?
