@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2024_06_06_105122) do
+ActiveRecord::Schema.define(version: 2024_06_06_130057) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -302,6 +302,7 @@ ActiveRecord::Schema.define(version: 2024_06_06_105122) do
     t.string "description"
     t.string "website_url"
     t.boolean "google_connected", default: false
+    t.datetime "inactive_since"
     t.index ["slug"], name: "index_users_on_slug", unique: true
   end
 
