@@ -50,6 +50,7 @@ gem 'simple_form'
 gem 'friendly_id'
 gem 'http'
 gem 'acts_as_list'
+gem 'paper_trail'
 
 # workers
 gem 'sidekiq'
