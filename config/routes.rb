@@ -44,8 +44,10 @@ Rails.application.routes.draw do
     end
 
     put 'users' => 'users#update'
+    delete 'users' => 'users#destroy'
     post 'users/register' => 'users#register_waitlist'
     post 'users/redeem' => 'users#redeem_code'
+    get 'users/check_slug' => 'users#check_slug'
 
     resources :articles, only: [:index]
     resources :whitelist, only: [:index]

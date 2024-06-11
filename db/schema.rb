@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2024_05_29_152829) do
+ActiveRecord::Schema.define(version: 2024_06_06_132038) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -299,7 +299,22 @@ ActiveRecord::Schema.define(version: 2024_05_29_152829) do
     t.string "origin"
     t.boolean "whitelisted", default: false
     t.string "redeem_code"
+    t.string "description"
+    t.string "website_url"
+    t.boolean "google_connected", default: false
+    t.datetime "inactive_since"
     t.index ["slug"], name: "index_users_on_slug", unique: true
+  end
+
+  create_table "versions", force: :cascade do |t|
+    t.string "item_type", null: false
+    t.bigint "item_id", null: false
+    t.string "event", null: false
+    t.string "whodunnit"
+    t.text "object"
+    t.datetime "created_at"
+    t.text "object_changes"
+    t.index ["item_type", "item_id"], name: "index_versions_on_item_type_and_item_id"
   end
 
   add_foreign_key "achievement_tokens", "achievements"

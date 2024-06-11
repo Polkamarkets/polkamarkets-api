@@ -46,13 +46,13 @@ module Api
           login_public_key = privy_user_data[:address]
           login_type = privy_user_data[:login_type]
 
-          user = User.find_by(email: email)
+          user = User.find_by(email: email) || User.find_by(login_public_key: login_public_key)
 
           if user.nil?
             user = User.new(email: email, login_public_key: login_public_key, raw_email: raw_email, username: username)
             user.save!
           else
-            user.update(login_public_key: login_public_key, raw_email: raw_email, username: username || user.username)
+            user.update(login_public_key: login_public_key, raw_email: raw_email, email: email)
           end
 
           if params[:redeem_code].present? && !user.whitelisted?
@@ -64,8 +64,8 @@ module Api
             end
           end
 
-          user.update(username: email.split('@').first) if user.username.blank?
-          user.update(avatar: avatar) if avatar.present?
+          user.update(username: username || email.split('@').first) if user.username.blank?
+          user.update(avatar: avatar) if avatar.present? && user.avatar.blank?
           user.update(login_type: login_type) if login_type.present?
 
           @current_user_id = user.id

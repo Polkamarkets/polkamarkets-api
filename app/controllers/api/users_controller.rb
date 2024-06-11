@@ -1,6 +1,8 @@
 module Api
   class UsersController < BaseController
-    before_action :authenticate_user!, except: [:register_waitlist, :redeem_code]
+    before_action :authenticate_user!, except: [:register_waitlist, :redeem_code, :check_slug]
+
+    before_action :set_paper_trail_whodunnit
 
     def register_waitlist
       raise 'Email not found' if params[:email].blank?
@@ -39,11 +41,7 @@ module Api
 
     def update
       # create dictionary of params to update
-      update_data = {}
-
-      if params[:login_type].present?
-        update_data['login_type'] = params[:login_type]
-      end
+      update_data = user_params
 
       if params[:legacy].present?
         update_data['wallet_address'] = params[:wallet_address] if params[:wallet_address].present?
@@ -58,34 +56,44 @@ module Api
         end
       end
 
-      if current_user.avatar.blank? && params[:avatar].present?
-        update_data['avatar'] = params[:avatar]
-      end
-
-      if params[:login_type] == 'discord' && params[:oauth_access_token]
-        # get username and servers from discord
-        discord_service = DiscordService.new
-        username = discord_service.get_username(token: params[:oauth_access_token])
-        unless username.nil?
-          update_data['username'] = username
-        end
-
-        servers = discord_service.get_servers(token: params[:oauth_access_token])
-        unless servers.nil?
-          update_data['discord_servers'] = servers
-        end
-
-        # revoke token to allow new login
-        discord_service.revoke_token(token: params[:oauth_access_token])
-      end
-
-      if params[:origin].present?
-        update_data['origin'] = params[:origin]
-      end
+      # updating last active date
+      update_data['inactive_since'] = DateTime.now
 
       current_user.update(update_data)
 
       render json: { user: current_user }, status: :ok
+    end
+
+    def destroy
+      current_user.destroy
+
+      render json: { success: true }, status: :ok
+    end
+
+    def check_slug
+      slug = params[:slug]
+
+      if User.friendly.exists?(slug)
+        render json: { error: 'Slug already taken' }, status: :bad_request
+      else
+        render json: { success: true }, status: :ok
+      end
+    end
+
+    private
+
+    def user_params
+      params.permit(
+        :login_type,
+        :avatar,
+        :origin,
+        :email,
+        :description,
+        :website_url,
+        :google_connected,
+        :slug,
+        :username,
+      )
     end
   end
 end

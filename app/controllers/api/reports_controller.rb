@@ -1,5 +1,7 @@
 module Api
   class ReportsController < BaseController
+    before_action :authenticate_user!, only: %i[create destroy]
+
     def create
       report = Report.new
       report.content = report_params[:content]
