@@ -91,7 +91,8 @@ module Api
         :description,
         :website_url,
         :google_connected,
-        :slug
+        :slug,
+        :username,
       )
     end
   end
