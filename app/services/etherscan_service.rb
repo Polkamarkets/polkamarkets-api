@@ -68,7 +68,9 @@ class EtherscanService
       when 1284
         'https://api-moonbeam.moonscan.io'
       when 1285
-        'https://api-moonriver.moonscan.io/'
+        'https://api-moonriver.moonscan.io'
+      when 44787
+        'https://api-alfajores.celoscan.io'
       when 80001
         'https://api-mumbai.polygonscan.com'
       else
@@ -89,6 +91,8 @@ class EtherscanService
         Rails.application.config_for(:etherscan).moonbeam_api_key
       when 1285
         Rails.application.config_for(:etherscan).moonriver_api_key
+      when 44787
+        Rails.application.config_for(:etherscan).alfajores_api_key
       when 80001
         Rails.application.config_for(:etherscan).mumbai_api_key
       else
