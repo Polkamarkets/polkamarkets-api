@@ -75,6 +75,8 @@ class MarketOutcome < ApplicationRecord
   end
 
   def closing_price(refresh: false)
+    return price if market.state == 'closed'
+
     return nil unless market.resolved?
 
     Rails.cache.fetch(
