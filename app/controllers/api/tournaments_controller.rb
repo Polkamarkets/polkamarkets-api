@@ -25,6 +25,12 @@ module Api
         end
       end
 
+      if params[:network_id].present?
+        tournaments = tournaments.select do |tournament|
+          tournament.network_id.to_i == params[:network_id].to_i
+        end
+      end
+
       render json: tournaments
     end
 
