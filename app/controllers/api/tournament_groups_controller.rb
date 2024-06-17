@@ -5,11 +5,13 @@ module Api
 
     def index
       tournament_groups = TournamentGroup.order(position: :asc).all
+      show_redeem_code = false
 
       if params[:admin].present?
         tournament_groups = tournament_groups.select do |tournament_group|
           tournament_group.admins.any? { |admin| admin.downcase == params[:admin].downcase }
         end
+        show_redeem_code = true
       elsif params[:publish_status].present?
         if params[:publish_status] == 'published'
           tournament_groups = tournament_groups.published
@@ -32,7 +34,7 @@ module Api
         end
       end
 
-      render json: tournament_groups, show_tournaments: true
+      render json: tournament_groups, show_tournaments: true, show_redeem_code: show_redeem_code
     end
 
     def show
