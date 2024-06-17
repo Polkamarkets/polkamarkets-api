@@ -48,27 +48,55 @@ class Market < ApplicationRecord
     # invalid market
     raise "Market #{eth_market_id} does not exist" if eth_data[:outcomes].blank?
 
-    market = Market.new(
-      title: eth_data[:title],
-      description: eth_data[:description],
-      category: eth_data[:category],
-      subcategory: eth_data[:subcategory],
-      eth_market_id: eth_market_id,
-      expires_at: eth_data[:expires_at],
-      published_at: DateTime.now,
-      image_url: IpfsService.image_url_from_hash(eth_data[:image_hash]),
-      network_id: network_id
-    )
-    eth_data[:outcomes].each_with_index do |outcome, i|
-      image_hash = eth_data[:outcomes_image_hashes].present? ? eth_data[:outcomes_image_hashes][i] : nil
-      market.outcomes << MarketOutcome.new(
-        title: outcome[:title],
-        eth_market_id: outcome[:id],
-        image_url: image_hash ? IpfsService.image_url_from_hash(image_hash) : nil
-      )
-    end
+    # checking if market is already in draft in the database
+    # first checking slug metadata
+    market = Market.find_by(slug: eth_data[:draft_slug], eth_market_id: nil) if eth_data[:draft_slug].present?
+    # also checking title
+    market ||= Market.find_by(title: eth_data[:title], eth_market_id: nil)
 
-    market.save!
+    if market.present?
+      market.update!(
+        title: eth_data[:title],
+        eth_market_id: eth_market_id,
+        description: eth_data[:description],
+        category: eth_data[:category],
+        subcategory: eth_data[:subcategory],
+        expires_at: eth_data[:expires_at],
+        published_at: DateTime.now,
+        image_url: IpfsService.image_url_from_hash(eth_data[:image_hash]),
+        network_id: network_id
+      )
+      eth_data[:outcomes].each_with_index do |outcome, i|
+        image_hash = eth_data[:outcomes_image_hashes].present? ? eth_data[:outcomes_image_hashes][i] : nil
+        market.outcomes[i].update!(
+          title: outcome[:title],
+          eth_market_id: outcome[:id],
+          image_url: image_hash ? IpfsService.image_url_from_hash(image_hash) : nil
+        )
+      end
+    else
+      market = Market.new(
+        title: eth_data[:title],
+        description: eth_data[:description],
+        category: eth_data[:category],
+        subcategory: eth_data[:subcategory],
+        eth_market_id: eth_market_id,
+        expires_at: eth_data[:expires_at],
+        published_at: DateTime.now,
+        image_url: IpfsService.image_url_from_hash(eth_data[:image_hash]),
+        network_id: network_id
+      )
+      eth_data[:outcomes].each_with_index do |outcome, i|
+        image_hash = eth_data[:outcomes_image_hashes].present? ? eth_data[:outcomes_image_hashes][i] : nil
+        market.outcomes << MarketOutcome.new(
+          title: outcome[:title],
+          eth_market_id: outcome[:id],
+          image_url: image_hash ? IpfsService.image_url_from_hash(image_hash) : nil
+        )
+      end
+
+      market.save!
+    end
 
     # updating banner image asynchrounously
     MarketBannerWorker.perform_async(market.id)

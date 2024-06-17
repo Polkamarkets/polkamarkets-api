@@ -92,6 +92,7 @@ module Bepro
       topics = category.split(',')
       resolution_source = question[-1].split(';')[2]
       resolution_title = question[-1].split(';')[3]
+      draft_slug = question[-1].split(';')[4]
       outcome_titles = JSON.parse("[#{question[-2]}]")
       outcomes.each_with_index { |outcome, i| outcome[:title] = outcome_titles[i] }
       image_hash = events[0]['returnValues']['image'].split(DELIMITER)[0]
@@ -124,6 +125,7 @@ module Bepro
         outcomes: outcomes,
         outcomes_image_hashes: outcomes_image_hashes,
         token_address: token_address,
+        draft_slug: draft_slug
       }
     end
 
