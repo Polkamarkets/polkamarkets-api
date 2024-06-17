@@ -4,7 +4,6 @@ module Api
 
     def index
       markets = Market
-        .published
         .where(network_id: Rails.application.config_for(:ethereum).network_ids)
         .order(created_at: :desc)
         .includes(:outcomes)
@@ -16,6 +15,14 @@ module Api
         ids = params[:id].split(',').map(&:to_i)
         # filtering by a list of ids, comma separated
         markets = markets.where(eth_market_id: ids)
+      elsif params[:publish_status].present?
+        if params[:publish_status] == 'published'
+          markets = markets.published
+        elsif params[:publish_status] == 'unpublished'
+          markets = markets.unpublished
+        end
+      else
+        markets = markets.published
       end
 
       if params[:network_id]
