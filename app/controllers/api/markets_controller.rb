@@ -46,6 +46,31 @@ module Api
       render json: market, serializer: MinifiedMarketSerializer, status: :ok
     end
 
+    def draft
+      # TODO: add admin auth
+      create_params = market_params.except(:outcomes, :land_id, :tournament_id)
+
+      tournament_group = TournamentGroup.find_by(id: market_params[:land_id])
+      tournament = Tournament.find_by(id: market_params[:tournament_id])
+
+      raise "Tournament or Land are not defined" if tournament_group.blank? || tournament.blank?
+
+      market = Market.new(create_params)
+      market_params[:outcomes].each do |outcome|
+        market.outcomes.build(outcome)
+      end
+
+      market.save!
+      tournament.markets << market
+
+      render json: market,
+        show_price_charts: true,
+        hide_tournament_markets: true,
+        show_related_markets: true,
+        scope: serializable_scope,
+        status: :ok
+    end
+
     def reload
       # cleaning up total market cache
       # @market.destroy_cache!
@@ -62,6 +87,23 @@ module Api
 
     def get_market
       @market = Market.find_by_slug_or_eth_market_id!(params[:id], params[:network_id])
+    end
+
+    def market_params
+      params.require(:market).permit(
+        :land_id,
+        :tournament_id,
+        :network_id,
+        :expires_at,
+        :title,
+        :description,
+        :category,
+        :resolution_title,
+        :resolution_source,
+        :image_url,
+        topics: [],
+        outcomes: %i[title image_url],
+      )
     end
   end
 end

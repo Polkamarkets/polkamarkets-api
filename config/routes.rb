@@ -34,6 +34,10 @@ Rails.application.routes.draw do
         post :reload
         get :feed
       end
+
+      collection do
+        post :draft
+      end
     end
 
     resources :portfolios, only: [:show], constraints: { id: /.*/ } do
