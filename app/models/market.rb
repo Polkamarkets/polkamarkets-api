@@ -113,19 +113,19 @@ class Market < ApplicationRecord
   end
 
   def resolution_source
-    return nil if eth_data.blank?
+    return self["resolution_source"] if eth_data.blank?
 
     eth_data[:resolution_source]
   end
 
   def resolution_title
-    return nil if eth_data.blank?
+    return self["resolution_title"] if eth_data.blank?
 
     eth_data[:resolution_title]
   end
 
   def topics
-    return [] if eth_data.blank?
+    return self["topics"] if eth_data.blank?
 
     eth_data[:topics] || []
   end
