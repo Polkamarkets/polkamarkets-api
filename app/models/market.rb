@@ -6,11 +6,13 @@ class Market < ApplicationRecord
   friendly_id :title, use: :slugged
 
   validates_presence_of :title, :category, :expires_at, :network_id
-  validates_uniqueness_of :eth_market_id, scope: :network_id
+  validates_uniqueness_of :eth_market_id, scope: :network_id, if: -> { eth_market_id.present? }
 
   after_destroy :destroy_cache!
 
   has_many :outcomes, -> { order('eth_market_id ASC, created_at ASC') }, class_name: "MarketOutcome", dependent: :destroy, inverse_of: :market
+
+  accepts_nested_attributes_for :outcomes
 
   has_many :comments, -> { includes :user }, dependent: :destroy
   has_many :likes, as: :likeable, dependent: :destroy
@@ -394,6 +396,8 @@ class Market < ApplicationRecord
 
   # realitio data
   def question_data(refresh: false)
+    return Bepro::RealitioErc20ContractService::DEFAULT_QUESTION_DATA if question_id.blank?
+
     Rails.cache.fetch("markets:network_#{network_id}:#{eth_market_id}:question", force: refresh) do
       question_data = Bepro::RealitioErc20ContractService.new(network_id: network_id).get_question(question_id)
 
@@ -438,6 +442,9 @@ class Market < ApplicationRecord
   end
 
   def token(refresh: false)
+    # TODO: fetch from land
+    return nil if eth_data.blank?
+
     Rails.cache.fetch("markets:network_#{network_id}:#{eth_market_id}:token", force: refresh) do
       token_address = eth_data[:token_address]
       return if token_address.blank?

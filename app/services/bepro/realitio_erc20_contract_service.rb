@@ -3,6 +3,19 @@ module Bepro
     include BigNumberHelper
     include NetworkHelper
 
+    DEFAULT_QUESTION_DATA = {
+      id: "0x0000000000000000000000000000000000000000000000000000000000000000",
+      bond: 0.0,
+      best_answer: "0x0000000000000000000000000000000000000000000000000000000000000000",
+      is_finalized: false,
+      arbitrator: "0x0000000000000000000000000000000000000000",
+      is_pending_arbitration: false,
+      is_claimed: false,
+      finalize_ts: 0,
+      dispute_id: nil,
+      is_pending_arbitration_request: false
+    }.freeze
+
     def initialize(network_id: nil, api_url: nil, contract_address: nil)
       super(
         network_id: network_id,
