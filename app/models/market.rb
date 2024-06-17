@@ -26,6 +26,7 @@ class Market < ApplicationRecord
   accepts_nested_attributes_for :outcomes
 
   scope :published, -> { where('published_at < ?', DateTime.now).where.not(eth_market_id: nil) }
+  scope :unpublished, -> { where('published_at is NULL OR published_at > ?', DateTime.now).or(where(eth_market_id: nil)) }
   scope :open, -> { published.where('expires_at > ?', DateTime.now) }
   scope :resolved, -> { published.where('expires_at < ?', DateTime.now) }
 

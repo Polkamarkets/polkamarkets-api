@@ -48,6 +48,17 @@ module Api
         .includes(:tournaments)
         .includes(:comments)
         .includes(:likes)
+
+      if params[:publish_status].present?
+        if params[:publish_status] == 'published'
+          markets = markets.published
+        elsif params[:publish_status] == 'unpublished'
+          markets = markets.unpublished
+        end
+      else
+        markets = markets.published
+      end
+
       markets = markets.select { |market| market.state == params[:state] } if params[:state]
 
       render json: markets,
