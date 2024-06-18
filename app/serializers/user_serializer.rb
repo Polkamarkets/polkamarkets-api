@@ -4,6 +4,8 @@ class UserSerializer < BaseSerializer
     :avatar,
     :slug,
     :address,
+    :description,
+    :website_url,
   )
 
   def address

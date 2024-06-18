@@ -47,11 +47,13 @@ Rails.application.routes.draw do
       end
     end
 
-    put 'users' => 'users#update'
-    delete 'users' => 'users#destroy'
-    post 'users/register' => 'users#register_waitlist'
-    post 'users/redeem' => 'users#redeem_code'
-    get 'users/check_slug' => 'users#check_slug'
+    resources :users, only: [:show, :update, :destroy] do
+      collection do
+        post :register, to: 'users#register_waitlist'
+        post :redeem, to: 'users#redeem_code'
+        get :check_slug
+      end
+    end
 
     resources :articles, only: [:index]
     resources :whitelist, only: [:index]
