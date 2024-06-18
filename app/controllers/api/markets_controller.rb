@@ -63,8 +63,10 @@ module Api
       raise "Tournament or Land are not defined" if tournament_group.blank? || tournament.blank?
 
       market = Market.new(create_params)
-      market_params[:outcomes].each do |outcome|
-        market.outcomes.build(outcome)
+      market_params[:outcomes].each do |outcome_params|
+        market.outcomes.build(
+          outcome_params.merge(draft_price: outcome_params[:price]).except(:price)
+        )
       end
 
       market.save!
@@ -109,7 +111,7 @@ module Api
         :resolution_source,
         :image_url,
         topics: [],
-        outcomes: %i[title image_url],
+        outcomes: %i[title image_url price],
       )
     end
   end
