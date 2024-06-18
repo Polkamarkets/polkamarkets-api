@@ -47,11 +47,12 @@ Rails.application.routes.draw do
       end
     end
 
-    resources :users, only: [:show, :update, :destroy] do
+    resources :users, only: [:show, :destroy] do
       collection do
         post :register, to: 'users#register_waitlist'
         post :redeem, to: 'users#redeem_code'
         get :check_slug
+        put '/', to: 'users#update'
       end
     end
 
