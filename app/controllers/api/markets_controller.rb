@@ -80,6 +80,41 @@ module Api
         status: :ok
     end
 
+    def update
+      market = Market.find_by!(slug: params[:id])
+
+      raise "Market is not in draft state" if market.eth_market_id.present?
+
+      raise "Market has not enough outcomes" if market_params[:outcomes].count < 2
+
+      update_params = market_params.except(:outcomes, :land_id, :tournament_id)
+      # destroying outcomes and rebuilding them
+      market.outcomes.destroy_all
+      market_params[:outcomes].each do |outcome_params|
+        market.outcomes.build(
+          outcome_params.merge(draft_price: outcome_params[:price]).except(:price)
+        )
+      end
+      market.update!(update_params)
+
+      render json: market,
+        show_price_charts: true,
+        hide_tournament_markets: true,
+        show_related_markets: true,
+        scope: serializable_scope,
+        status: :ok
+    end
+
+    def destroy
+      market = Market.find_by!(slug: params[:id])
+
+      raise "Market is not in draft state" if market.eth_market_id.present?
+
+      market.destroy!
+
+      render json: { status: 'ok' }, status: :ok
+    end
+
     def reload
       # cleaning up total market cache
       # @market.destroy_cache!

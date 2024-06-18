@@ -29,7 +29,7 @@ Rails.application.routes.draw do
   end
 
   scope :module => 'api' do
-    resources :markets, only: [:index, :show, :create] do
+    resources :markets, only: [:index, :show, :create, :update, :destroy] do
       member do
         post :reload
         get :feed
