@@ -6,6 +6,7 @@ class UserSerializer < BaseSerializer
     :address,
     :description,
     :website_url,
+    :created_at,
   )
 
   def address
