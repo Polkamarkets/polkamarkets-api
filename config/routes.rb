@@ -29,10 +29,14 @@ Rails.application.routes.draw do
   end
 
   scope :module => 'api' do
-    resources :markets, only: [:index, :show, :create] do
+    resources :markets, only: [:index, :show, :create, :update, :destroy] do
       member do
         post :reload
         get :feed
+      end
+
+      collection do
+        post :draft
       end
     end
 
@@ -43,11 +47,14 @@ Rails.application.routes.draw do
       end
     end
 
-    put 'users' => 'users#update'
-    delete 'users' => 'users#destroy'
-    post 'users/register' => 'users#register_waitlist'
-    post 'users/redeem' => 'users#redeem_code'
-    get 'users/check_slug' => 'users#check_slug'
+    resources :users, only: [:show, :destroy] do
+      collection do
+        post :register, to: 'users#register_waitlist'
+        post :redeem, to: 'users#redeem_code'
+        get :check_slug
+        put '/', to: 'users#update'
+      end
+    end
 
     resources :articles, only: [:index]
     resources :whitelist, only: [:index]

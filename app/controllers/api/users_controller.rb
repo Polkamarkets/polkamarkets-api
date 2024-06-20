@@ -1,8 +1,17 @@
 module Api
   class UsersController < BaseController
-    before_action :authenticate_user!, except: [:register_waitlist, :redeem_code, :check_slug]
+    before_action :authenticate_user!, only: [:update, :destroy]
 
     before_action :set_paper_trail_whodunnit
+
+    def show
+      # trying to fetch by wallet or slug
+      user = User.where("lower(wallet_address) = ? OR lower(slug) = ?", params[:id].downcase, params[:id].downcase).first
+
+      raise ActiveRecord::RecordNotFound if user.nil?
+
+      render json: user, status: :ok
+    end
 
     def register_waitlist
       raise 'Email not found' if params[:email].blank?

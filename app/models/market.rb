@@ -6,11 +6,13 @@ class Market < ApplicationRecord
   friendly_id :title, use: :slugged
 
   validates_presence_of :title, :category, :expires_at, :network_id
-  validates_uniqueness_of :eth_market_id, scope: :network_id
+  validates_uniqueness_of :eth_market_id, scope: :network_id, if: -> { eth_market_id.present? }
 
   after_destroy :destroy_cache!
 
   has_many :outcomes, -> { order('eth_market_id ASC, created_at ASC') }, class_name: "MarketOutcome", dependent: :destroy, inverse_of: :market
+
+  accepts_nested_attributes_for :outcomes
 
   has_many :comments, -> { includes :user }, dependent: :destroy
   has_many :likes, as: :likeable, dependent: :destroy
@@ -24,6 +26,7 @@ class Market < ApplicationRecord
   accepts_nested_attributes_for :outcomes
 
   scope :published, -> { where('published_at < ?', DateTime.now).where.not(eth_market_id: nil) }
+  scope :unpublished, -> { where('published_at is NULL OR published_at > ?', DateTime.now).or(where(eth_market_id: nil)) }
   scope :open, -> { published.where('expires_at > ?', DateTime.now) }
   scope :resolved, -> { published.where('expires_at < ?', DateTime.now) }
 
@@ -45,27 +48,55 @@ class Market < ApplicationRecord
     # invalid market
     raise "Market #{eth_market_id} does not exist" if eth_data[:outcomes].blank?
 
-    market = Market.new(
-      title: eth_data[:title],
-      description: eth_data[:description],
-      category: eth_data[:category],
-      subcategory: eth_data[:subcategory],
-      eth_market_id: eth_market_id,
-      expires_at: eth_data[:expires_at],
-      published_at: DateTime.now,
-      image_url: IpfsService.image_url_from_hash(eth_data[:image_hash]),
-      network_id: network_id
-    )
-    eth_data[:outcomes].each_with_index do |outcome, i|
-      image_hash = eth_data[:outcomes_image_hashes].present? ? eth_data[:outcomes_image_hashes][i] : nil
-      market.outcomes << MarketOutcome.new(
-        title: outcome[:title],
-        eth_market_id: outcome[:id],
-        image_url: image_hash ? IpfsService.image_url_from_hash(image_hash) : nil
-      )
-    end
+    # checking if market is already in draft in the database
+    # first checking slug metadata
+    market = Market.find_by(slug: eth_data[:draft_slug], eth_market_id: nil) if eth_data[:draft_slug].present?
+    # also checking title
+    market ||= Market.find_by(title: eth_data[:title], eth_market_id: nil)
 
-    market.save!
+    if market.present?
+      market.update!(
+        title: eth_data[:title],
+        eth_market_id: eth_market_id,
+        description: eth_data[:description],
+        category: eth_data[:category],
+        subcategory: eth_data[:subcategory],
+        expires_at: eth_data[:expires_at],
+        published_at: DateTime.now,
+        image_url: IpfsService.image_url_from_hash(eth_data[:image_hash]),
+        network_id: network_id
+      )
+      eth_data[:outcomes].each_with_index do |outcome, i|
+        image_hash = eth_data[:outcomes_image_hashes].present? ? eth_data[:outcomes_image_hashes][i] : nil
+        market.outcomes[i].update!(
+          title: outcome[:title],
+          eth_market_id: outcome[:id],
+          image_url: image_hash ? IpfsService.image_url_from_hash(image_hash) : nil
+        )
+      end
+    else
+      market = Market.new(
+        title: eth_data[:title],
+        description: eth_data[:description],
+        category: eth_data[:category],
+        subcategory: eth_data[:subcategory],
+        eth_market_id: eth_market_id,
+        expires_at: eth_data[:expires_at],
+        published_at: DateTime.now,
+        image_url: IpfsService.image_url_from_hash(eth_data[:image_hash]),
+        network_id: network_id
+      )
+      eth_data[:outcomes].each_with_index do |outcome, i|
+        image_hash = eth_data[:outcomes_image_hashes].present? ? eth_data[:outcomes_image_hashes][i] : nil
+        market.outcomes << MarketOutcome.new(
+          title: outcome[:title],
+          eth_market_id: outcome[:id],
+          image_url: image_hash ? IpfsService.image_url_from_hash(image_hash) : nil
+        )
+      end
+
+      market.save!
+    end
 
     # updating banner image asynchrounously
     MarketBannerWorker.perform_async(market.id)
@@ -111,19 +142,19 @@ class Market < ApplicationRecord
   end
 
   def resolution_source
-    return nil if eth_data.blank?
+    return self["resolution_source"] if eth_data.blank?
 
     eth_data[:resolution_source]
   end
 
   def resolution_title
-    return nil if eth_data.blank?
+    return self["resolution_title"] if eth_data.blank?
 
     eth_data[:resolution_title]
   end
 
   def topics
-    return [] if eth_data.blank?
+    return self["topics"] if eth_data.blank?
 
     eth_data[:topics] || []
   end
@@ -394,6 +425,8 @@ class Market < ApplicationRecord
 
   # realitio data
   def question_data(refresh: false)
+    return Bepro::RealitioErc20ContractService::DEFAULT_QUESTION_DATA if question_id.blank?
+
     Rails.cache.fetch("markets:network_#{network_id}:#{eth_market_id}:question", force: refresh) do
       question_data = Bepro::RealitioErc20ContractService.new(network_id: network_id).get_question(question_id)
 
@@ -438,6 +471,9 @@ class Market < ApplicationRecord
   end
 
   def token(refresh: false)
+    # TODO: fetch from land
+    return nil if eth_data.blank?
+
     Rails.cache.fetch("markets:network_#{network_id}:#{eth_market_id}:token", force: refresh) do
       token_address = eth_data[:token_address]
       return if token_address.blank?

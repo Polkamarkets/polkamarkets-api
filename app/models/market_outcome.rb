@@ -69,7 +69,7 @@ class MarketOutcome < ApplicationRecord
   end
 
   def price
-    return nil if eth_data.blank?
+    return draft_price if eth_data.blank?
 
     eth_data[:price]
   end
