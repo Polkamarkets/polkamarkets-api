@@ -19,7 +19,8 @@ class TournamentGroupSerializer < BaseSerializer
     :published,
     :website_url,
     :whitelabel,
-    :onboarded
+    :onboarded,
+    :advanced
   )
 
   attribute :redeem_code, if: :show_redeem_code?
