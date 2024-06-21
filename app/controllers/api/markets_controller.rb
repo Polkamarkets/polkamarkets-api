@@ -48,7 +48,19 @@ module Api
     end
 
     def create
-      market = Market.create_from_eth_market_id!(params[:network_id], params[:id].to_i)
+      # TODO: improve this, current issue is due indexing speed on RPC
+      # trying 5 times with 3 second intervals
+      market = nil
+      5.times do |i|
+        begin
+          market = Market.create_from_eth_market_id!(params[:network_id], params[:id].to_i)
+          break if market.present?
+        rescue => e
+          # only raise if it's the last iteration
+          raise e if i == 4
+          sleep(3)
+        end
+      end
 
       render json: market, serializer: MinifiedMarketSerializer, status: :ok
     end
