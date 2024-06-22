@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2024_06_20_110353) do
+ActiveRecord::Schema.define(version: 2024_06_22_093518) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -248,6 +248,7 @@ ActiveRecord::Schema.define(version: 2024_06_20_110353) do
     t.boolean "onboarded", default: false, null: false
     t.string "redeem_code"
     t.boolean "advanced", default: false
+    t.string "metadata_url"
     t.index ["slug"], name: "index_tournament_groups_on_slug", unique: true
   end
 
@@ -268,6 +269,7 @@ ActiveRecord::Schema.define(version: 2024_06_20_110353) do
     t.datetime "expires_at"
     t.boolean "published", default: false
     t.boolean "comments_enabled", default: true
+    t.string "metadata_url"
     t.index ["slug"], name: "index_tournaments_on_slug", unique: true
     t.index ["tournament_group_id"], name: "index_tournaments_on_tournament_group_id"
   end

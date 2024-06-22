@@ -10,6 +10,7 @@ class TournamentSerializer < BaseSerializer
     :token,
     :created_at,
     :image_url,
+    :metadata_url,
     :expires_at,
     :users,
     :position,
