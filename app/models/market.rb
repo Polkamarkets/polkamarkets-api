@@ -121,6 +121,10 @@ class Market < ApplicationRecord
     end
   end
 
+  def published?
+    published_at.present? && published_at < DateTime.now && eth_market_id.present?
+  end
+
   def open?
     !closed?
   end
@@ -497,7 +501,11 @@ class Market < ApplicationRecord
     return [] if tournaments.blank?
 
     Rails.cache.fetch("markets:network_#{network_id}:#{eth_market_id}:related_markets", force: refresh) do
-      tournaments.order(:position).map(&:markets).flatten.uniq.select { |market| market.id != id }.first(5)
+      tournaments
+        .order(:position)
+        .map(&:markets)
+        .flatten.uniq
+        .select { |market| market.id != id && market.published? }.first(5)
     end
   end
 end
