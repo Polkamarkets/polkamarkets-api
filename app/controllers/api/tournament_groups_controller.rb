@@ -91,6 +91,17 @@ module Api
       end
     end
 
+    def update_featured_markets
+      tournament_group = TournamentGroup.friendly.find(params[:id])
+
+      markets = Market.where(network_id: tournament_group.network_id, eth_market_id: params[:market_ids])
+
+      tournament_group.markets.update_all(featured: false)
+      markets.update_all(featured: true)
+
+      render json: tournament_group
+    end
+
     def destroy
       tournament_group = TournamentGroup.friendly.find(params[:id])
 
