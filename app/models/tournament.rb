@@ -79,7 +79,7 @@ class Tournament < ApplicationRecord
   end
 
   def tokens
-    markets.map(&:token).flatten.uniq
+    markets.map(&:token).flatten.uniq.compact
   end
 
   def token(refresh: false)
