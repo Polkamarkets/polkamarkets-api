@@ -112,6 +112,16 @@ module Api
       end
     end
 
+    def add_market
+      tournament = Tournament.friendly.find(params[:id])
+
+      market = Market.find_by!(eth_market_id: params[:market_id], network_id: tournament.network_id)
+
+      tournament.markets << market
+
+      render json: tournament
+    end
+
     def destroy
       tournament = Tournament.friendly.find(params[:id])
 
