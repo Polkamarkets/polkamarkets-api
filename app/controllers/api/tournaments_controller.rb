@@ -21,7 +21,7 @@ module Api
 
       if params[:token].present?
         tournaments = tournaments.select do |tournament|
-          tournament.tokens.any? { |token| token[:symbol].downcase == params[:token].downcase }
+          tournament.tokens.present? && tournament.tokens.any? { |token| token[:symbol].downcase == params[:token].downcase }
         end
       end
 

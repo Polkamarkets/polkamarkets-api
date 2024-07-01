@@ -31,6 +31,12 @@ module Api
 
       markets = markets.select { |market| market.state == params[:state] } if params[:state]
 
+      if params[:token].present?
+        markets = markets.select do |market|
+          market.token.present? && market.token[:symbol].downcase == params[:token].downcase
+        end
+      end
+
       render json: markets,
         simplified_price_charts: true,
         hide_tournament_markets: true,
