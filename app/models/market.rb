@@ -38,7 +38,11 @@ class Market < ApplicationRecord
   end
 
   def self.create_from_eth_market_id!(network_id, eth_market_id)
-    raise "Market #{eth_market_id} is already created" if Market.where(network_id: network_id, eth_market_id: eth_market_id).exists?
+    raise "eth_market_id is required" if eth_market_id.blank?
+
+    market = Market.find_by(network_id: network_id, eth_market_id: eth_market_id)
+
+    return market if market.present?
 
     eth_data =
       Rails.cache.fetch("markets:network_#{network_id}:#{eth_market_id}:data", force: true) do
