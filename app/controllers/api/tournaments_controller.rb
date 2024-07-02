@@ -113,11 +113,13 @@ module Api
     end
 
     def add_market
+      raise 'Market ID is required' unless params[:market_id]
+
       tournament = Tournament.friendly.find(params[:id])
 
       market = Market.find_by!(eth_market_id: params[:market_id], network_id: tournament.network_id)
 
-      tournament.markets << market
+      tournament.markets << market unless tournament.markets.include?(market)
 
       render json: tournament
     end
