@@ -8,6 +8,7 @@ class TournamentGroupSerializer < BaseSerializer
     :description,
     :short_description,
     :token,
+    :token_controller_address,
     :created_at,
     :position,
     :users,

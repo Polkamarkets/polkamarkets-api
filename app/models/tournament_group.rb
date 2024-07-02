@@ -71,6 +71,10 @@ class TournamentGroup < ApplicationRecord
     end
   end
 
+  def token_controller_address
+    self[:token_controller_address] || Rails.application.config_for(:ethereum).dig(:"network_#{network_id}", :prediction_market_manager_contract_address)
+  end
+
   def admins(refresh: false)
     return [] if token.blank?
 
