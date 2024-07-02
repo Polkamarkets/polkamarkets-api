@@ -75,7 +75,10 @@ class TournamentGroup < ApplicationRecord
     return [] if token.blank?
 
     Rails.cache.fetch("tournament_groups:#{id}:admins", expires_in: 24.hours, force: refresh) do
-      Bepro::PredictionMarketManagerContractService.new(network_id: network_id).get_land_admins(token[:address])
+      Bepro::PredictionMarketManagerContractService.new(
+        network_id: network_id,
+        contract_address: token_controller_address
+      ).get_land_admins(token[:address])
     end
   end
 end
