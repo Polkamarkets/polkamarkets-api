@@ -93,6 +93,9 @@ class TokenRatesService
   end
 
   def fantasy_token?(address, network_id)
+    # checking land tokens
+    return true if Rails.application.config_for(:ethereum).fantasy_enabled
+
     fantasy_tokens = Rails.application.config_for(:ethereum).fantasy_tokens
 
     # case insensitive search by key

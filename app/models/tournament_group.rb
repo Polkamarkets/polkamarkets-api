@@ -20,6 +20,13 @@ class TournamentGroup < ApplicationRecord
 
   SOCIALS = %w[instagram twitter telegram facebook youtube linkedin medium discord].freeze
 
+  def self.tokens
+    # caching value for 1h
+    Rails.cache.fetch('lands:tokens', expires_in: 1.hour) do
+      TournamentGroup.all.map(&:tokens).flatten.uniq.compact
+    end
+  end
+
   def network_id_validation
     # checking all tournaments have the same network id
     return if tournaments.map(&:network_id).uniq.count <= 1
