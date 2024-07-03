@@ -77,7 +77,7 @@ class UserOperation < ApplicationRecord
 
   def ticker
     # TODO: save in db
-    if action == 'claimAndApproveTokens'
+    if action == 'claimAndApproveTokens' || action == 'mintAndCreateMarket'
       # checking in user_operation if it's a fantasy token
       TournamentGroup.tokens.each do |token|
         if user_operation.to_s.downcase.include?(token[:address][2..-1].downcase)
