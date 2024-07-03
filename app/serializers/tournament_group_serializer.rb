@@ -11,6 +11,7 @@ class TournamentGroupSerializer < BaseSerializer
     :token_controller_address,
     :created_at,
     :position,
+    :rank_by,
     :users,
     :image_url,
     :banner_url,

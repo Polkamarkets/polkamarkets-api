@@ -85,4 +85,9 @@ class TournamentGroup < ApplicationRecord
       ).get_land_admins(token[:address])
     end
   end
+
+  def rank_by
+    # returning most common rank_by criteria amongst tournaments
+    tournaments.map(&:rank_by).tally.max_by { |_, v| v }&.first || 'claim_winnings_count,earnings_eur'
+  end
 end
