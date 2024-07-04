@@ -89,6 +89,7 @@ Rails.application.routes.draw do
         post :move_down
         get :markets, to: 'tournament_groups#show_markets'
         post :update_featured_markets
+        post :join
       end
     end
 

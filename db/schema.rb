@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2024_07_02_230741) do
+ActiveRecord::Schema.define(version: 2024_07_04_130631) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -251,7 +251,16 @@ ActiveRecord::Schema.define(version: 2024_07_02_230741) do
     t.boolean "advanced", default: false
     t.string "metadata_url"
     t.string "token_controller_address"
+    t.integer "users_count", default: 0
     t.index ["slug"], name: "index_tournament_groups_on_slug", unique: true
+  end
+
+  create_table "tournament_groups_users", id: false, force: :cascade do |t|
+    t.bigint "tournament_group_id", null: false
+    t.bigint "user_id", null: false
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["tournament_group_id", "user_id"], name: "index_tg_users_on_tg_id_and_user_id", unique: true
   end
 
   create_table "tournaments", force: :cascade do |t|

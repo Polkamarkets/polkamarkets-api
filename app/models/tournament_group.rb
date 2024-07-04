@@ -12,6 +12,7 @@ class TournamentGroup < ApplicationRecord
 
   has_many :tournaments, -> { order(position: :asc) }, inverse_of: :tournament_group, dependent: :nullify
   has_many :markets, through: :tournaments
+  has_and_belongs_to_many :users
 
   acts_as_list
 
@@ -19,6 +20,13 @@ class TournamentGroup < ApplicationRecord
   scope :unpublished, -> { where(published: false) }
 
   SOCIALS = %w[instagram twitter telegram facebook youtube linkedin medium discord].freeze
+
+  def self.tokens
+    # caching value for 1h
+    Rails.cache.fetch('lands:tokens', expires_in: 1.hour) do
+      TournamentGroup.all.map(&:tokens).flatten.uniq.compact
+    end
+  end
 
   def network_id_validation
     # checking all tournaments have the same network id
@@ -43,15 +51,6 @@ class TournamentGroup < ApplicationRecord
     return self[:network_id] if self[:network_id].present?
 
     @_network_id ||= tournaments.first&.network_id
-  end
-
-  def users(refresh: false)
-    # TODO: store counter in postgres
-    Rails.cache.fetch("tournament_groups:#{id}:users", expires_in: 24.hours, force: refresh) do
-      eth_market_ids = markets.map(&:eth_market_id).uniq
-
-      Activity.where(market_id: eth_market_ids, network_id: network_id).distinct.count(:address)
-    end
   end
 
   def tokens
@@ -89,5 +88,9 @@ class TournamentGroup < ApplicationRecord
   def rank_by
     # returning most common rank_by criteria amongst tournaments
     tournaments.map(&:rank_by).tally.max_by { |_, v| v }&.first || 'claim_winnings_count,earnings_eur'
+  end
+
+  def update_counters
+    update(users_count: users.count)
   end
 end
