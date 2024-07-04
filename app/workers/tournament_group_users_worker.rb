@@ -14,8 +14,10 @@ class TournamentGroupUsersWorker
     mint_event_addresses = mint_events.map { |event| event[:to] }.uniq
     users = User.where(wallet_address: mint_event_addresses)
 
-    users.each do |user|
-      tournament_group.users << user unless tournament_group.users.include?(user)
+    users_not_in_group = users - tournament_group.reload.users
+
+    users_not_in_group.each do |user|
+      tournament_group.users << user
     end
 
     tournament_group.update_counters
