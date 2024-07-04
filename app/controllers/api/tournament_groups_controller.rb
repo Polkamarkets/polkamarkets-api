@@ -2,6 +2,7 @@ module Api
   class TournamentGroupsController < BaseController
     # TODO: add auth to endpoints
     # before_action :authenticate_user!, only: %i[create update destroy move_up move_down]
+    before_action :authenticate_user!, only: %i[join]
 
     def index
       tournament_groups = TournamentGroup.order(position: :asc).all
@@ -118,6 +119,15 @@ module Api
     def move_down
       tournament_group = TournamentGroup.friendly.find(params[:id])
       tournament_group.move_lower
+
+      render json: tournament_group
+    end
+
+    def join
+      tournament_group = TournamentGroup.friendly.find(params[:id])
+
+      tournament_group.users << current_user unless tournament_group.users.include?(current_user)
+      tournament_group.update_counters
 
       render json: tournament_group
     end

@@ -37,4 +37,8 @@ class TournamentGroupSerializer < BaseSerializer
   def show_redeem_code?
     !!instance_options[:show_redeem_code]
   end
+
+  def users
+    object.users_count
+  end
 end
