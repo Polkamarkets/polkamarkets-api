@@ -5,6 +5,7 @@ class TournamentGroupSerializer < BaseSerializer
     :id,
     :slug,
     :title,
+    :network_id,
     :description,
     :short_description,
     :token,
