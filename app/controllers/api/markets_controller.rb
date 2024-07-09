@@ -68,8 +68,7 @@ module Api
         end
       end
 
-      render json: { success: true }, status: :ok
-      # render json: market, serializer: MinifiedMarketSerializer, status: :ok
+      render json: market, serializer: MinifiedMarketSerializer, status: :ok
     end
 
     def draft
