@@ -19,7 +19,7 @@ module Api
       like.destroy!
 
       # destroying likeable cache
-      likeable.destroy_cache! if likeable.respond_to?(:destroy_cache!)
+      likeable.touch
 
       render json: like
     end
