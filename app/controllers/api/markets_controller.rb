@@ -98,6 +98,21 @@ module Api
         status: :ok
     end
 
+    def publish
+      market = Market.find_by!(slug: params[:id])
+
+      raise "Market is not in draft state" if market.eth_market_id.present? || market.publish_status == 'published'
+
+      market.update!(publish_status: 'pending')
+
+      render json: market,
+        show_price_charts: true,
+        hide_tournament_markets: true,
+        show_related_markets: true,
+        scope: serializable_scope,
+        status: :ok
+    end
+
     def update
       market = Market.find_by!(slug: params[:id])
 

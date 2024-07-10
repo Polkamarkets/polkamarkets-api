@@ -25,6 +25,12 @@ class Market < ApplicationRecord
 
   accepts_nested_attributes_for :outcomes
 
+  enum publish_status: {
+    draft: 0,
+    pending: 1,
+    published: 2,
+  }
+
   scope :published, -> { where('published_at < ?', DateTime.now).where.not(eth_market_id: nil) }
   scope :unpublished, -> { where('published_at is NULL OR published_at > ?', DateTime.now).or(where(eth_market_id: nil)) }
   scope :open, -> { published.where('expires_at > ?', DateTime.now) }
@@ -68,7 +74,8 @@ class Market < ApplicationRecord
         expires_at: eth_data[:expires_at],
         published_at: DateTime.now,
         image_url: IpfsService.image_url_from_hash(eth_data[:image_hash]),
-        network_id: network_id
+        network_id: network_id,
+        publish_status: :published
       )
       eth_data[:outcomes].each_with_index do |outcome, i|
         image_hash = eth_data[:outcomes_image_hashes].present? ? eth_data[:outcomes_image_hashes][i] : nil
@@ -88,7 +95,8 @@ class Market < ApplicationRecord
         expires_at: eth_data[:expires_at],
         published_at: DateTime.now,
         image_url: IpfsService.image_url_from_hash(eth_data[:image_hash]),
-        network_id: network_id
+        network_id: network_id,
+        publish_status: :published
       )
       eth_data[:outcomes].each_with_index do |outcome, i|
         image_hash = eth_data[:outcomes_image_hashes].present? ? eth_data[:outcomes_image_hashes][i] : nil

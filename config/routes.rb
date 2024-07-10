@@ -33,6 +33,7 @@ Rails.application.routes.draw do
       member do
         post :reload
         get :feed
+        post :publish
       end
 
       collection do
