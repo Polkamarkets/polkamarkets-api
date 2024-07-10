@@ -39,6 +39,7 @@ default: &default
     bundler_pimlico_api_key: <%= ENV["ETHEREUM_BUNDLER_PIMLICO_API_KEY"] %>
     bundler_pimlico_network_ids: <%= ENV["ETHEREUM_BUNDLER_PIMLICO_NETWORK_IDS"].to_s.split(',').map(&:to_i) %>
     prediction_market_contract_version: <%= (ENV["ETHEREUM_PREDICTION_MARKET_CONTRACT_VERSION"] || 2).to_i %>
+    executor_pk: <%= ENV["ETHEREUM_EXECUTOR_PK"] %>
 
 production:
   <<: *default

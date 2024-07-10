@@ -62,6 +62,47 @@ module Bepro
       end
     end
 
+    def execute(method:, args: [], private_key: nil)
+      uri = api_url + "/execute"
+      private_key ||= Rails.application.config_for(:ethereum).executor_pk
+
+      body = {
+        contract: contract_name,
+        address: contract_address,
+        method: method,
+        args: args,
+        privateKey: private_key
+      }
+
+      Sentry.with_scope do |scope|
+        scope.set_tags(
+          uri: uri
+        )
+        begin
+          response = HTTP.post(uri, json: body)
+          unless response.status.success?
+            scope.set_tags(
+              status: response.status,
+              error: response.body.to_s
+            )
+            raise "BeproService :: Execute Error"
+          end
+        rescue => e
+          scope.set_tags(
+            error: e.message
+          )
+          raise "BeproService :: Execute Error"
+        end
+
+        begin
+          JSON.parse(response.body.to_s)
+        rescue => e
+          # not a JSON response, return the raw response
+          response.body.to_s
+        end
+      end
+    end
+
     def get_events(event_name:, filter: {}, store_events: false)
       from_block = 0
       past_events = []
