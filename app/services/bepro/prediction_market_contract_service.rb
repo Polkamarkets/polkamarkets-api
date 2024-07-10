@@ -98,8 +98,7 @@ module Bepro
       image_hash = events[0]['returnValues']['image'].split(DELIMITER)[0]
       outcomes_image_hashes = events[0]['returnValues']['image'].split(DELIMITER)[1].presence&.split(',')
       # making sure outcomes_image_hashes length is correct
-      outcomes_image_hashes = outcomes_image_hashes.present? && outcomes_image_hashes.count == outcomes.count ?
-        outcomes_image_hashes : []
+      outcomes_image_hashes = outcomes_image_hashes.presence || []
       token_address = market_alt_data[3]
 
       {
