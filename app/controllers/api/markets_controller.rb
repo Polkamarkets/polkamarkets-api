@@ -99,10 +99,10 @@ module Api
     end
 
     def publish
-      markets = Market.where(slug: params[:slugs].split(','))
+      markets = Market.where(slug: params[:slugs])
 
       # making sure all markets exist
-      raise "Market not found" if markets.count != params[:slugs].split(',').count
+      raise "Market not found" if markets.count != params[:slugs].count
 
       # making sure all markets are in draft state
       markets.each do |market|
