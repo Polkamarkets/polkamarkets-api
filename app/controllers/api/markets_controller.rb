@@ -99,18 +99,19 @@ module Api
     end
 
     def publish
-      market = Market.find_by!(slug: params[:id])
+      markets = Market.where(slug: params[:slugs].split(','))
 
-      raise "Market is not in draft state" if market.eth_market_id.present? || market.publish_status == 'published'
+      # making sure all markets exist
+      raise "Market not found" if markets.count != params[:slugs].split(',').count
 
-      market.update!(publish_status: 'pending')
+      # making sure all markets are in draft state
+      markets.each do |market|
+        raise "Market is not in draft state" if market.eth_market_id.present? || market.publish_status == 'published'
+      end
 
-      render json: market,
-        show_price_charts: true,
-        hide_tournament_markets: true,
-        show_related_markets: true,
-        scope: serializable_scope,
-        status: :ok
+      markets.each { |market| market.update!(publish_status: 'pending') }
+
+      render json: { status: 'ok' }, status: :ok
     end
 
     def update
