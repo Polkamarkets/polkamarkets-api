@@ -223,7 +223,7 @@ class Market < ApplicationRecord
   end
 
   def liquidity
-    return nil if eth_data.blank?
+    return self[:draft_liquidity] if eth_data.blank?
 
     eth_data[:liquidity]
   end
@@ -441,7 +441,7 @@ class Market < ApplicationRecord
 
   # realitio data
   def question_data(refresh: false)
-    return Bepro::RealitioErc20ContractService::DEFAULT_QUESTION_DATA if question_id.blank?
+    return Bepro::RealitioErc20ContractService.default_question_data(timeout: draft_timeout || 0) if question_id.blank?
 
     Rails.cache.fetch("markets:network_#{network_id}:#{eth_market_id}:question", force: refresh) do
       question_data = Bepro::RealitioErc20ContractService.new(network_id: network_id).get_question(question_id)
