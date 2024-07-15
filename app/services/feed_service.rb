@@ -90,12 +90,14 @@ class FeedService
 
       # using user's avatar if it's a market feed
       image_url =
-        user&.avatar ||
-        (outcome&.image_url&.present? ? outcome.image_url : action_market.image_url)
+        market.present? ?
+          user&.avatar :
+          (outcome&.image_url&.present? ? outcome.image_url : action_market.image_url)
 
       {
         user: user&.username || action[:address],
         user_slug: user&.slug,
+        user_address: action[:address],
         action: action[:action],
         market_title: action_market.title,
         market_slug: action_market.slug,
