@@ -73,6 +73,8 @@ class EtherscanService
         'https://api-alfajores.celoscan.io'
       when 80001
         'https://api-mumbai.polygonscan.com'
+      when 421614
+        'https://api-sepolia.arbiscan.io'
       else
         raise "EtherscanService :: Network #{network_id} unknown"
       end
@@ -95,6 +97,8 @@ class EtherscanService
         Rails.application.config_for(:etherscan).alfajores_api_key
       when 80001
         Rails.application.config_for(:etherscan).mumbai_api_key
+      when 421614
+        "" # no API key required
       else
         raise "EtherscanService :: Network #{network_id} unknown"
       end
