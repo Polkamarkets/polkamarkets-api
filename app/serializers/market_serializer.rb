@@ -38,7 +38,8 @@ class MarketSerializer < BaseSerializer
     :users,
     :liked,
     :likes,
-    :featured
+    :featured,
+    :publish_status
   )
   attribute :related_markets, if: :show_related_markets?
 

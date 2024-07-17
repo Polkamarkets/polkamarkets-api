@@ -13,8 +13,13 @@ module Bepro
       is_claimed: false,
       finalize_ts: 0,
       dispute_id: nil,
-      is_pending_arbitration_request: false
-    }.freeze
+      is_pending_arbitration_request: false,
+      timeout: 0,
+    }
+
+    def self.default_question_data(timeout: 0)
+      DEFAULT_QUESTION_DATA.merge(timeout: timeout)
+    end
 
     def initialize(network_id: nil, api_url: nil, contract_address: nil)
       super(
@@ -50,7 +55,8 @@ module Bepro
         arbitrator: question_data[1],
         is_pending_arbitration: question_data[5],
         is_claimed: question_is_claimed,
-        finalize_ts: question_data[4].to_i
+        finalize_ts: question_data[4].to_i,
+        timeout: question_data[3].to_i,
       }
     end
 

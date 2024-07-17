@@ -74,6 +74,9 @@ module Api
     def draft
       # TODO: add admin auth
       create_params = market_params.except(:outcomes, :land_id, :tournament_id)
+      market_draft_params.each do |key, value|
+        market_params["draft_#{key}"] = value if value.present?
+      end
 
       tournament_group = TournamentGroup.find_by(id: market_params[:land_id])
       tournament = Tournament.find_by(id: market_params[:tournament_id])
@@ -98,6 +101,22 @@ module Api
         status: :ok
     end
 
+    def publish
+      markets = Market.where(slug: params[:slugs])
+
+      # making sure all markets exist
+      raise "Market not found" if markets.count != params[:slugs].count
+
+      # making sure all markets are in draft state
+      markets.each do |market|
+        raise "Market is not in draft state" if market.eth_market_id.present? || market.publish_status == 'published'
+      end
+
+      markets.each { |market| market.update!(publish_status: 'pending') }
+
+      render json: { status: 'ok' }, status: :ok
+    end
+
     def update
       market = Market.find_by!(slug: params[:id])
 
@@ -106,6 +125,10 @@ module Api
       raise "Market has not enough outcomes" if market_params[:outcomes].count < 2
 
       update_params = market_params.except(:outcomes, :land_id, :tournament_id)
+      market_draft_params.each do |key, value|
+        update_params["draft_#{key}"] = value if value.present?
+      end
+
       # destroying outcomes and rebuilding them
       market.outcomes.destroy_all
       market_params[:outcomes].each do |outcome_params|
@@ -165,6 +188,13 @@ module Api
         :image_url,
         topics: [],
         outcomes: %i[title image_url price],
+      )
+    end
+
+    def market_draft_params
+      params.require(:market).permit(
+        :liquidity,
+        :timeout,
       )
     end
   end

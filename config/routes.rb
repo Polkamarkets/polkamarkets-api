@@ -37,6 +37,7 @@ Rails.application.routes.draw do
 
       collection do
         post :draft
+        post :publish
       end
     end
 

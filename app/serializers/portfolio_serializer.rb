@@ -3,15 +3,11 @@ class PortfolioSerializer < BaseSerializer
     :address,
     :network_id,
     :holdings_value,
-    :holdings_performance,
-    :holdings_chart,
     :open_positions,
     :won_positions,
     :total_positions,
-    :closed_markets_profit,
-    :liquidity_provided,
-    :liquidity_fees_earned,
-    :first_position_at
+    :first_position_at,
+    :accuracy
   )
 
   def address
