@@ -173,8 +173,13 @@ class Portfolio < ApplicationRecord
     action_events.select { |event| event[:action] == 'buy' }.min_by { |event| event[:timestamp] }&.dig(:timestamp)
   end
 
-  def open_positions
-    holdings.count
+  def open_positions(filter_by_market_ids: nil, refresh: false)
+    holdings_by_market = holdings_value_by_market(refresh: refresh)
+
+    # filtering by market ids if provided
+    holdings_value_by_market.select! { |market_id, value| filter_by_market_ids.include?(market_id) } if !filter_by_market_ids.nil?
+
+    holdings_value_by_market.values.count
   end
 
   def won_positions
@@ -226,11 +231,11 @@ class Portfolio < ApplicationRecord
       end
   end
 
-  def holdings_value(filter_by_market_ids: nil, refresh: false)
-    value = 0
+  def holdings_value_by_market(refresh: false)
+    return @holdings_value_by_market if @holdings_value_by_market.present? && !refresh
 
-    holdings_value_by_market =
-      Rails.cache.fetch("portfolios:network_#{network_id}:#{eth_address}:holdings_value", expires_in: 24.hours, force: refresh) do
+    @holdings_value_by_market ||=
+      Rails.cache.fetch("portfolios:network_#{network_id}:#{eth_address}:holdings_by_market", expires_in: 24.hours, force: refresh) do
         holdings_value_by_market = Hash.new(0)
 
         # fetching holdings markets
@@ -258,19 +263,25 @@ class Portfolio < ApplicationRecord
 
         holdings_value_by_market
       end
+  end
+
+  def holdings_value(filter_by_market_ids: nil, refresh: false)
+    value = 0
+
+    holdings_by_market = holdings_value_by_market(refresh: refresh)
 
     # filtering by market ids if provided
-    holdings_value_by_market.select! { |market_id, value| filter_by_market_ids.include?(market_id) } if !filter_by_market_ids.nil?
+    holdings_by_market.select! { |market_id, value| filter_by_market_ids.include?(market_id) } if !filter_by_market_ids.nil?
 
-    holdings_value_by_market.values.sum
+    holdings_by_market.values.sum
   end
 
   def holdings_cost(filter_by_market_ids: nil, refresh: false)
     value = 0
 
-    holdings_value_by_market =
+    holdings_cost_by_market =
       Rails.cache.fetch("portfolios:network_#{network_id}:#{eth_address}:holdings_cost", expires_in: 24.hours, force: refresh) do
-        holdings_value_by_market = Hash.new(0)
+        holdings_cost_by_market = Hash.new(0)
 
         # fetching holdings markets
         market_ids = holdings.map { |holding| holding[:market_id] }.uniq
@@ -292,18 +303,18 @@ class Portfolio < ApplicationRecord
 
               outcome_buy_price = outcome_buy_events.sum { |event| event[:value] } / outcome_buy_events.sum { |event| event[:shares] }
 
-              holdings_value_by_market[market.eth_market_id] += holding[:outcome_shares][outcome.eth_market_id] * outcome_buy_price * market.token_rate
+              holdings_cost_by_market[market.eth_market_id] += holding[:outcome_shares][outcome.eth_market_id] * outcome_buy_price * market.token_rate
             end
           end
         end
 
-        holdings_value_by_market
+        holdings_cost_by_market
       end
 
     # filtering by market ids if provided
-    holdings_value_by_market.select! { |market_id, value| filter_by_market_ids.include?(market_id) } if !filter_by_market_ids.nil?
+    holdings_cost_by_market.select! { |market_id, value| filter_by_market_ids.include?(market_id) } if !filter_by_market_ids.nil?
 
-    holdings_value_by_market.values.sum
+    holdings_cost_by_market.values.sum
   end
 
   def holdings_performance
