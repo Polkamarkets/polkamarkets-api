@@ -11,7 +11,8 @@ class PortfolioSerializer < BaseSerializer
     :closed_markets_profit,
     :liquidity_provided,
     :liquidity_fees_earned,
-    :first_position_at
+    :first_position_at,
+    :accuracy
   )
 
   def address
