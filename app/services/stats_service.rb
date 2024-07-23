@@ -294,6 +294,12 @@ class StatsService
         key << ":land_#{tournament_group_id}" if tournament_group.present? && tournament_group.network_id.to_i == network_id.to_i
 
         Rails.cache.fetch(key, force: refresh) do
+          if (tournament.present? && tournament.network_id.to_i != network_id.to_i) ||
+            (tournament_group.present? && tournament_group.network_id.to_i != network_id.to_i)
+            next [network_id.to_i, []]
+          end
+
+
           actions = network_actions(network_id)
           bonds = network_bonds(network_id)
           votes = network_votes(network_id)
