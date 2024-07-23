@@ -5,7 +5,7 @@ etherscan: &default
   moonbeam_api_key: <%= ENV['ETHERSCAN_MOONBEAM_API_KEY'] %>
   moonriver_api_key: <%= ENV['ETHERSCAN_MOONRIVER_API_KEY'] %>
   mumbai_api_key: <%= ENV['ETHERSCAN_MUMBAI_API_KEY'] %>
-  alfajores_api_key: <%= ENV['ETHERSCAN_ALFAJORES_API_KEY'] %>
+  celo_api_key: <%= ENV['ETHERSCAN_CELO_API_KEY'] %>
 
 production:
   <<: *default

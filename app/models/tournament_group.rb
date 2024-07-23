@@ -24,7 +24,7 @@ class TournamentGroup < ApplicationRecord
   def self.tokens
     # caching value for 1h
     Rails.cache.fetch('lands:tokens', expires_in: 1.hour) do
-      TournamentGroup.all.map(&:tokens).flatten.uniq.compact
+      TournamentGroup.all.map(&:token).uniq.compact
     end
   end
 
