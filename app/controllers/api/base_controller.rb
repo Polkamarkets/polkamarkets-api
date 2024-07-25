@@ -42,6 +42,8 @@ module Api
           email = privy_user_data[:email] || privy_user_data[:username] || privy_user_data[:address] + '@login_type.com'
           username =
             privy_user_data[:username] || (privy_user_data[:email].present? ? email.split('@').first : "User #{privy_user_data[:address][0..4]}...#{privy_user_data[:address][-3..-1]}")
+          slug =
+            (privy_user_data[:username] || privy_user_data[:email].present?) ? nil : "user-#{privy_user_data[:address][2..4]}#{privy_user_data[:address][-3..-1]}".downcase)
           avatar = privy_user_data[:avatar]
           raw_email = privy_user_data[:email]
           login_public_key = privy_user_data[:address]
@@ -50,7 +52,7 @@ module Api
           user = User.find_by(email: email) || User.find_by(login_public_key: login_public_key)
 
           if user.nil?
-            user = User.new(email: email, login_public_key: login_public_key, raw_email: raw_email, username: username)
+            user = User.new(email: email, login_public_key: login_public_key, raw_email: raw_email, username: username, slug: slug)
             user.save!
           else
             user.update(login_public_key: login_public_key, raw_email: raw_email, email: email)
