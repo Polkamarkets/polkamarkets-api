@@ -75,7 +75,7 @@ module Api
       # TODO: add admin auth
       create_params = market_params.except(:outcomes, :land_id, :tournament_id)
       market_draft_params.each do |key, value|
-        market_params["draft_#{key}"] = value if value.present?
+        create_params["draft_#{key}"] = value if value.present?
       end
 
       tournament_group = TournamentGroup.find_by(id: market_params[:land_id])
