@@ -40,7 +40,8 @@ module Api
           privy_user_data = privy_service.get_user_data(user_id: jwt_payload[0]['sub'])
 
           email = privy_user_data[:email] || privy_user_data[:username] || privy_user_data[:address] + '@login_type.com'
-          username = privy_user_data[:username]
+          username =
+            privy_user_data[:username] || (privy_user_data[:email].present? ? email.split('@').first : "User #{privy_user_data[:address][0..4]}...#{privy_user_data[:address][-3..-1]}")
           avatar = privy_user_data[:avatar]
           raw_email = privy_user_data[:email]
           login_public_key = privy_user_data[:address]
@@ -64,7 +65,7 @@ module Api
             end
           end
 
-          user.update(username: username || email.split('@').first) if user.username.blank?
+          user.update(username: username) if user.username.blank?
           user.update(avatar: avatar) if avatar.present? && user.avatar.blank?
           user.update(login_type: login_type) if login_type.present?
 
