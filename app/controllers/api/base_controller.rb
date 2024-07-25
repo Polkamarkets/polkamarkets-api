@@ -43,7 +43,7 @@ module Api
           username =
             privy_user_data[:username] || (privy_user_data[:email].present? ? email.split('@').first : "User #{privy_user_data[:address][0..4]}...#{privy_user_data[:address][-3..-1]}")
           slug =
-            (privy_user_data[:username] || privy_user_data[:email].present?) ? nil : "user-#{privy_user_data[:address][2..4]}#{privy_user_data[:address][-3..-1]}".downcase)
+            (privy_user_data[:username] || privy_user_data[:email].present?) ? nil : "user-#{privy_user_data[:address][2..4]}#{privy_user_data[:address][-3..-1]}".downcase
           avatar = privy_user_data[:avatar]
           raw_email = privy_user_data[:email]
           login_public_key = privy_user_data[:address]
