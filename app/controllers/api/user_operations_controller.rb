@@ -21,7 +21,9 @@ module Api
         return render json: { errors: user_operation.errors }, status: :unprocessable_entity
       end
 
-      UserOperation::SendToBundlerWorker.set(queue: 'priority').perform_async(user_operation.id)
+      unless params[:do_not_bundle]
+        UserOperation::SendToBundlerWorker.set(queue: 'priority').perform_async(user_operation.id)
+      end
 
       head :ok
     end
