@@ -38,6 +38,18 @@ class Market < ApplicationRecord
 
   IMMUTABLE_FIELDS = [:title]
 
+  def self.all_voided_market_ids
+    Rails.cache.fetch('markets:voided', expires_in: 5.minutes) do
+      Market.all.group_by(&:network_id).map do |network_id, markets|
+        market_ids = markets.select(&:voided).map do |market|
+          market.eth_market_id
+        end
+
+        [network_id, market_ids]
+      end.to_h
+    end
+  end
+
   def self.find_by_slug_or_eth_market_id!(id_or_slug, network_id = nil)
     Market.find_by(slug: id_or_slug) ||
       Market.find_by!(eth_market_id: id_or_slug, network_id: network_id)

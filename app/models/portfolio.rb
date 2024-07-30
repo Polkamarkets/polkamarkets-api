@@ -129,10 +129,7 @@ class Portfolio < ApplicationRecord
     winnings_by_market[:winnings].select! { |market_id, value| filter_by_market_ids.include?(market_id) } if !filter_by_market_ids.nil?
     winnings_by_market[:accuracy].select! { |market_id, value| filter_by_market_ids.include?(market_id) } if !filter_by_market_ids.nil?
 
-    voided_market_ids = Market
-      .where(eth_market_id: winnings_by_market[:winnings].keys, network_id: network_id)
-      .select { |market| market.voided }
-      .map(&:eth_market_id)
+    voided_market_ids = (Market.all_voided_market_ids[network_id] || []) & winnings_by_market[:winnings].keys
 
     {
       value: winnings_by_market[:winnings].values.sum,
