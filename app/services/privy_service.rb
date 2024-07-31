@@ -9,36 +9,29 @@ class PrivyService
   end
 
   def get_user_data(user_id:)
-    uri = api_url + "/api/v1/users/#{user_id}"
+    uri = privy_url + "/users/#{user_id}"
 
-    Sentry.with_scope do |scope|
-      scope.set_tags(
-        uri: uri
-      )
+    response = HTTP.basic_auth(user: app_id, pass: app_secret)
+      .headers('privy-app-id' => app_id)
+      .get(uri)
+    response_body = response.body.to_s
 
-      begin
-        response = HTTP.basic_auth(user: app_id, pass: app_secret)
-              .headers('privy-app-id' => app_id)
-              .get(uri)
-        response_body = response.body.to_s
+    raise "PrivyService :: Get User Data Error" unless response.status.success?
 
-        unless response.status.success? && !response_body.include?('server unavailable')
-          puts response_body.to_s
-          scope.set_tags(
-            status: response.status,
-            error: response_body.to_s
-          )
-          raise "PrivyService :: Get User Data Error"
-        end
+    parse_data(JSON.parse(response_body.to_s))
+  end
 
-        parse_data(JSON.parse(response_body.to_s))
-      rescue => e
-        scope.set_tags(
-          error: e.message
-        )
-        raise e.message
-      end
-    end
+  def search_users(query: {})
+    uri = privy_url + "/users/search"
+
+    response = HTTP.basic_auth(user: app_id, pass: app_secret)
+      .headers('privy-app-id' => app_id)
+      .headers('Content-Type' => 'application/json')
+      .post(uri, body: query.to_json)
+
+    raise "PrivyService :: Search Users Error" unless response.status.success?
+
+    JSON.parse(response.body.to_s)
   end
 
   def uid_from_linked_account_data(linked_account)
@@ -76,4 +69,7 @@ class PrivyService
     }
   end
 
+  def privy_url
+    "https://auth.privy.io/api/v1"
+  end
 end
