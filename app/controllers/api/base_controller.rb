@@ -36,8 +36,8 @@ module Api
             return
           end
 
-          privy_service = PrivyService.new
-          privy_user_data = privy_service.get_user_data(user_id: jwt_payload[0]['sub'])
+          privy_user_id = jwt_payload[0]['sub']
+          privy_user_data = PrivyService.new.get_user_data(user_id: privy_user_id)
 
           email = privy_user_data[:email] || privy_user_data[:username] || privy_user_data[:address] + '@login_type.com'
           username =
@@ -52,10 +52,18 @@ module Api
           user = User.find_by(email: email) || User.find_by(login_public_key: login_public_key)
 
           if user.nil?
-            user = User.new(email: email, login_public_key: login_public_key, raw_email: raw_email, username: username, slug: slug)
+            user = User.new(email: email, login_public_key: login_public_key, raw_email: raw_email, username: username, slug: slug, idp_uid: privy_user_id, idp: 'privy')
             user.save!
           else
-            user.update(login_public_key: login_public_key, raw_email: raw_email, email: email)
+            user.update(login_public_key: login_public_key, raw_email: raw_email, email: email, idp_uid: privy_user_id, idp: 'privy')
+          end
+
+          # updating user idps
+          privy_user_data[:linked_accounts].each do |linked_account|
+            idp_uid = PrivyService.new.uid_from_linked_account_data(linked_account)
+            user_idp = user.user_idps.find_or_initialize_by(provider: linked_account['type'], uid: idp_uid)
+            user_idp.data = linked_account
+            user_idp.save!
           end
 
           if params[:redeem_code].present? && !user.whitelisted?
