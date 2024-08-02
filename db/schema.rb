@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2024_07_14_171809) do
+ActiveRecord::Schema.define(version: 2024_07_31_141315) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -288,6 +288,16 @@ ActiveRecord::Schema.define(version: 2024_07_14_171809) do
     t.index ["tournament_group_id"], name: "index_tournaments_on_tournament_group_id"
   end
 
+  create_table "user_idps", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.jsonb "data", default: {}
+    t.string "provider"
+    t.string "uid"
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["user_id"], name: "index_user_idps_on_user_id"
+  end
+
   create_table "user_operations", force: :cascade do |t|
     t.integer "network_id", null: false
     t.integer "status", default: 0, null: false
@@ -324,6 +334,8 @@ ActiveRecord::Schema.define(version: 2024_07_14_171809) do
     t.string "website_url"
     t.boolean "google_connected", default: false
     t.datetime "inactive_since"
+    t.string "idp"
+    t.string "idp_uid"
     t.index ["slug"], name: "index_users_on_slug", unique: true
   end
 
@@ -347,4 +359,5 @@ ActiveRecord::Schema.define(version: 2024_07_14_171809) do
   add_foreign_key "market_outcomes", "markets"
   add_foreign_key "reports", "users"
   add_foreign_key "tournaments", "tournament_groups"
+  add_foreign_key "user_idps", "users"
 end

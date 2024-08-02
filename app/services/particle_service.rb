@@ -36,7 +36,6 @@ class ParticleService
           response_body = response.body.to_s
 
           unless response.status.success? && !response_body.include?('server unavailable')
-            puts response_body.to_s
             scope.set_tags(
               status: response.status,
               error: response_body.to_s

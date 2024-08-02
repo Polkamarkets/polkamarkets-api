@@ -8,6 +8,7 @@ class User < ApplicationRecord
   has_many :likes, dependent: :destroy
   has_many :comments, dependent: :destroy
   has_many :reports, dependent: :destroy
+  has_many :user_idps, dependent: :destroy
   has_and_belongs_to_many :tournament_groups
 
   validates :email, presence: true, uniqueness: true
