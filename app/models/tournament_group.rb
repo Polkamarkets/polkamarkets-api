@@ -57,6 +57,12 @@ class TournamentGroup < ApplicationRecord
     markets.map(&:token).flatten.uniq.compact
   end
 
+  def topics
+    Rails.cache.fetch("tournament_groups:#{id}:topics", expires_in: 1.hour) do
+      markets.map(&:topics).flatten.uniq.compact
+    end
+  end
+
   def token(refresh: false)
     return tokens.first if token_address.blank?
 
