@@ -3,7 +3,7 @@ module Api
     def index
       if params[:from].blank? && params[:to].blank?
         # only fetching cached stats without params
-        stats = Rails.cache.fetch("api:stats", expires_in: 24.hours) do
+        stats = Rails.cache.fetch("api:stats") do
           StatsService.new.get_stats
         end
       else
