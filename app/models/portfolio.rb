@@ -41,7 +41,7 @@ class Portfolio < ApplicationRecord
     return @market_actions if @market_actions.present? && !refresh
 
     @market_actions ||=
-      Rails.cache.fetch("portfolios:network_#{network_id}:#{eth_address}:actions", expires_in: 24.hours, force: refresh) do
+      Rails.cache.fetch("portfolios:network_#{network_id}:#{eth_address}:actions", force: refresh) do
         Bepro::PredictionMarketContractService.new(network_id: network_id).get_action_events(address: eth_address)
       end
   end
@@ -52,7 +52,7 @@ class Portfolio < ApplicationRecord
     return @burn_actions if @burn_actions.present? && !refresh
 
     @burn_actions ||=
-      Rails.cache.fetch("portfolios:network_#{network_id}:#{eth_address}:burn_actions", expires_in: 24.hours, force: refresh) do
+      Rails.cache.fetch("portfolios:network_#{network_id}:#{eth_address}:burn_actions", force: refresh) do
         Bepro::Erc20ContractService.new(network_id: network_id).burn_events(from: eth_address)
       end
   end
@@ -64,7 +64,7 @@ class Portfolio < ApplicationRecord
   end
 
   def feed_events(refresh: false)
-    Rails.cache.fetch("portfolios:network_#{network_id}:#{eth_address}:feed", expires_in: 24.hours, force: refresh) do
+    Rails.cache.fetch("portfolios:network_#{network_id}:#{eth_address}:feed", force: refresh) do
       FeedService.new(address: eth_address, network_id: network_id).feed_actions
     end
   end
@@ -212,7 +212,7 @@ class Portfolio < ApplicationRecord
     return @liquidity_fees_earned if @liquidity_fees_earned.present? && !refresh
 
     @liquidity_fees_earned ||=
-      Rails.cache.fetch("portfolios:network_#{network_id}:#{eth_address}:liquidity_fees", expires_in: 24.hours, force: refresh) do
+      Rails.cache.fetch("portfolios:network_#{network_id}:#{eth_address}:liquidity_fees", force: refresh) do
         events = Bepro::PredictionMarketContractService.new(network_id: network_id).get_user_liquidity_fees_earned(eth_address)
 
         market_ids = events.map { |event| event[:market_id] }.uniq
@@ -232,7 +232,7 @@ class Portfolio < ApplicationRecord
     return @holdings_value_by_market if @holdings_value_by_market.present? && !refresh
 
     @holdings_value_by_market ||=
-      Rails.cache.fetch("portfolios:network_#{network_id}:#{eth_address}:holdings_by_market", expires_in: 24.hours, force: refresh) do
+      Rails.cache.fetch("portfolios:network_#{network_id}:#{eth_address}:holdings_by_market", force: refresh) do
         holdings_value_by_market = Hash.new(0)
 
         # fetching holdings markets
@@ -490,7 +490,7 @@ class Portfolio < ApplicationRecord
   end
 
   def erc20_balance
-    Rails.cache.fetch("portfolios:network_#{network_id}:#{eth_address}:erc20_balance", expires_in: 24.hours, force: refresh) do
+    Rails.cache.fetch("portfolios:network_#{network_id}:#{eth_address}:erc20_balance", force: refresh) do
       Bepro::Erc20ContractService.new(network_id: network_id).balance_of(eth_address)
     end
   end
@@ -501,7 +501,9 @@ class Portfolio < ApplicationRecord
 
     # triggering a refresh for all cached ethereum data
     Cache::PortfolioActionEventsWorker.set(queue: queue).perform_async(id)
-    Cache::PortfolioLiquidityFeesWorker.set(queue: queue).perform_async(id)
+    unless Rails.application.config_for(:ethereum).fantasy_enabled
+      Cache::PortfolioLiquidityFeesWorker.set(queue: queue).perform_async(id)
+    end
     Cache::PortfolioFeedWorker.set(queue: queue).perform_async(id)
   end
 end
