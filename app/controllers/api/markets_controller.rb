@@ -52,7 +52,7 @@ module Api
     end
 
     def comments
-      render json: @market.comments, status: :ok
+      render json: @market.comments, scope: serializable_scope, status: :ok
     end
 
     def create
