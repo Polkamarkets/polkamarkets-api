@@ -15,6 +15,7 @@ module Api
       )
 
       if @comment.save
+        market.update_comments_counter
         render json: @comment, status: :ok
       else
         render json: @comment.errors, status: :unprocessable_entity

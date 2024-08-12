@@ -1,5 +1,6 @@
 class Comment < ApplicationRecord
   include Reportable
+  include Likeable
 
   belongs_to :user
   belongs_to :market

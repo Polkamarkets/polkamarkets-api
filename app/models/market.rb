@@ -2,6 +2,7 @@ class Market < ApplicationRecord
   include NetworkHelper
   include Immutable
   include Reportable
+  include Likeable
   extend FriendlyId
   friendly_id :title, use: :slugged
 
@@ -519,6 +520,11 @@ class Market < ApplicationRecord
     Rails.cache.fetch("markets:network_#{network_id}:#{eth_market_id}:users", force: refresh) do
       action_events.map { |action| action[:address] }.uniq.count
     end
+  end
+
+  def update_comments_counter
+    self.comments_count = comments.count
+    save
   end
 
   def related_markets(refresh: false)

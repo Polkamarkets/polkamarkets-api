@@ -8,8 +8,10 @@ module Api
       like.likeable = likeable
       like.save!
 
+      likeable.update_likes_counter
       # destroying likeable cache
       likeable.touch
+
 
       render json: like
     end
@@ -18,6 +20,7 @@ module Api
       like = Like.find_by!(likeable: likeable, user: current_user)
       like.destroy!
 
+      likeable.update_likes_counter
       # destroying likeable cache
       likeable.touch
 
