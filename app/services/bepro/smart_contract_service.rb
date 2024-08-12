@@ -85,8 +85,9 @@ module Bepro
       if eth_query.last_block_number.present?
         uri << "&fromBlock=#{eth_query.last_block_number}"
         # batching for optimization purposes
-        eth_query.eth_events.except_raw_data.find_each(batch_size: 10000) do |event|
+        eth_query.eth_events.except_raw_data.find_each(batch_size: 10000).with_index do |event, i|
           past_events << event.serialize_as_eth_log
+          GC.start if i % 1000 == 0
         end
       end
 
