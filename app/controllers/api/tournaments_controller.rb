@@ -46,8 +46,6 @@ module Api
       markets = tournament.markets
         .includes(:outcomes)
         .includes(:tournaments)
-        .includes(:comments)
-        .includes(:likes)
 
       if params[:publish_status].present?
         if params[:publish_status] == 'published'
