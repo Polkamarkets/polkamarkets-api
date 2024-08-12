@@ -84,11 +84,6 @@ module Bepro
 
       if eth_query.last_block_number.present?
         uri << "&fromBlock=#{eth_query.last_block_number}"
-        # batching for optimization purposes
-        eth_query.eth_events.except_raw_data.find_each(batch_size: 10000).with_index do |event, i|
-          past_events << event.serialize_as_eth_log
-          GC.start if i % 1000 == 0
-        end
       end
 
       Sentry.with_scope do |scope|
@@ -117,52 +112,64 @@ module Bepro
         end
       end
 
+      if store_events
+        return [] if events.blank?
+
+        current_block_number = events.map { |event| event['blockNumber'] }.max
+
+        events.each_with_index do |event, index|
+          eth_event = EthEvent.find_or_initialize_by(
+            event: event_name,
+            contract_name: contract_name,
+            network_id: network_id,
+            address: contract_address,
+            transaction_hash: event['transactionHash'],
+            log_index: event['logIndex'] || 0,
+          )
+          eth_event.update!(
+            block_hash: event['blockHash'],
+            block_number: event['blockNumber'],
+            removed: event['removed'],
+            transaction_index: event['transactionIndex'],
+            signature: event['signature'],
+            data: event['returnValues'],
+            raw_data: event['raw'],
+          )
+          eth_query.eth_events << eth_event if eth_query.eth_event_ids.exclude?(eth_event.id)
+
+          # periodically updating the last block number
+          if index % 1000 == 0 &&
+            (eth_query.reload.last_block_number.blank? || event['blockNumber'] > eth_query.last_block_number)
+            eth_query.update!(last_block_number: event['blockNumber'])
+          end
+        end
+
+        eth_query.last_block_number = current_block_number + 1 if current_block_number.present?
+        eth_query.save!
+
+        return events
+      end
+
+      if eth_query.last_block_number.present?
+        # batching for optimization purposes
+        eth_query.eth_events.except_raw_data.find_each(batch_size: 10000).with_index do |event, i|
+          past_events << event.serialize_as_eth_log
+          GC.start if i % 1000 == 0
+        end
+      end
+
       all_events = (past_events + events)
         .uniq { |event| [event['logIndex'] || 0, event['transactionHash']] }
         .sort_by { |event| event['blockNumber'] }
 
-      if !store_events && events.present?
+      if events.present?
         args = [network_id, contract_name, contract_address, api_url, event_name, filter]
 
         # only enqueue backfill job if no same current job is running
         if !eth_query.pending_index_running?
           EthEventsWorker.perform_async(*args)
         end
-
-        return all_events
       end
-
-      current_block_number = all_events.map { |event| event['blockNumber'] }.max
-
-      events.each_with_index do |event, index|
-        eth_event = EthEvent.find_or_initialize_by(
-          event: event_name,
-          contract_name: contract_name,
-          network_id: network_id,
-          address: contract_address,
-          transaction_hash: event['transactionHash'],
-          log_index: event['logIndex'] || 0,
-        )
-        eth_event.update!(
-          block_hash: event['blockHash'],
-          block_number: event['blockNumber'],
-          removed: event['removed'],
-          transaction_index: event['transactionIndex'],
-          signature: event['signature'],
-          data: event['returnValues'],
-          raw_data: event['raw'],
-        )
-        eth_query.eth_events << eth_event if eth_query.eth_event_ids.exclude?(eth_event.id)
-
-        # periodically updating the last block number
-        if index % 1000 == 0 &&
-          (eth_query.reload.last_block_number.blank? || event['blockNumber'] > eth_query.last_block_number)
-          eth_query.update!(last_block_number: event['blockNumber'])
-        end
-      end
-
-      eth_query.last_block_number = current_block_number + 1 if current_block_number.present?
-      eth_query.save!
 
       all_events
     end
