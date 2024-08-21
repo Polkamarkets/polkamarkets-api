@@ -231,8 +231,8 @@ class Portfolio < ApplicationRecord
   def holdings_value_by_market(refresh: false)
     return @holdings_value_by_market if @holdings_value_by_market.present? && !refresh
 
-    @holdings_value_by_market ||=
-      Rails.cache.fetch("portfolios:network_#{network_id}:#{eth_address}:holdings_by_market", force: refresh) do
+    @holdings_value_by_market =
+      Rails.cache.fetch("portfolios:network_#{network_id}:#{eth_address}:holdings_by_market", expires_in: 24.hours, force: refresh) do
         holdings_value_by_market = Hash.new(0)
 
         # fetching holdings markets
