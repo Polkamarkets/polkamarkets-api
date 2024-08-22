@@ -197,6 +197,7 @@ GEM
     opus-ruby (1.0.1)
       ffi
     os (1.1.4)
+    pagy (6.5.0)
     paper_trail (14.0.0)
       activerecord (>= 6.0)
       request_store (~> 1.4)
@@ -358,6 +359,7 @@ DEPENDENCIES
   listen (~> 3.2)
   newrelic_rpm
   news-api
+  pagy
   paper_trail
   pg (>= 0.18, < 2.0)
   pry-rails
