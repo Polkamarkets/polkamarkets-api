@@ -1,5 +1,5 @@
 class MarketSerializer < BaseSerializer
-  cache expires_in: 24.hours, except: [:liked, :comments, :related_markets]
+  cache expires_in: 24.hours, except: [:liked, :related_markets]
 
   attribute :eth_market_id, key: :id
   attributes(
@@ -38,13 +38,13 @@ class MarketSerializer < BaseSerializer
     :users,
     :liked,
     :likes,
+    :comments,
     :featured,
     :publish_status
   )
   attribute :related_markets, if: :show_related_markets?
 
   has_many :outcomes, class_name: "MarketOutcome", serializer: MarketOutcomeSerializer
-  has_many :comments, serializer: CommentSerializer
   has_many :tournaments, serializer: TournamentSerializer, if: :show_tournaments?
 
   def question
@@ -68,10 +68,14 @@ class MarketSerializer < BaseSerializer
   def liked
     return false unless current_user
 
-    object.likes.map(&:user_id).include?(current_user.id)
+    current_user.likes.any? { |l| l.likeable_type == 'Market' && l.likeable_id == object.id }
   end
 
   def likes
-    object.likes.size
+    object.likes_count
+  end
+
+  def comments
+    object.comments_count
   end
 end

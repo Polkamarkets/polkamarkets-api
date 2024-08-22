@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2024_07_31_141315) do
+ActiveRecord::Schema.define(version: 2024_08_12_110640) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -87,6 +87,7 @@ ActiveRecord::Schema.define(version: 2024_07_31_141315) do
     t.bigint "parent_id"
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
+    t.integer "likes_count", default: 0
     t.index ["market_id"], name: "index_comments_on_market_id"
     t.index ["parent_id"], name: "index_comments_on_parent_id"
     t.index ["user_id"], name: "index_comments_on_user_id"
@@ -199,6 +200,8 @@ ActiveRecord::Schema.define(version: 2024_07_31_141315) do
     t.integer "publish_status", default: 0
     t.integer "draft_liquidity"
     t.integer "draft_timeout"
+    t.integer "comments_count", default: 0
+    t.integer "likes_count", default: 0
     t.index ["eth_market_id", "network_id"], name: "index_markets_on_eth_market_id_and_network_id", unique: true
     t.index ["slug"], name: "index_markets_on_slug", unique: true
   end

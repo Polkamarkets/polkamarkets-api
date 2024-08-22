@@ -15,10 +15,10 @@ class CommentSerializer < BaseSerializer
   def liked
     return false unless current_user
 
-    object.likes.map(&:user_id).include?(current_user.id)
+    current_user.likes.any? { |l| l.likeable_type == 'Comment' && l.likeable_id == object.id }
   end
 
   def likes
-    object.likes.size
+    object.likes_count
   end
 end

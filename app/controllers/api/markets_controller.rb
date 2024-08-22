@@ -1,6 +1,6 @@
 module Api
   class MarketsController < BaseController
-    before_action :get_market, only: %i[show reload feed]
+    before_action :get_market, only: %i[show comments reload feed]
 
     def index
       markets = Market
@@ -8,8 +8,6 @@ module Api
         .order(created_at: :desc)
         .includes(:outcomes)
         .includes(:tournaments)
-        .includes(:comments)
-        .includes(:likes)
 
       if params[:id]
         ids = params[:id].split(',').map(&:to_i)
@@ -51,6 +49,10 @@ module Api
         show_related_markets: true,
         scope: serializable_scope,
         status: :ok
+    end
+
+    def comments
+      render json: @market.comments, scope: serializable_scope, status: :ok
     end
 
     def create
