@@ -102,19 +102,31 @@ module Api
         end
       end
 
-      # sorting leaderboard, when tournament param is present
-      if params[:tournament_id].present?
-        tournament = Tournament.find(params[:tournament_id])
+      rank_by = params[:rank_by]
 
-        raise "tournament network does not match" if tournament.network_id.to_i != network_id.to_i
+      # sorting leaderboard, when tournament param is present
+      if rank_by.blank? &&
+        (params[:tournament_id].present? || params[:land_id].present? || params[:tournament_group_id].present?)
+        record = params[:tournament_id].present? ?
+          Tournament.find(params[:tournament_id]) :
+          TournamentGroup.find(params[:land_id] || params[:tournament_group_id])
+
+        raise "tournament network does not match" if record.network_id.to_i != network_id.to_i
 
         # sorting params are comma separated
-        sort_params = tournament.rank_by.split(',').map(&:to_sym)
+        rank_by = record.rank_by
+      end
+
+      if rank_by.present?
+        sort_params = rank_by.split(',').map(&:to_sym)
 
         leaderboard.sort_by! do |user|
           sort_params.map { |param| -user[param] }
         end
       end
+
+      # TODO: remove - making it optional for legacy reasons
+      return paginate_array(leaderboard) if params[:paginate]
 
       leaderboard
     end
