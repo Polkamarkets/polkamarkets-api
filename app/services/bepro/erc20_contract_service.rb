@@ -14,6 +14,9 @@ module Bepro
           api_url ||
             Rails.application.config_for(:ethereum).dig(:"network_#{network_id}", :bepro_api_url) ||
             Rails.application.config_for(:ethereum).dig(:"stats_network_#{network_id}", :bepro_api_url),
+        api_public_key:
+          Rails.application.config_for(:ethereum).dig(:"network_#{network_id}", :bepro_api_public_key) ||
+          Rails.application.config_for(:ethereum).dig(:"stats_network_#{network_id}", :bepro_api_public_key),
       )
     end
 
@@ -35,6 +38,10 @@ module Bepro
         symbol: call(method: 'symbol'),
         decimals: decimals,
       }
+    end
+
+    def mint_tokens(to:, amount:)
+      execute(method: 'mint', args: [to, from_integer_to_big_number(amount, decimals).to_s])
     end
 
     def transfer_events(from: nil, to: nil)
