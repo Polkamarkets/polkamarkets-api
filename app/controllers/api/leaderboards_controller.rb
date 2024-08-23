@@ -120,7 +120,7 @@ module Api
 
          # adding a rank field to the user leaderboard
         leaderboard.each_with_index do |user, index|
-          user[:rank] = index + 1
+          user[:ranking] = index + 1
         end
       end
 
