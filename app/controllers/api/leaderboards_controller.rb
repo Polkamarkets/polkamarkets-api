@@ -120,8 +120,10 @@ module Api
       if rank_by.present?
         sort_params = rank_by.split(',').map(&:to_sym)
 
+        direction = params[:sort] == 'asc' ? 1 : -1
+
         leaderboard.sort_by! do |user|
-          sort_params.map { |param| -user[param] }
+          sort_params.map { |param| direction * user[param] }
         end
       end
 
