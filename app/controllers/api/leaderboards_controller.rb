@@ -102,11 +102,8 @@ module Api
         end
       end
 
-      rank_by = params[:rank_by]
-
       # sorting leaderboard, when tournament param is present
-      if rank_by.blank? &&
-        (params[:tournament_id].present? || params[:land_id].present? || params[:tournament_group_id].present?)
+      if params[:tournament_id].present? || params[:land_id].present? || params[:tournament_group_id].present?
         record = params[:tournament_id].present? ?
           Tournament.find(params[:tournament_id]) :
           TournamentGroup.find(params[:land_id] || params[:tournament_group_id])
@@ -115,16 +112,28 @@ module Api
 
         # sorting params are comma separated
         rank_by = record.rank_by
-      end
-
-      if rank_by.present?
         sort_params = rank_by.split(',').map(&:to_sym)
 
-        direction = params[:sort] == 'asc' ? 1 : -1
+        leaderboard.sort_by! do |user|
+          sort_params.map { |param| -user[param] }
+        end
+
+         # adding a rank field to the user leaderboard
+        leaderboard.each_with_index do |user, index|
+          user[:rank] = index + 1
+        end
+      end
+
+      if params[:rank_by].present? && params[:rank_by] != rank_by
+        sort_params = params[:rank_by].split(',').map(&:to_sym)
 
         leaderboard.sort_by! do |user|
-          sort_params.map { |param| direction * user[param] }
+          sort_params.map { |param| -user[param] }
         end
+      end
+
+      if params[:sort] == 'asc'
+        leaderboard.reverse!
       end
 
       # TODO: remove - making it optional for legacy reasons
