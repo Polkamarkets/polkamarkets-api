@@ -131,6 +131,9 @@ module Api
         update_params["draft_#{key}"] = value if value.present?
       end
 
+      # update slug
+      update_params[:slug] = nil if update_params[:title].present?
+
       # destroying outcomes and rebuilding them
       market.outcomes.destroy_all
       market_params[:outcomes].each do |outcome_params|
