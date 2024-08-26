@@ -14,9 +14,6 @@ module Bepro
           api_url ||
             Rails.application.config_for(:ethereum).dig(:"network_#{network_id}", :bepro_api_url) ||
             Rails.application.config_for(:ethereum).dig(:"stats_network_#{network_id}", :bepro_api_url),
-        api_public_key:
-          Rails.application.config_for(:ethereum).dig(:"network_#{network_id}", :bepro_api_public_key) ||
-          Rails.application.config_for(:ethereum).dig(:"stats_network_#{network_id}", :bepro_api_public_key),
       )
     end
 

@@ -15,14 +15,16 @@ module Bepro
 
     attr_accessor :contract_name, :contract_address, :api_url, :network_id
 
-    def initialize(network_id:, api_url:, contract_name:, contract_address:, api_public_key: nil)
+    def initialize(network_id:, api_url:, contract_name:, contract_address:)
       raise "Smart contract #{contract_name} not defined" unless SMART_CONTRACTS.include?(contract_name)
 
       @network_id = network_id
       @contract_name = contract_name
       @contract_address = contract_address
       @api_url = api_url
-      @api_public_key = api_public_key
+
+      @api_public_key = Rails.application.config_for(:ethereum).dig(:"network_#{network_id}", :bepro_api_public_key)
+      @admin_private_key = Rails.application.config_for(:ethereum).dig(:"network_#{network_id}", :admin_private_key)
     end
 
     def call(method:, args: [])
@@ -73,7 +75,7 @@ module Bepro
         address: contract_address,
         method: method,
         args: args,
-        privateKey: Base64.encode64(public_key.public_encrypt(ENV["ADMIN_PRIVATE_KEY"], OpenSSL::PKey::RSA::PKCS1_OAEP_PADDING)),
+        privateKey: Base64.encode64(public_key.public_encrypt(@admin_private_key, OpenSSL::PKey::RSA::PKCS1_OAEP_PADDING)),
         timestamp: Base64.encode64(public_key.public_encrypt((Time.now.to_i * 1000).to_s, OpenSSL::PKey::RSA::PKCS1_OAEP_PADDING)),
       }
 
