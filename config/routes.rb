@@ -32,6 +32,7 @@ Rails.application.routes.draw do
     resources :markets, only: [:index, :show, :create, :update, :destroy] do
       member do
         post :reload
+        post :reload_prices
         get :feed
         get :comments
       end
