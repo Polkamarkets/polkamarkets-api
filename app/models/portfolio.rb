@@ -340,6 +340,7 @@ class Portfolio < ApplicationRecord
 
     action_events.each do |action|
       market = markets.find { |market| market.eth_market_id == action[:market_id] }
+      next if market.blank?
 
       # still no action performed in this market, initializing object
       if holdings[action[:market_id]].blank?

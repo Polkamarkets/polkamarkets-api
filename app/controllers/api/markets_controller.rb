@@ -1,6 +1,6 @@
 module Api
   class MarketsController < BaseController
-    before_action :get_market, only: %i[show comments reload feed]
+    before_action :get_market, only: %i[show comments reload reload_prices feed]
 
     def index
       markets = Market
@@ -131,6 +131,9 @@ module Api
         update_params["draft_#{key}"] = value if value.present?
       end
 
+      # update slug
+      update_params[:slug] = nil if update_params[:title].present?
+
       # destroying outcomes and rebuilding them
       market.outcomes.destroy_all
       market_params[:outcomes].each do |outcome_params|
@@ -161,7 +164,13 @@ module Api
     def reload
       # cleaning up total market cache
       # @market.destroy_cache!
-      # @market.refresh_cache!(queue: 'critical')
+      @market.refresh_cache!(queue: 'critical')
+
+      render json: { status: 'ok' }, status: :ok
+    end
+
+    def reload_prices
+      @market.refresh_prices!(queue: 'critical')
 
       render json: { status: 'ok' }, status: :ok
     end

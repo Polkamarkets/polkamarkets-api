@@ -4,6 +4,8 @@ module Api
 
     include ActionController::HttpAuthentication::Token::ControllerMethods
 
+    include Pagy::Backend
+
     rescue_from ActiveRecord::RecordNotFound, with: :render_not_found
 
     # TODO: authentication
@@ -199,6 +201,15 @@ module Api
 
     def allowed_network?
       Rails.application.config_for(:ethereum).network_ids.include?(params[:network_id].to_s)
+    end
+
+    def paginate_array(data)
+      pagy, items = pagy_array(data)
+
+      {
+        data: items,
+        pagination: pagy_metadata(pagy).extract!(:count, :page, :last, :next_url, :prev_url)
+      }
     end
   end
 end
