@@ -1,7 +1,7 @@
 class LeaderboardService
-  def calculate_market_leaderboard(network_id, market_id, refresh: false)
+  def calculate_market_leaderboard(network_id, market_id, refresh: true)
     market = Market.find_by(eth_market_id: market_id, network_id: network_id)
-    return {} if market.blank?
+    return {} if market.blank? || market.eth_market_id.blank?
 
     actions = market.action_events
     users = {}
@@ -10,7 +10,13 @@ class LeaderboardService
       return Rails.cache.read("market_leaderboard:#{network_id}:#{market_id}")
     end
 
-    actions.each do |action|
+
+    market_is_voided = market.voided
+    market_is_resolved = market.resolved?
+    market_resolved_outcome_id = market.resolved_outcome_id
+    market_outcome_current_prices = market.outcome_current_prices
+
+    actions.each_with_index do |action, index|
       address = action[:address]
       users[address] ||= { earnings: 0, volume: 0, holdings: {}, won_prediction: false }
 
@@ -31,23 +37,23 @@ class LeaderboardService
     end
 
     # Calculate holdings value and format the final result
-    leaderboard = users.transform_values do |data|
+    leaderboard = users.transform_values.with_index do |data, index|
       result = {
         earnings: data[:earnings],
         volume: data[:volume],
         holdings_value: data[:holdings].sum do |outcome_id, holdings|
-          holdings[:shares] > 1 && (!market.resolved? || market.voided) ? holdings[:shares] * market.outcome_current_prices[outcome_id] : 0
+          holdings[:shares] > 1 && (!market_is_resolved || market_is_voided) ? holdings[:shares] * market_outcome_current_prices[outcome_id] : 0
         end,
         holdings_cost: data[:holdings].sum do |outcome_id, holdings|
-          holdings[:shares] > 1 && (!market.resolved? || market.voided) ? holdings[:shares_value] / holdings[:shares_total] : 0
+          holdings[:shares] > 1 && (!market_is_resolved || market_is_voided) ? holdings[:shares_value] / holdings[:shares_total] * holdings[:shares] : 0
         end,
       }
 
-      if market.resolved? &&
-          data[:holdings][market.resolved_outcome_id].present? &&
-          data[:holdings][market.resolved_outcome_id][:shares] > 1
+      if market_is_resolved &&
+          data[:holdings][market_resolved_outcome_id].present? &&
+          data[:holdings][market_resolved_outcome_id][:shares] > 1
         result[:won_prediction] = true
-        result[:earnings] += data[:holdings][market.resolved_outcome_id][:shares] * market.outcome_current_prices[market.resolved_outcome_id]
+        result[:earnings] += data[:holdings][market_resolved_outcome_id][:shares] * market_outcome_current_prices[market_resolved_outcome_id]
       end
 
       result
@@ -56,7 +62,7 @@ class LeaderboardService
     leaderboard = leaderboard.sort_by { |user, data| -data[:earnings] }
 
     # write leaderboard to cache if market is resolved
-    if market.resolved?
+    if market_is_resolved
       Rails.cache.write("market_leaderboard:#{network_id}:#{market_id}", leaderboard)
     end
 
@@ -67,7 +73,7 @@ class LeaderboardService
     tournament = Tournament.find_by(id: tournament_id, network_id: network_id)
     return {} if tournament.blank?
 
-    market_ids = tournament.markets.pluck(:eth_market_id)
+    market_ids = tournament.markets.pluck(:eth_market_id).compact
     market_leaderboards = market_ids.map do |market_id|
       calculate_market_leaderboard(network_id, market_id)
     end
@@ -75,14 +81,14 @@ class LeaderboardService
     leaderboard = merge_market_leaderboards(market_leaderboards)
 
     # sorting by holdings
-    leaderboard.sort_by { |user, data| -data[:earnings] }
+    leaderboard.sort_by { |user, data| -data[:profit] }
   end
 
   def calculate_tournament_group_leaderboard(network_id, tournament_group_id)
     tournament_group = TournamentGroup.find_by(id: tournament_group_id, network_id: network_id)
     return {} if tournament_group.blank?
 
-    market_ids = tournament_group.markets.pluck(:eth_market_id)
+    market_ids = tournament_group.markets.pluck(:eth_market_id).compact
     market_leaderboards = market_ids.map do |market_id|
       calculate_market_leaderboard(network_id, market_id)
     end
@@ -90,18 +96,19 @@ class LeaderboardService
     leaderboard = merge_market_leaderboards(market_leaderboards)
 
     # sorting by holdings
-    leaderboard.sort_by { |user, data| -data[:earnings] }
+    leaderboard.sort_by { |user, data| -data[:profit] }
   end
 
   def merge_market_leaderboards(market_leaderboards)
     leaderboard = market_leaderboards.reduce({}) do |acc, market_leaderboard|
       market_leaderboard.each do |user, data|
-        acc[user] ||= { won_predictions: 0, earnings: 0, volume: 0, holdings_value: 0, holdings_cost: 0 }
+        acc[user] ||= { won_predictions: 0, earnings: 0, volume: 0, holdings_value: 0, holdings_cost: 0, profit: 0 }
         acc[user][:won_predictions] += data[:won_prediction] ? 1 : 0
         acc[user][:earnings] += data[:earnings]
         acc[user][:volume] += data[:volume]
         acc[user][:holdings_value] += data[:holdings_value]
         acc[user][:holdings_cost] += data[:holdings_cost]
+        acc[user][:profit] += data[:earnings] + data[:holdings_value]
       end
 
       acc
