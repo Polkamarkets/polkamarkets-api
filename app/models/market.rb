@@ -522,6 +522,36 @@ class Market < ApplicationRecord
     end
   end
 
+  def holders(refresh: false)
+    Rails.cache.fetch("markets:network_#{network_id}:#{eth_market_id}:holders", force: refresh) do
+      holders = {}
+
+      action_events.each do |action|
+        holders[action[:outcome_id]] ||= {}
+        holders[action[:outcome_id]][action[:address]] ||= 0
+
+        case action[:action]
+        when 'buy'
+          holders[action[:outcome_id]][action[:address]] += action[:shares]
+        when 'sell'
+          holders[action[:outcome_id]][action[:address]] -= action[:shares]
+        end
+      end;
+
+      # filtering shares < 1
+      holders.each do |outcome_id, outcome_holders|
+        outcome_holders.delete_if { |address, amount| amount < 1 }
+      end;
+
+      # sorting holders by amount
+      holders.each do |outcome_id, outcome_holders|
+        holders[outcome_id] = outcome_holders.sort_by { |address, amount| -amount }.to_h
+      end;
+
+      holders
+    end
+  end
+
   def update_comments_counter
     self.comments_count = comments.count
     save
