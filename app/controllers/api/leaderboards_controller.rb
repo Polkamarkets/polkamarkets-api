@@ -14,114 +14,41 @@ module Api
       render json: user_leaderboard, status: :ok
     end
 
-    def winners
-      blacklist = params[:blacklist].to_s.split(',').to_a.map(&:downcase)
-      timeframe = params[:timeframe]
-      network_id = params[:network_id].to_i
-
-      timestamp = params[:timestamp].present? ?
-        params[:timestamp].to_i :
-        (timeframe == 'at' ?
-          Time.now.to_i :
-          (Time.now - 1.send(StatsService::TIMEFRAMES[timeframe])).to_i
-        )
-
-      leaderboards = StatsService.new.get_leaderboard(timeframe: params[:timeframe], timestamp: timestamp)
-      leaderboard = leaderboards[network_id.to_i] || []
-
-      network = Rails.application.config_for(:networks).find { |name, id| id == network_id }
-      network = network ? network.first.to_s.capitalize : 'Unknown'
-
-      winners = []
-
-      # removing blacklisted wallets from leaderboard
-      leaderboard.reject! { |user| blacklist.include?(user[:user].downcase) }
-
-      rewards = Hash.new(0)
-
-      StatsService::LEADERBOARD_PARAMS.each do |param, specs|
-        rows = leaderboard.sort_by { |user| -user[param] }.select { |user| user[param] > 0 }[0..specs[:amount] - 1]
-        next if rows.blank?
-
-        rows.each_with_index do |winner, index|
-          winners.push(
-            {
-              network: network,
-              category: param,
-              position: index + 1,
-              address: winner[:user],
-              reward: specs[:value]
-            }
-          )
-
-          rewards[winner[:user]] += specs[:value]
-        end
-      end
-
-      # mapping rewards to array
-      rewards = rewards.map { |user, reward| { address: user, reward: reward } }
-
-      render json: {
-        winners: winners,
-        rewards: rewards,
-        period: {
-          from: Time.at(StatsService.new.timestamp_from(timestamp, timeframe)).to_date,
-          to: Time.at(StatsService.new.timestamp_to(timestamp, timeframe)).to_date
-        }
-      }, status: :ok
-    end
-
     private
 
+    def tournament_leaderboard?
+      params[:tournament_id].present?
+    end
+
+    def tournament_group_leaderboard?
+      !tournament_leaderboard? && (params[:land_id].present? || params[:tournament_group_id].present?)
+    end
+
+    def leaderboard_record
+      @leaderboard_record ||= tournament_leaderboard? ?
+        Tournament.find(params[:tournament_id]) :
+        TournamentGroup.find(params[:land_id] || params[:tournament_group_id])
+    end
+
     def get_leaderboard(network_id, user = nil)
-      leaderboards = StatsService.new.get_leaderboard(
-        timeframe: params[:timeframe],
-        tournament_id: params[:tournament_id],
-        tournament_group_id: params[:land_id] || params[:tournament_group_id]
-      )
-
-      leaderboard = leaderboards[network_id.to_i] || []
-
-      achievements_service = Bepro::AchievementsContractService.new(network_id: network_id)
-      if achievements_service.contract_address.present?
-        # adding achievements to leaderboard data
-        achievement_token_users = achievements_service.get_achievement_token_users
-        achievement_tokens = AchievementToken
-          .includes(:achievement)
-          .where(network_id: network_id, eth_id: achievement_token_users.map { |token| token[:id] })
-
-        leaderboard.each do |user|
-          achievement_token_ids = achievement_token_users.select { |token| token[:user] == user[:user] }.map { |token| token[:id].to_i }
-          user[:achievements] = achievement_tokens
-            .select { |token| achievement_token_ids.include?(token.eth_id) }
-            .map { |token| AchievementTokenSerializer.new(token).as_json }
-        end
-      else
-        leaderboard.each do |user|
-          user[:achievements] = []
-        end
-      end
+      leaderboard = tournament_leaderboard? ?
+        LeaderboardService.new.get_tournament_leaderboard(network_id, params[:tournament_id]) :
+        LeaderboardService.new.get_tournament_group_leaderboard(network_id, params[:land_id] || params[:tournament_group_id])
 
       # sorting leaderboard, when tournament param is present
-      if params[:tournament_id].present? || params[:land_id].present? || params[:tournament_group_id].present?
-        record = params[:tournament_id].present? ?
-          Tournament.find(params[:tournament_id]) :
-          TournamentGroup.find(params[:land_id] || params[:tournament_group_id])
+      raise "tournament network does not match" if leaderboard_record.network_id.to_i != network_id.to_i
 
-        raise "tournament network does not match" if record.network_id.to_i != network_id.to_i
+      # sorting params are comma separated
+      rank_by = leaderboard_record.rank_by
+      sort_params = rank_by.split(',').map(&:to_sym)
 
-        # sorting params are comma separated
-        rank_by = record.rank_by
-        sort_params = rank_by.split(',').map(&:to_sym)
+      leaderboard.sort_by! do |user|
+        sort_params.map { |param| -user[param] }
+      end
 
-        leaderboard.sort_by! do |user|
-          sort_params.map { |param| -user[param] }
-        end
-
-         # adding a rank field to the user leaderboard
-        leaderboard.each_with_index do |user, index|
-          user[:ranking] = index + 1
-        end
+        # adding a rank field to the user leaderboard
+      leaderboard.each_with_index do |user, index|
+        user[:ranking] = index + 1
       end
 
       if params[:rank_by].present? && params[:rank_by] != rank_by
@@ -168,8 +95,9 @@ module Api
     end
 
     def validate_params
-      raise "timeframe parameter is required" if params[:timeframe].blank?
       raise "network_id parameter is required" if params[:network_id].blank?
+      raise "tournament or land parameters are required" if params[:tournament_id].blank? &&
+        params[:land_id].blank? && params[:tournament_group_id].blank?
     end
 
     def user_not_found
