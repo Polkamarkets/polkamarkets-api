@@ -69,7 +69,7 @@ module Api
           holders[outcome_id] << {
             address: address,
             shares: amount,
-            user: UserSerializer.new(user).as_json
+            user: user.present? ? UserSerializer.new(user).as_json : nil
           }
         end
       end
