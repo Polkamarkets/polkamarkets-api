@@ -1,15 +1,14 @@
 class LeaderboardService
-  def calculate_market_leaderboard(network_id, market_id, refresh: true)
+  def calculate_market_leaderboard(network_id, market_id, refresh: false)
     market = Market.find_by(eth_market_id: market_id, network_id: network_id)
     return {} if market.blank? || market.eth_market_id.blank?
 
     actions = market.action_events
     users = {}
 
-    if Rails.cache.exist?("market_leaderboard:#{network_id}:#{market_id}") && !refresh
-      return Rails.cache.read("market_leaderboard:#{network_id}:#{market_id}")
+    if Rails.cache.exist?("leaderboard:market:#{network_id}:#{market_id}") && !refresh
+      return Rails.cache.read("leaderboard:market:#{network_id}:#{market_id}")
     end
-
 
     market_is_voided = market.voided
     market_is_resolved = market.resolved?
@@ -18,7 +17,8 @@ class LeaderboardService
 
     actions.each_with_index do |action, index|
       address = action[:address]
-      users[address] ||= { earnings: 0, volume: 0, holdings: {}, won_prediction: false }
+      users[address] ||= { earnings: 0, volume: 0, holdings: {}, won_prediction: false, transactions: 0 }
+      users[address][:transactions] += 1
 
       case action[:action]
       when 'buy'
@@ -49,6 +49,7 @@ class LeaderboardService
       result = {
         earnings: data[:earnings] + holdings_value,
         volume: data[:volume],
+        transactions: data[:transactions],
         holdings_value: data[:holdings].sum do |outcome_id, holdings|
           !market_is_resolved ? holdings_value : 0
         end,
@@ -71,7 +72,7 @@ class LeaderboardService
 
     # write leaderboard to cache if market is resolved
     if market_is_resolved
-      Rails.cache.write("market_leaderboard:#{network_id}:#{market_id}", leaderboard)
+      Rails.cache.write("leaderboard:market:#{network_id}:#{market_id}", leaderboard)
     end
 
     leaderboard
@@ -110,16 +111,92 @@ class LeaderboardService
   def merge_market_leaderboards(market_leaderboards)
     leaderboard = market_leaderboards.reduce({}) do |acc, market_leaderboard|
       market_leaderboard.each do |user, data|
-        acc[user] ||= { won_predictions: 0, earnings: 0, volume: 0, holdings_value: 0, holdings_cost: 0, earnings: 0, winnings: 0 }
+        acc[user] ||= { won_predictions: 0, earnings: 0, volume: 0, holdings_value: 0, holdings_cost: 0, winnings: 0, transactions: 0 }
         acc[user][:won_predictions] += data[:won_prediction] ? 1 : 0
         acc[user][:earnings] += data[:earnings]
         acc[user][:volume] += data[:volume]
         acc[user][:holdings_value] += data[:holdings_value]
         acc[user][:holdings_cost] += data[:holdings_cost]
         acc[user][:winnings] += data[:winnings]
+        acc[user][:transactions] += data[:transactions]
       end
 
       acc
     end
+  end
+
+  def get_tournament_leaderboard(network_id, tournament_id, refresh: false)
+    if Rails.cache.exist?("leaderboard:tournament:#{network_id}:#{tournament_id}") && !refresh
+      return Rails.cache.read("leaderboard:tournament:#{network_id}:#{tournament_id}")
+    end
+
+    leaderboard = calculate_tournament_leaderboard(network_id, tournament_id)
+    leaderboard_legacy = format_in_legacy_format(network_id, leaderboard)
+
+    Rails.cache.write("leaderboard:tournament:#{network_id}:#{tournament_id}", leaderboard_legacy)
+
+    leaderboard_legacy
+  end
+
+  def get_tournament_group_leaderboard(network_id, tournament_group_id, refresh: false)
+    if Rails.cache.exist?("leaderboard:tournament_group:#{network_id}:#{tournament_group_id}") && !refresh
+      return Rails.cache.read("leaderboard:tournament_group:#{network_id}:#{tournament_group_id}")
+    end
+
+    leaderboard = calculate_tournament_group_leaderboard(network_id, tournament_group_id)
+    leaderboard_legacy = format_in_legacy_format(network_id, leaderboard)
+
+    Rails.cache.write("leaderboard:tournament_group:#{network_id}:#{tournament_group_id}", leaderboard_legacy)
+
+    leaderboard_legacy
+  end
+
+  def format_in_legacy_format(network_id, leaderboard)
+    # filtering out empty users, blacklist and backfilling user data
+    users = User.where.not(wallet_address: nil).pluck(:username, :wallet_address, :avatar, :slug, :origin)
+    users_hash = {}
+
+    blacklist = Rails.application.config_for(:ethereum).blacklist
+    blacklist_hash = blacklist.map { |address| [address.downcase, true] }.to_h
+
+    # populating users_hash hash
+    users.each do |user|
+      users_hash[user[1].downcase] = user
+    end
+
+    legacy_leaderboard = leaderboard.map do |address, data|
+      user = users_hash[address.downcase]
+
+      # skipping blacklisted users
+      next if blacklist_hash[address.downcase]
+
+      {
+        user: address,
+        ens: nil,
+        markets_created: 0,
+        verified_markets_created: 0,
+        volume_eur: data[:volume],
+        tvl_volume_eur: 0,
+        earnings_eur: data[:earnings],
+        earnings_open_eur: data[:holdings_value] - data[:holdings_cost],
+        earnings_closed_eur: data[:winnings],
+        liquidity_eur: 0,
+        tvl_liquidity_eur: 0,
+        bond_volume: 0,
+        claim_winnings_count: data[:won_predictions],
+        transactions: data[:transactions],
+        upvotes: 0,
+        downvotes: 0,
+        malicious: false,
+        bankrupt: false,
+        needs_rescue: false,
+        username: user ? user[0] : nil,
+        user_image_url: user ? user[2] : nil,
+        slug: user ? user[3] : nil,
+        origin: user ? user[4] : nil
+      }
+    end.compact
+
+    { network_id => legacy_leaderboard }
   end
 end
