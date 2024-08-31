@@ -9,47 +9,19 @@ namespace :cache do
   task :refresh_stats, [:symbol] => :environment do |task, args|
     stats = StatsService.new.get_stats
     Rails.cache.write("api:stats", stats, expires_in: 24.hours)
-
-    # updating time-based stats for all timeframes
-    stats_1d = StatsService.new.get_stats_by_timeframe(timeframe: '1d', refresh: true)
-    Rails.cache.write("api:stats:1d", stats_1d, expires_in: 24.hours)
-    stats_1w = StatsService.new.get_stats_by_timeframe(timeframe: '1w', refresh: true)
-    Rails.cache.write("api:stats:1w", stats_1w, expires_in: 24.hours)
-    stats_1m = StatsService.new.get_stats_by_timeframe(timeframe: '1m', refresh: true)
-    Rails.cache.write("api:stats:1m", stats_1m, expires_in: 24.hours)
-    stats_at = StatsService.new.get_stats_by_timeframe(timeframe: 'at', refresh: true)
-    Rails.cache.write("api:stats:at", stats_at, expires_in: 24.hours)
-
-    # updating time-based leaderboards for all timeframes
-    StatsService.new.get_leaderboard(timeframe: '1d', refresh: true)
-    StatsService.new.get_leaderboard(timeframe: '1w', refresh: true)
-    StatsService.new.get_leaderboard(timeframe: '1m', refresh: true)
-    StatsService.new.get_leaderboard(timeframe: 'at', refresh: true)
-
-    # updating time-based leaderboards for all tournaments
-    Tournament.all.each do |tournament|
-      StatsService.new.get_leaderboard(timeframe: '1d', refresh: true, tournament_id: tournament.id)
-      StatsService.new.get_leaderboard(timeframe: '1w', refresh: true, tournament_id: tournament.id)
-      StatsService.new.get_leaderboard(timeframe: '1m', refresh: true, tournament_id: tournament.id)
-      StatsService.new.get_leaderboard(timeframe: 'at', refresh: true, tournament_id: tournament.id)
-    end
   end
 
   desc "refreshes cache of open tournaments"
   task :refresh_tournament_stats, [:symbol] => :environment do |task, args|
     Tournament.all.each do |tournament|
-      next if tournament.closed? || tournament.markets.blank?
-
-      StatsService.new.get_leaderboard(timeframe: 'at', refresh: true, tournament_id: tournament.id)
+      LeaderboardService.new.get_tournament_leaderboard(tournament.network_id, tournament.id, refresh: true)
     end
   end
 
   desc "refreshes cache of tournament_groups"
   task :refresh_tournament_group_stats, [:symbol] => :environment do |task, args|
     TournamentGroup.all.each do |tournament_group|
-      next if tournament_group.whitelabel?
-
-      StatsService.new.get_leaderboard(timeframe: 'at', refresh: true, tournament_group_id: tournament_group.id)
+      LeaderboardService.new.get_tournament_group_leaderboard(tournament_group.network_id, tournament_group.id, refresh: true)
     end
   end
 
