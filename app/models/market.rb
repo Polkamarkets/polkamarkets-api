@@ -170,6 +170,12 @@ class Market < ApplicationRecord
     eth_data[:expires_at]
   end
 
+  def created_at
+    return published_at if published?
+
+    self["created_at"]
+  end
+
   def resolution_source
     return self["resolution_source"] if eth_data.blank?
 
