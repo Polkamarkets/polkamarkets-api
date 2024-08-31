@@ -164,7 +164,7 @@ class LeaderboardService
       users_hash[user[1].downcase] = user
     end
 
-    legacy_leaderboard = leaderboard.map do |address, data|
+    leaderboard.map do |address, data|
       user = users_hash[address.downcase]
 
       # skipping blacklisted users
@@ -196,7 +196,5 @@ class LeaderboardService
         origin: user ? user[4] : nil
       }
     end.compact
-
-    { network_id => legacy_leaderboard }
   end
 end
