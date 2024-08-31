@@ -8,7 +8,7 @@ namespace :cache do
   desc "refreshes cache of protocol stats"
   task :refresh_stats, [:symbol] => :environment do |task, args|
     stats = StatsService.new.get_stats
-    Rails.cache.write("api:stats", stats, expires_in: 24.hours)
+    Rails.cache.write("api:stats", stats)
   end
 
   desc "refreshes cache of open tournaments"
