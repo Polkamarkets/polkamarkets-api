@@ -271,6 +271,12 @@ class Market < ApplicationRecord
     end
   end
 
+  def outcome_current_prices
+    eth_data[:outcomes].map do |outcome|
+      [outcome[:id], outcome[:price]]
+    end.to_h
+  end
+
   def prices(refresh: false)
     return {} if eth_market_id.blank?
 
