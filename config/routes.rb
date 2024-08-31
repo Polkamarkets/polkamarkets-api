@@ -35,6 +35,7 @@ Rails.application.routes.draw do
         post :reload_prices
         get :feed
         get :comments
+        get :holders
       end
 
       collection do

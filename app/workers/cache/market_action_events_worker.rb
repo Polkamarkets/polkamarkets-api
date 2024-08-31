@@ -7,5 +7,6 @@ class Cache::MarketActionEventsWorker
 
     market.action_events(refresh: true)
     market.users(refresh: true)
+    market.holders(refresh: true)
   end
 end
