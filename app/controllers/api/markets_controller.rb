@@ -1,6 +1,6 @@
 module Api
   class MarketsController < BaseController
-    before_action :get_market, only: %i[show comments reload feed]
+    before_action :get_market, only: %i[show comments holders reload reload_prices feed]
 
     def index
       markets = Market
@@ -53,6 +53,28 @@ module Api
 
     def comments
       render json: @market.comments, scope: serializable_scope, status: :ok
+    end
+
+    def holders
+      # fetching top 20 holders from each outcome and serializing users
+      holders = {}
+
+      @market.holders.each do |outcome_id, outcome_holders|
+        outcome_holders = outcome_holders.first(20).to_h
+        users = User.where(wallet_address: outcome_holders.keys)
+        holders[outcome_id] = []
+
+        outcome_holders.each do |address, amount|
+          user = users.find { |u| u.wallet_address == address }
+          holders[outcome_id] << {
+            address: address,
+            shares: amount,
+            user: user.present? ? UserSerializer.new(user).as_json : nil
+          }
+        end
+      end
+
+      render json: holders, status: :ok
     end
 
     def create
@@ -131,6 +153,9 @@ module Api
         update_params["draft_#{key}"] = value if value.present?
       end
 
+      # update slug
+      update_params[:slug] = nil if update_params[:title].present?
+
       # destroying outcomes and rebuilding them
       market.outcomes.destroy_all
       market_params[:outcomes].each do |outcome_params|
@@ -161,7 +186,13 @@ module Api
     def reload
       # cleaning up total market cache
       # @market.destroy_cache!
-      # @market.refresh_cache!(queue: 'critical')
+      @market.refresh_cache!(queue: 'critical')
+
+      render json: { status: 'ok' }, status: :ok
+    end
+
+    def reload_prices
+      @market.refresh_prices!(queue: 'critical')
 
       render json: { status: 'ok' }, status: :ok
     end

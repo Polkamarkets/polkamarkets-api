@@ -72,4 +72,19 @@ namespace :markets do
   task :refresh_votes, [:symbol] => :environment do |task, args|
     Market.all.each { |m| Cache::MarketVotesWorker.set(queue: 'low').perform_async(m.id) }
   end
+
+  desc "features markets published in the last 24 hours"
+  task :feature_markets, [:symbol] => :environment do |task, args|
+    # unfeaturing all markets
+    Market
+      .where(featured: true)
+      .where('published_at < ?', 24.hours.ago)
+      .each { |m| m.update(featured: false) }
+
+    # featuring markets published in the last 24 hours
+    Market
+      .where(published_at: 24.hours.ago..Time.now)
+      .where(featured: false)
+      .each { |m| m.update(featured: true) }
+  end
 end
