@@ -6,6 +6,7 @@ default: &default
       admin_private_key: "<%= ENV["ETHEREUM_NETWORK_#{network_id}_ADMIN_PRIVATE_KEY"].to_s %>"
       prediction_market_contract_address: "<%= ENV["ETHEREUM_NETWORK_#{network_id}_PREDICTION_MARKET_CONTRACT_ADDRESS"].to_s %>"
       prediction_market_manager_contract_address: "<%= ENV["ETHEREUM_NETWORK_#{network_id}_PREDICTION_MARKET_MANAGER_CONTRACT_ADDRESS"].to_s %>"
+      prediction_market_controller_contract_address: "<%= ENV["ETHEREUM_NETWORK_#{network_id}_PREDICTION_MARKET_CONTROLLER_CONTRACT_ADDRESS"].to_s %>"
       realitio_contract_address: "<%= ENV["ETHEREUM_NETWORK_#{network_id}_REALITIO_ERC20_CONTRACT_ADDRESS"].to_s %>"
       achievements_contract_address: "<%= ENV["ETHEREUM_NETWORK_#{network_id}_ACHIEVEMENTS_CONTRACT_ADDRESS"].to_s %>"
       voting_contract_address: "<%= ENV["ETHEREUM_NETWORK_#{network_id}_VOTING_CONTRACT_ADDRESS"].to_s %>"
@@ -20,6 +21,7 @@ default: &default
     stats_network_<%= network_id %>:
       bepro_api_url: <%= ENV["STATS_NETWORK_#{network_id}_BEPRO_API_URL"] %>
       prediction_market_contract_address: "<%= ENV["STATS_NETWORK_#{network_id}_PREDICTION_MARKET_CONTRACT_ADDRESS"].to_s %>"
+      prediction_market_controller_contract_address: "<%= ENV["STATS_NETWORK_#{network_id}_PREDICTION_MARKET_CONTROLLER_CONTRACT_ADDRESS"].to_s %>"
       realitio_contract_address: "<%= ENV["STATS_NETWORK_#{network_id}_REALITIO_ERC20_CONTRACT_ADDRESS"].to_s %>"
   <% end %>
     market_list_url: <%= ENV['ETHEREUM_MARKET_LIST_URL'] %>
@@ -41,6 +43,7 @@ default: &default
     bundler_pimlico_api_key: <%= ENV["ETHEREUM_BUNDLER_PIMLICO_API_KEY"] %>
     bundler_pimlico_network_ids: <%= ENV["ETHEREUM_BUNDLER_PIMLICO_NETWORK_IDS"].to_s.split(',').map(&:to_i) %>
     prediction_market_contract_version: <%= (ENV["ETHEREUM_PREDICTION_MARKET_CONTRACT_VERSION"] || 2).to_i %>
+    token_amount_to_claim: <%= (ENV["ETHEREUM_TOKEN_AMOUNT_TO_CLAIM"]).to_i %>
 
 production:
   <<: *default

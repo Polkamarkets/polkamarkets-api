@@ -2,7 +2,7 @@ module Api
   class TournamentGroupsController < BaseController
     # TODO: add auth to endpoints
     # before_action :authenticate_user!, only: %i[create update destroy move_up move_down]
-    before_action :authenticate_user!, only: %i[join]
+    before_action :authenticate_user!, only: %i[join create]
 
     def index
       tournament_groups = TournamentGroup.order(position: :asc).all
@@ -71,7 +71,21 @@ module Api
     end
 
     def create
+      predictionMarketControllerContractService = Bepro::PredictionMarketControllerContractService.new(network_id: params[:land][:network_id])
+
+      created_land = predictionMarketControllerContractService.create_land(params[:land][:title], params[:land][:symbol])
+
+      @token_address = created_land['events']['LandCreated'][0]['returnValues']['token']
+
       tournament_group = TournamentGroup.new(tournament_group_params)
+      tournament_group.token_address = @token_address
+
+      if params[:land][:everyoneCanCreateMarkets]
+        predictionMarketControllerContractService.setLandEveryoneCanCreateMarkets(@token_address, true)
+      end
+
+      # add user as admin
+      predictionMarketControllerContractService.add_admin_to_land(@token_address, current_user.wallet_address)
 
       if tournament_group.save
         render json: tournament_group, status: :created
@@ -144,6 +158,7 @@ module Api
         :website_url,
         :published,
         :onboarded,
+        :network_id,
         tags: [],
         social_urls: {},
       )
