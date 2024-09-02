@@ -80,7 +80,7 @@ module Api
       tournament_group = TournamentGroup.new(tournament_group_params)
       tournament_group.token_address = @token_address
 
-      if params[:land][:everyoneCanCreateMarkets]
+      if params[:land][:everyone_can_create_markets]
         predictionMarketControllerContractService.setLandEveryoneCanCreateMarkets(@token_address, true)
       end
 
