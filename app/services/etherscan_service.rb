@@ -75,6 +75,8 @@ class EtherscanService
         'https://api-alfajores.celoscan.io'
       when 80001
         'https://api-mumbai.polygonscan.com'
+      when 42161
+        'https://api.arbiscan.io'
       when 421614
         'https://api-sepolia.arbiscan.io'
       else
@@ -101,6 +103,8 @@ class EtherscanService
         Rails.application.config_for(:etherscan).celo_api_key
       when 80001
         Rails.application.config_for(:etherscan).mumbai_api_key
+      when 42161
+        Rails.application.config_for(:etherscan).arbitrum_api_key
       when 421614
         "" # no API key required
       else
