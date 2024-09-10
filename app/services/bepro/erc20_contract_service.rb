@@ -37,6 +37,10 @@ module Bepro
       }
     end
 
+    def mint_tokens(to:, amount:)
+      execute(method: 'mint', args: [to, from_integer_to_big_number(amount, decimals).to_s])
+    end
+
     def transfer_events(from: nil, to: nil)
       events = get_events(
         event_name: 'Transfer',

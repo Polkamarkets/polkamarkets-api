@@ -22,6 +22,9 @@ module Bepro
       @contract_name = contract_name
       @contract_address = contract_address
       @api_url = api_url
+
+      @api_public_key = Rails.application.config_for(:ethereum).dig(:"network_#{network_id}", :bepro_api_public_key)
+      @admin_private_key = Rails.application.config_for(:ethereum).dig(:"network_#{network_id}", :admin_private_key)
     end
 
     def call(method:, args: [])
@@ -51,6 +54,50 @@ module Bepro
             error: e.message
           )
           raise "BeproService :: Call Error"
+        end
+
+        begin
+          JSON.parse(response.body.to_s)
+        rescue => e
+          # not a JSON response, return the raw response
+          response.body.to_s
+        end
+      end
+    end
+
+    def execute(method:, args: [])
+      uri = api_url + "/execute"
+
+      public_key = OpenSSL::PKey::RSA.new(@api_public_key.gsub("\\n", "\n"))
+
+      body = {
+        contract: contract_name,
+        address: contract_address,
+        method: method,
+        args: args,
+        privateKey: Base64.encode64(public_key.public_encrypt(@admin_private_key, OpenSSL::PKey::RSA::PKCS1_OAEP_PADDING)),
+        timestamp: Base64.encode64(public_key.public_encrypt((Time.now.to_i * 1000).to_s, OpenSSL::PKey::RSA::PKCS1_OAEP_PADDING)),
+      }
+
+      Sentry.with_scope do |scope|
+        scope.set_tags(
+          uri: uri
+        )
+        begin
+          response = HTTP.post(uri, json: body)
+
+          unless response.status.success?
+            scope.set_tags(
+              status: response.status,
+              error: response.body.to_s
+            )
+            raise "BeproService :: Call Error #{response.body.to_s}"
+          end
+        rescue => e
+          scope.set_tags(
+            error: e.message
+          )
+          raise "BeproService :: Call Error #{e.message}"
         end
 
         begin
