@@ -12,16 +12,16 @@ class TournamentGroupCreateWorker
 
     token_address = created_land['events']['LandCreated'][0]['returnValues']['token']
 
+    # adding admins on-chain
+    tournament_group.admins.each do |user|
+      controller_contract_service.add_admin_to_land(token_address, user)
+    end
+
     tournament_group.token_address = token_address
     tournament_group.token_controller_address = controller_contract_service.contract_address
 
     if everyone_can_create_markets
       controller_contract_service.set_land_everyone_can_create_markets(token_address, true)
-    end
-
-    # adding admins on-chain
-    tournament_group.admins.each do |user|
-      controller_contract_service.add_admin_to_land(token_address, user)
     end
 
     tournament_group.save!
