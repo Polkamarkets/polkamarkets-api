@@ -1,7 +1,6 @@
 module Api
   class TournamentGroupsController < BaseController
-    # TODO: add auth to endpoints
-    # before_action :authenticate_user!, only: %i[create update destroy move_up move_down]
+    before_action :authenticate_admin!, only: %i[update update_featured_markets destroy move_up move_down]
     before_action :authenticate_user!, only: %i[join create]
 
     def index

@@ -169,6 +169,39 @@ module Api
       head :unauthorized unless signed_in?
     end
 
+    def authenticate_admin!
+      authenticate_user
+
+      head :unauthorized unless signed_in?
+      head :unauthorized unless admin_resource.admins.any? { |admin| admin.downcase == current_user.wallet_address.downcase }
+    end
+
+    def admin_resource
+      # fetching tournament_group, tournament or market depending on controller
+      @admin_resource ||=
+        case controller_name
+        when 'tournament_groups'
+          TournamentGroup.friendly.find(params[:id])
+        when 'tournaments'
+          if action_name == 'create'
+            return TournamentGroup.friendly.find(params[:land_id] || params[:tournament][:land_id])
+          end
+
+          Tournament.friendly.find(params[:id])
+        when 'markets'
+          if action_name == 'draft'
+            if params.dig(:market, :land_id).present? || params[:land_id].present?
+              return TournamentGroup.friendly.find(params[:land_id] || params[:market][:land_id])
+            else
+              return Tournament.friendly.find(params[:tournament_id] || params[:market][:tournament_id])
+            end
+          end
+
+          Market.friendly.find(params[:id])
+        end
+    end
+
+
     def current_user
       if @current_user_id
         @current_user ||= User.find(@current_user_id)
