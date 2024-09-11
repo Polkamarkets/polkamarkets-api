@@ -78,22 +78,14 @@ module Api
       # checking for lands with the same slug
       raise "Land with slug #{params[:land][:slug]} already exists" if TournamentGroup.exists?(slug: params[:land][:slug])
 
-      created_land = controller_contract_service.create_land(params[:land][:title], params[:land][:symbol])
-
-      @token_address = created_land['events']['LandCreated'][0]['returnValues']['token']
-
       tournament_group = TournamentGroup.new(tournament_group_params)
-      tournament_group.token_address = @token_address
-      tournament_group.token_controller_address = controller_contract_service.contract_address
-
-      if params[:land][:everyone_can_create_markets]
-        controller_contract_service.set_land_everyone_can_create_markets(@token_address, true)
-      end
-
-      # add user as admin
-      controller_contract_service.add_admin_to_land(@token_address, current_user.wallet_address)
+      tournament_group.admins = [current_user.wallet_address]
 
       if tournament_group.save
+        TournamentGroupCreateWorker.perform_async(
+          tournament_group.id,
+          params[:land][:everyone_can_create_markets]
+        )
         render json: tournament_group, status: :created
       else
         render json: tournament_group.errors, status: :unprocessable_entity
@@ -156,6 +148,7 @@ module Api
       params.require(:land).permit(
         :id,
         :title,
+        :symbol,
         :description,
         :short_description,
         :slug,

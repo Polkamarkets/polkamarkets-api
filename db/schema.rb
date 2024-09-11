@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2024_08_12_110640) do
+ActiveRecord::Schema.define(version: 2024_09_11_155103) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -258,6 +258,8 @@ ActiveRecord::Schema.define(version: 2024_08_12_110640) do
     t.string "metadata_url"
     t.string "token_controller_address"
     t.integer "users_count", default: 0
+    t.string "symbol"
+    t.jsonb "admins", default: []
     t.index ["slug"], name: "index_tournament_groups_on_slug", unique: true
   end
 
