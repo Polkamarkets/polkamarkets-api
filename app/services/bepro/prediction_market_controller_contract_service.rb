@@ -34,7 +34,7 @@ module Bepro
         ])
     end
 
-    def setLandEveryoneCanCreateMarkets(token_address, everyoneCanCreateMarkets)
+    def set_land_everyone_can_create_markets(token_address, everyoneCanCreateMarkets)
       execute(
         method: 'setLandEveryoneCanCreateMarkets',
         args: [

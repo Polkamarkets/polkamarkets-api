@@ -71,9 +71,10 @@ module Api
     end
 
     def create
-      predictionMarketControllerContractService = Bepro::PredictionMarketControllerContractService.new(network_id: params[:land][:network_id])
+      prediction_market_controller_contract_service =
+        Bepro::PredictionMarketControllerContractService.new(network_id: params[:land][:network_id])
 
-      created_land = predictionMarketControllerContractService.create_land(params[:land][:title], params[:land][:symbol])
+      created_land = prediction_market_controller_contract_service.create_land(params[:land][:title], params[:land][:symbol])
 
       @token_address = created_land['events']['LandCreated'][0]['returnValues']['token']
 
@@ -81,11 +82,11 @@ module Api
       tournament_group.token_address = @token_address
 
       if params[:land][:everyone_can_create_markets]
-        predictionMarketControllerContractService.setLandEveryoneCanCreateMarkets(@token_address, true)
+        prediction_market_controller_contract_service.set_land_everyone_can_create_markets(@token_address, true)
       end
 
       # add user as admin
-      predictionMarketControllerContractService.add_admin_to_land(@token_address, current_user.wallet_address)
+      prediction_market_controller_contract_service.add_admin_to_land(@token_address, current_user.wallet_address)
 
       if tournament_group.save
         render json: tournament_group, status: :created
