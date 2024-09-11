@@ -1,7 +1,6 @@
 module Api
   class TournamentGroupsController < BaseController
-    # TODO: add auth to endpoints
-    # before_action :authenticate_user!, only: %i[create update destroy move_up move_down]
+    before_action :authenticate_admin!, only: %i[update update_featured_markets destroy move_up move_down]
     before_action :authenticate_user!, only: %i[join create]
 
     def index
@@ -117,6 +116,16 @@ module Api
       tournament_group = TournamentGroup.friendly.find(params[:id])
 
       tournament_group.destroy
+    end
+
+    def check_slug
+      slug = params[:slug]
+
+      if TournamentGroup.friendly.exists?(slug)
+        render json: { error: 'Slug already taken' }, status: :bad_request
+      else
+        render json: { success: true }, status: :ok
+      end
     end
 
     def move_up

@@ -1,6 +1,8 @@
 module Api
   class MarketsController < BaseController
     before_action :get_market, only: %i[show comments holders reload reload_prices feed]
+    before_action :authenticate_admin!, only: %i[draft update destroy]
+    before_action :authenticate_user!, only: %i[publish]
 
     def index
       markets = Market
@@ -130,6 +132,11 @@ module Api
 
       # making sure all markets exist
       raise "Market not found" if markets.count != params[:slugs].count
+
+      # making sure user is admin of all markets
+      markets.each do |market|
+        raise "User is not admin of market #{market.slug}" unless market.admins.any? { |admin| admin.downcase == current_user.wallet_address.downcase }
+      end
 
       # making sure all markets are in draft state
       markets.each do |market|

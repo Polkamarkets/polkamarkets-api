@@ -580,4 +580,10 @@ class Market < ApplicationRecord
         .select { |market| market.id != id && market.published? }.first(5)
     end
   end
+
+  def admins
+    return [] if tournaments.blank?
+
+    tournaments.map(&:admins).flatten.uniq
+  end
 end

@@ -87,4 +87,10 @@ class Tournament < ApplicationRecord
 
     tournament_group&.token(refresh: refresh)
   end
+
+  def admins
+    return [] if tournament_group.blank?
+
+    tournament_group.admins
+  end
 end

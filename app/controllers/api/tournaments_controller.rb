@@ -1,7 +1,6 @@
 module Api
   class TournamentsController < BaseController
-    # TODO: add auth to endpoints
-    # before_action :authenticate_user!, only: %i[create update destroy move_up move_down]
+    before_action :authenticate_admin!, only: %i[create update destroy move_up move_down]
 
     def index
       # sorting by tournament_group position and tournament position
