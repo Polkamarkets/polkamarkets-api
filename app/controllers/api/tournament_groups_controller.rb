@@ -119,6 +119,16 @@ module Api
       tournament_group.destroy
     end
 
+    def check_slug
+      slug = params[:slug]
+
+      if TournamentGroup.friendly.exists?(slug)
+        render json: { error: 'Slug already taken' }, status: :bad_request
+      else
+        render json: { success: true }, status: :ok
+      end
+    end
+
     def move_up
       tournament_group = TournamentGroup.friendly.find(params[:id])
       tournament_group.move_higher

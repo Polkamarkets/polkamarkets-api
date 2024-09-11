@@ -95,6 +95,9 @@ Rails.application.routes.draw do
         post :update_featured_markets
         post :join
       end
+      collection do
+        get :check_slug
+      end
     end
 
     resources :reports, only: [:create]
