@@ -2,7 +2,7 @@ module Api
   class TournamentGroupsController < BaseController
     # TODO: add auth to endpoints
     # before_action :authenticate_user!, only: %i[create update destroy move_up move_down]
-    before_action :authenticate_user!, only: %i[join]
+    before_action :authenticate_user!, only: %i[join create]
 
     def index
       tournament_groups = TournamentGroup.order(position: :asc).all
@@ -71,9 +71,21 @@ module Api
     end
 
     def create
+      controller_contract_service =
+        Bepro::PredictionMarketControllerContractService.new(network_id: params[:land][:network_id])
+
+      raise "Network #{params[:land][:network_id]} not supported" if controller_contract_service.contract_address.blank?
+      # checking for lands with the same slug
+      raise "Land with slug #{params[:land][:slug]} already exists" if TournamentGroup.exists?(slug: params[:land][:slug])
+
       tournament_group = TournamentGroup.new(tournament_group_params)
+      tournament_group.admins = [current_user.wallet_address]
 
       if tournament_group.save
+        TournamentGroupCreateWorker.perform_async(
+          tournament_group.id,
+          params[:land][:everyone_can_create_markets]
+        )
         render json: tournament_group, status: :created
       else
         render json: tournament_group.errors, status: :unprocessable_entity
@@ -136,6 +148,7 @@ module Api
       params.require(:land).permit(
         :id,
         :title,
+        :symbol,
         :description,
         :short_description,
         :slug,
@@ -144,6 +157,7 @@ module Api
         :website_url,
         :published,
         :onboarded,
+        :network_id,
         tags: [],
         social_urls: {},
       )
