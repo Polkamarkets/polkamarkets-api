@@ -71,22 +71,27 @@ module Api
     end
 
     def create
-      prediction_market_controller_contract_service =
+      controller_contract_service =
         Bepro::PredictionMarketControllerContractService.new(network_id: params[:land][:network_id])
 
-      created_land = prediction_market_controller_contract_service.create_land(params[:land][:title], params[:land][:symbol])
+      raise "Network #{params[:land][:network_id]} not supported" if controller_contract_service.contract_address.blank?
+      # checking for lands with the same slug
+      raise "Land with slug #{params[:land][:slug]} already exists" if TournamentGroup.exists?(slug: params[:land][:slug])
+
+      created_land = controller_contract_service.create_land(params[:land][:title], params[:land][:symbol])
 
       @token_address = created_land['events']['LandCreated'][0]['returnValues']['token']
 
       tournament_group = TournamentGroup.new(tournament_group_params)
       tournament_group.token_address = @token_address
+      tournament_group.token_controller_address = controller_contract_service.contract_address
 
       if params[:land][:everyone_can_create_markets]
-        prediction_market_controller_contract_service.set_land_everyone_can_create_markets(@token_address, true)
+        controller_contract_service.set_land_everyone_can_create_markets(@token_address, true)
       end
 
       # add user as admin
-      prediction_market_controller_contract_service.add_admin_to_land(@token_address, current_user.wallet_address)
+      controller_contract_service.add_admin_to_land(@token_address, current_user.wallet_address)
 
       if tournament_group.save
         render json: tournament_group, status: :created
