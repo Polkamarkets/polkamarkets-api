@@ -36,6 +36,8 @@ Rails.application.routes.draw do
         get :feed
         get :comments
         get :holders
+        post :feature
+        post :unfeature
       end
 
       collection do
