@@ -212,10 +212,12 @@ module Api
       market = Market.find_by!(slug: params[:id])
 
       market.update!(featured: true)
+
+      # disabling this for now
       # unfeaturing all other markets from same contest
-      market.tournaments.each do |tournament|
-        tournament.markets.where.not(id: market.id).each { |m| m.update!(featured: false) }
-      end
+      # market.tournaments.each do |tournament|
+      #   tournament.markets.where.not(id: market.id).each { |m| m.update!(featured: false) }
+      # end
 
       render json: { status: 'ok' }, status: :ok
     end
