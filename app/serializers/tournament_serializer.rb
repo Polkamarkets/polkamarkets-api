@@ -24,8 +24,6 @@ class TournamentSerializer < BaseSerializer
 
   has_many :markets, serializer: TournamentMarketSerializer, if: :show_markets?
 
-  # TODO remove; legacy
-  belongs_to :tournament_group, key: :group, if: :show_tournament_group?
   belongs_to :tournament_group, key: :land, if: :show_tournament_group?
 
   def show_tournament_group?
