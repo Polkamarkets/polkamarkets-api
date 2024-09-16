@@ -1,7 +1,7 @@
 module Api
   class MarketsController < BaseController
     before_action :get_market, only: %i[show comments holders reload reload_prices feed]
-    before_action :authenticate_admin!, only: %i[draft update destroy]
+    before_action :authenticate_admin!, only: %i[draft update destroy feature unfeature]
     before_action :authenticate_user!, only: %i[publish]
 
     def index
@@ -206,6 +206,26 @@ module Api
 
     def feed
       render json: @market.feed, status: :ok
+    end
+
+    def feature
+      market = Market.find_by!(slug: params[:id])
+
+      market.update!(featured: true)
+      # unfeaturing all other markets from same contest
+      market.tournaments.each do |tournament|
+        tournament.markets.where.not(id: market.id).each { |m| m.update!(featured: false) }
+      end
+
+      render json: { status: 'ok' }, status: :ok
+    end
+
+    def unfeature
+      market = Market.find_by!(slug: params[:id])
+
+      market.update!(featured: false)
+
+      render json: { status: 'ok' }, status: :ok
     end
 
     private

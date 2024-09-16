@@ -172,7 +172,8 @@ module Api
     def authenticate_admin!
       authenticate_user
 
-      head :unauthorized unless signed_in?
+      return head :unauthorized unless signed_in?
+
       head :unauthorized unless admin_resource.admins.any? { |admin| admin.downcase == current_user.wallet_address.downcase }
     end
 
