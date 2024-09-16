@@ -248,6 +248,7 @@ module Api
         :resolution_title,
         :resolution_source,
         :image_url,
+        :scheduled_at,
         topics: [],
         outcomes: %i[title image_url price],
       )

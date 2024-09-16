@@ -136,6 +136,15 @@ class Market < ApplicationRecord
     market
   end
 
+  def scheduled_at_validation
+    return if scheduled_at.blank?
+    return if expires_at.blank?
+    return if published?
+
+    errors.add(:scheduled_at, 'cannot be in the past') if scheduled_at < DateTime.now
+    errors.add(:scheduled_at, 'cannot be after market expiration') if scheduled_at > expires_at
+  end
+
   def eth_data(refresh: false)
     return nil if eth_market_id.blank?
 
@@ -174,6 +183,12 @@ class Market < ApplicationRecord
     return published_at if published?
 
     self["created_at"]
+  end
+
+  def scheduled_at
+    return nil if published?
+
+    self["scheduled_at"]
   end
 
   def resolution_source
