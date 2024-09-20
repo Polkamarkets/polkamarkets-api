@@ -6,8 +6,9 @@ module Bepro
     def initialize(network_id: nil, api_url: nil, contract_address: nil)
       @version = Rails.application.config_for(:ethereum).dig(:prediction_market_contract_version) || 3
 
-      @tokenAmountToClaim = Rails.application.config_for(:ethereum).token_amount_to_claim || 1000
-      @tokenToAnswer = Rails.application.config_for(:ethereum).dig(:"network_#{network_id}", :erc20_contract_address)
+      @token_amount_to_claim = Rails.application.config_for(:ethereum).token_amount_to_claim > 0 ?
+        Rails.application.config_for(:ethereum).token_amount_to_claim : 1000
+      @token_to_answer = Rails.application.config_for(:ethereum).dig(:"network_#{network_id}", :erc20_contract_address)
 
       super(
         network_id: network_id,
@@ -29,17 +30,17 @@ module Bepro
         args: [
           name,
           symbol,
-          from_integer_to_big_number(@tokenAmountToClaim, 18).to_s,
-          @tokenToAnswer
+          from_integer_to_big_number(@token_amount_to_claim, 18).to_s,
+          @token_to_answer
         ])
     end
 
-    def set_land_everyone_can_create_markets(token_address, everyoneCanCreateMarkets)
+    def set_land_everyone_can_create_markets(token_address, everyone_can_create_markets)
       execute(
         method: 'setLandEveryoneCanCreateMarkets',
         args: [
           token_address,
-          everyoneCanCreateMarkets
+          everyone_can_create_markets
       ])
     end
 
