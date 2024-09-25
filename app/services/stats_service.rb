@@ -466,6 +466,8 @@ class StatsService
   end
 
   def action_rate(action, network_id)
+    return action[:value] if Rails.application.config_for(:ethereum).fantasy_enabled
+
     market = all_markets.find { |m| m.eth_market_id == action[:market_id] && m.network_id.to_i == network_id.to_i }
     market.present? ? action[:value] * market.token_rate_at(action[:timestamp]) : 0
   end
