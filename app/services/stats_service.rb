@@ -93,9 +93,8 @@ class StatsService
       volume = actions.select { |v| ['buy', 'sell'].include?(v[:action]) }
       bonds_volume = bonds.sum { |bond| bond[:value] }
       bonds_volume_eur = bonds.sum { |bond| bond[:value] * token_rate_at('polkamarkets', 'eur', bond[:timestamp]) }
-      volume_eur = volume.sum do |a|
-        action_rate(a, network_id)
-      end
+      volume_eur = Rails.application.config_for(:ethereum).fantasy_enabled ?
+        volume.sum { |a| a[:value] } : volume.sum { |a| action_rate(a, network_id) }
 
       users = actions.map { |a| a[:address] }.uniq.count
 
@@ -466,8 +465,6 @@ class StatsService
   end
 
   def action_rate(action, network_id)
-    return action[:value] if Rails.application.config_for(:ethereum).fantasy_enabled
-
     market = all_markets.find { |m| m.eth_market_id == action[:market_id] && m.network_id.to_i == network_id.to_i }
     market.present? ? action[:value] * market.token_rate_at(action[:timestamp]) : 0
   end
