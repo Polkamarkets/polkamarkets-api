@@ -218,19 +218,19 @@ class Market < ApplicationRecord
   end
 
   def fee
-    return nil if eth_data.blank?
+    return self[:draft_fee] if eth_data.blank?
 
     eth_data[:fee]
   end
 
   def treasury_fee
-    return nil if eth_data.blank?
+    return self[:draft_treasury_fee] if eth_data.blank?
 
     eth_data[:treasury_fee]
   end
 
   def treasury
-    return nil if eth_data.blank?
+    return self[:draft_treasury] if eth_data.blank?
 
     eth_data[:treasury]
   end

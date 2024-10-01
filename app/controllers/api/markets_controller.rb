@@ -248,6 +248,7 @@ module Api
         :resolution_title,
         :resolution_source,
         :image_url,
+        :banner_url,
         topics: [],
         outcomes: %i[title image_url price],
       )
@@ -257,6 +258,9 @@ module Api
       params.require(:market).permit(
         :liquidity,
         :timeout,
+        :fee,
+        :treasury_fee,
+        :treasury
       )
     end
   end
