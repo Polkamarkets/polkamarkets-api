@@ -2,6 +2,7 @@ class TournamentGroup < ApplicationRecord
   include NetworkHelper
   include Reportable
   include Redeemable
+  include Cloudflareable
   extend FriendlyId
 
   friendly_id :title, use: :slugged

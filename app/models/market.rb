@@ -3,6 +3,7 @@ class Market < ApplicationRecord
   include Immutable
   include Reportable
   include Likeable
+  include Cloudflareable
   extend FriendlyId
   friendly_id :title, use: :slugged
 
