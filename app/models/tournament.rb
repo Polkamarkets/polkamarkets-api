@@ -1,6 +1,7 @@
 class Tournament < ApplicationRecord
-  extend FriendlyId
   include Reportable
+  include Cloudflareable
+  extend FriendlyId
 
   friendly_id :title, use: :slugged
 
