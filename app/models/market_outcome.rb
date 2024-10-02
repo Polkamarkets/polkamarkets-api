@@ -68,6 +68,12 @@ class MarketOutcome < ApplicationRecord
     end
   end
 
+  def image_ipfs_hash
+    return self[:image_ipfs_hash] if eth_data.blank?
+
+    eth_data[:image_hash]
+  end
+
   def price
     return draft_price if eth_data.blank?
 

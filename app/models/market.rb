@@ -449,14 +449,17 @@ class Market < ApplicationRecord
   end
 
   def image_url
-    # return Rails.application.routes.url_helpers.rails_blob_url(image) if image.present?
+    return self['image_url'] if self['image_url'].present?
 
-    return if self['image_url'].blank?
+    return nil if image_ipfs_hash.blank?
 
-    # TODO: save image_hash only and concatenate with ipfs hosting provider
-    image_hash = self['image_url'].split('/').last
+    IpfsService.image_url_from_hash(image_ipfs_hash)
+  end
 
-    IpfsService.image_url_from_hash(image_hash)
+  def image_ipfs_hash
+    return self[:image_ipfs_hash] if eth_data.blank?
+
+    eth_data[:image_hash]
   end
 
   def update_banner_image

@@ -248,9 +248,10 @@ module Api
         :resolution_title,
         :resolution_source,
         :image_url,
+        :image_ipfs_hash
         :banner_url,
         topics: [],
-        outcomes: %i[title image_url price],
+        outcomes: %i[title image_url image_ipfs_hash price],
       )
     end
 
