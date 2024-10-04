@@ -27,7 +27,7 @@ class TournamentSerializer < BaseSerializer
   belongs_to :tournament_group, key: :land, if: :show_tournament_group?
 
   def show_tournament_group?
-    !instance_options[:show_tournaments]
+    !instance_options[:show_tournaments] && !instance_options[:hide_relations]
   end
 
   def show_markets?
