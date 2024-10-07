@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2024_10_01_164520) do
+ActiveRecord::Schema.define(version: 2024_10_07_103139) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -152,6 +152,14 @@ ActiveRecord::Schema.define(version: 2024_10_01_164520) do
     t.string "image_hash"
     t.string "banner_url"
     t.index ["slug"], name: "index_group_leaderboards_on_slug", unique: true
+  end
+
+  create_table "ipfs_mappings", force: :cascade do |t|
+    t.string "ipfs_hash", null: false
+    t.string "url", null: false
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["ipfs_hash"], name: "index_ipfs_mappings_on_ipfs_hash", unique: true
   end
 
   create_table "likes", force: :cascade do |t|

@@ -1,6 +1,6 @@
 class MarketOutcome < ApplicationRecord
   include Immutable
-  include Cloudflareable
+  include Imageable
 
   validates_presence_of :title, :market
 
