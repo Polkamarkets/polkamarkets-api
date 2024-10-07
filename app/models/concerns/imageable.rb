@@ -6,25 +6,14 @@ module Imageable
   included do
     after_save :imageable_migration
 
-    def ipfs_hash_from_url(url)
-      url.split('/').last
-    end
-
-    def is_ipfs_hash?(url)
-      # fetching last part of url
-      hash = ipfs_hash_from_url(url)
-
-      hash.length == 46 && hash.start_with?('Qm')
-    end
-
     def migrate_ipfs_image_to_cloudflare(image_field)
       image_url = self[image_field]
 
       return if image_url.blank?
-      return unless is_ipfs_hash?(image_url)
+      return unless IpfsService.is_ipfs_hash?(image_url)
 
       # checking if hash is already mapped
-      ipfs_mapping = IpfsMapping.find_by(ipfs_hash: ipfs_hash_from_url(image_url))
+      ipfs_mapping = IpfsMapping.find_by(ipfs_hash: IpfsService.ipfs_hash_from_url(image_url))
 
       if ipfs_mapping.present?
         self[image_field] = ipfs_mapping.url
@@ -41,7 +30,7 @@ module Imageable
       raise "No public variant found for #{image_url}" if variant.blank?
 
       # saving mapping
-      IpfsMapping.create!(ipfs_hash: ipfs_hash_from_url(image_url), url: variant)
+      IpfsMapping.create!(ipfs_hash: IpfsService.ipfs_hash_from_url(image_url), url: variant)
 
       self[image_field] = variant
       self.save!
@@ -54,7 +43,7 @@ module Imageable
         # field still not persisted
         next unless self.persisted?
 
-        next if self[field].blank? || !is_ipfs_hash?(self[field])
+        next if self[field].blank? || !IpfsService.is_ipfs_hash?(self[field])
 
         IpfsMigrateWorker.perform_async(self.class.name, id, field)
       end

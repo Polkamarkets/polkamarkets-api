@@ -13,6 +13,17 @@ class IpfsService
     Rails.application.config_for(:infura).ipfs_project_gateway || "https://infura-ipfs.io/ipfs/"
   end
 
+  def self.ipfs_hash_from_url(url)
+    url.split('/').last
+  end
+
+  def self.is_ipfs_hash?(url)
+    # fetching last part of url
+    hash = ipfs_hash_from_url(url)
+
+    hash.length == 46 && hash.start_with?('Qm')
+  end
+
   def add_from_url(url)
     file = URI.open(url)
     add(file)
