@@ -57,7 +57,7 @@ class MarketSerializer < BaseSerializer
   end
 
   def show_tournaments?
-    true
+    !instance_options[:hide_relations]
   end
 
   def related_markets

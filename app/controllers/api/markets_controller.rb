@@ -6,7 +6,7 @@ module Api
 
     def index
       markets = Market
-        .where(network_id: Rails.application.config_for(:ethereum).network_ids)
+        .where(network_id: params[:network_id] ? params[:network_id] : Rails.application.config_for(:ethereum).network_ids)
         .order(created_at: :desc)
         .includes(:outcomes)
         .includes(:tournaments)
@@ -37,11 +37,78 @@ module Api
         end
       end
 
-      render json: markets,
-        simplified_price_charts: true,
+      # ##################################################################################
+
+      # Find all unique tournaments
+      original_unique_tournaments = markets.flat_map(&:tournaments).uniq { |tournament| tournament.id }
+
+      # Find all unique lands
+      original_unique_lands = original_unique_tournaments.flat_map(&:tournament_group).uniq { |tournament_group| tournament_group.id }
+
+      # Serielize lands
+      unique_lands = ActiveModelSerializers::SerializableResource.new(
+        original_unique_lands,
+        each_serializer: TournamentGroupSerializer,
+        show_price_charts: false,
         hide_tournament_markets: true,
+        # show_tournaments: true,
+        hide_relations: true,
         scope: serializable_scope,
-        status: :ok
+      ).to_json
+
+      unique_lands = JSON.parse(unique_lands)
+
+      # Serialize tournaments
+      unique_tournaments = ActiveModelSerializers::SerializableResource.new(
+        original_unique_tournaments,
+        each_serializer: TournamentSerializer,
+        show_price_charts: false,
+          hide_tournament_markets: true,
+          # show_tournaments: true,
+          hide_relations: true,
+          scope: serializable_scope,
+      ).to_json
+
+      unique_tournaments = JSON.parse(unique_tournaments)
+
+      # Serialize markets
+      unique_markets = ActiveModelSerializers::SerializableResource.new(
+        markets,
+        each_serializer: MarketSerializer,
+          show_price_charts: false,
+          hide_tournament_markets: true,
+          show_tournaments: true,
+          hide_relations: true,
+          scope: serializable_scope,
+      ).to_json
+      unique_markets = JSON.parse(unique_markets)
+
+      # Add land to tournaments
+      unique_tournaments.each do |tournament|
+        original_tournament = original_unique_tournaments.find { |t| t.id == tournament['id'] }
+
+        tournament['land'] = unique_lands.find { |land| land['id'] == original_tournament.tournament_group.id }
+      end
+
+      # Add tournaments to markets
+      unique_markets.each do |market|
+        original_market = markets.find { |m| m.eth_market_id == market['id'] && m.network_id == market['network_id'] }
+
+        market['tournaments'] = []
+
+        original_market.tournaments.each do |t|
+          market['tournaments'] = market['tournaments'] + unique_tournaments.select { |tournament| tournament['id'] == t.id }
+        end
+
+      end
+
+      render json: unique_markets.to_json, status: :ok
+
+      # render json: markets,
+      #   show_price_charts: false,
+      #   hide_tournament_markets: true,
+      #   scope: serializable_scope,
+      #   status: :ok
     end
 
     def show
