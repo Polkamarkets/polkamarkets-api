@@ -1,7 +1,11 @@
 module Imageable
   extend ActiveSupport::Concern
 
+  IMAGEABLE_FIELDS = %w[].freeze
+
   included do
+    before_save :imageable_migration
+
     def ipfs_hash_from_url(url)
       url.split('/').last
     end
@@ -13,7 +17,7 @@ module Imageable
       hash.length == 46 && hash.start_with?('Qm')
     end
 
-    def update_image_to_cloudflare(image_field)
+    def migrate_ipfs_image_to_cloudflare(image_field)
       image_url = self[image_field]
 
       return if image_url.blank?
@@ -25,7 +29,8 @@ module Imageable
       if ipfs_mapping.present?
         self[image_field] = ipfs_mapping.url
         self.save!
-        return
+
+        return self[image_field]
       end
 
       cloudflare_service = CloudflareService.new
@@ -40,6 +45,17 @@ module Imageable
 
       self[image_field] = variant
       self.save!
+
+      self[image_field]
+    end
+
+    def imageable_migration
+      self.class::IMAGEABLE_FIELDS.each do |field|
+        puts field
+        next if self[field].blank? || !is_ipfs_hash?(self[field])
+
+        IpfsMigrateWorker.perform_async(self.class.name, id, field)
+      end
     end
   end
 end

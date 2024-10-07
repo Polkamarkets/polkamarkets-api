@@ -38,7 +38,8 @@ class Market < ApplicationRecord
   scope :open, -> { published.where('expires_at > ?', DateTime.now) }
   scope :resolved, -> { published.where('expires_at < ?', DateTime.now) }
 
-  IMMUTABLE_FIELDS = [:title]
+  IMMUTABLE_FIELDS = [:title].freeze
+  IMAGEABLE_FIELDS = [:image_url].freeze
 
   def self.all_voided_market_ids
     Rails.cache.fetch('markets:voided', expires_in: 5.minutes) do

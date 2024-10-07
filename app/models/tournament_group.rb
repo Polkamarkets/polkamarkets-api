@@ -21,6 +21,7 @@ class TournamentGroup < ApplicationRecord
   scope :unpublished, -> { where(published: false) }
 
   SOCIALS = %w[instagram twitter telegram facebook youtube linkedin medium discord].freeze
+  IMAGEABLE_FIELDS = [:image_url, :banner_url].freeze
 
   def self.tokens
     # caching value for 1h

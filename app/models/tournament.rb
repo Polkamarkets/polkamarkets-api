@@ -32,6 +32,8 @@ class Tournament < ApplicationRecord
     :downvotes
   ].freeze
 
+  IMAGEABLE_FIELDS = [:image_url].freeze
+
   def markets_network_id_validation
     markets.each do |market|
       errors.add(:markets, 'network id is not valid') unless market.network_id == network_id
