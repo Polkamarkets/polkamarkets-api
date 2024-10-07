@@ -177,8 +177,14 @@ module Api
       # destroying outcomes and rebuilding them
       market.outcomes.destroy_all
       market_params[:outcomes].each do |outcome_params|
-        if outcome_params[:image_url].present? && IpfsService.is_ipfs_hash?(outcome_params[:image_url])
-          outcome_params[:image_ipfs_hash] = IpfsService.ipfs_hash_from_url(outcome_params[:image_url])
+        if outcome_params[:image_url].present?
+          if IpfsService.is_ipfs_hash?(outcome_params[:image_url])
+            outcome_params[:image_ipfs_hash] = IpfsService.ipfs_hash_from_url(outcome_params[:image_url])
+          else
+            # trying to find image in IPFS mappings
+            ipfs_mapping = IpfsMapping.find_by(url: outcome_params[:image_url])
+            outcome_params[:image_ipfs_hash] = ipfs_mapping.ipfs_hash if ipfs_mapping.present?
+          end
         end
         market.outcomes.build(
           outcome_params.merge(draft_price: outcome_params[:price]).except(:price)
