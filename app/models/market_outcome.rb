@@ -5,7 +5,7 @@ class MarketOutcome < ApplicationRecord
   validates_presence_of :title, :market
 
   validates_uniqueness_of :title, scope: :market
-  validates_uniqueness_of :eth_market_id, scope: :market
+  validates_uniqueness_of :eth_market_id, scope: :market, allow_nil: true
 
   belongs_to :market, inverse_of: :outcomes
 
