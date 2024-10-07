@@ -1,14 +1,16 @@
 class MarketOutcome < ApplicationRecord
   include Immutable
+  include Imageable
 
   validates_presence_of :title, :market
 
   validates_uniqueness_of :title, scope: :market
-  validates_uniqueness_of :eth_market_id, scope: :market
+  validates_uniqueness_of :eth_market_id, scope: :market, allow_nil: true
 
   belongs_to :market, inverse_of: :outcomes
 
-  IMMUTABLE_FIELDS = [:title]
+  IMMUTABLE_FIELDS = [:title].freeze
+  IMAGEABLE_FIELDS = [:image_url].freeze
 
   def eth_data(refresh: false)
     return nil if eth_market_id.blank? || market.eth_market_id.blank?
@@ -66,6 +68,12 @@ class MarketOutcome < ApplicationRecord
         change_percent: change_percent
       }
     end
+  end
+
+  def image_ipfs_hash
+    return self[:image_ipfs_hash] if eth_data.blank?
+
+    eth_data[:image_hash]
   end
 
   def price

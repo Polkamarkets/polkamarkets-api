@@ -40,7 +40,8 @@ class MarketSerializer < BaseSerializer
     :likes,
     :comments,
     :featured,
-    :publish_status
+    :publish_status,
+    :image_ipfs_hash
   )
   attribute :related_markets, if: :show_related_markets?
 

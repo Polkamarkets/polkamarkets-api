@@ -9,7 +9,8 @@ class MarketOutcomeSerializer < BaseSerializer
     :price,
     :closing_price,
     :price_change_24h,
-    :image_url
+    :image_url,
+    :image_ipfs_hash
   )
 
   attribute :price_charts, if: :show_price_charts?

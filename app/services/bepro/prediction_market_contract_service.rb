@@ -97,8 +97,8 @@ module Bepro
       outcomes.each_with_index { |outcome, i| outcome[:title] = outcome_titles[i] }
       image_hash = events[0]['returnValues']['image'].split(DELIMITER)[0]
       outcomes_image_hashes = events[0]['returnValues']['image'].split(DELIMITER)[1].presence&.split(',')
-      # making sure outcomes_image_hashes length is correct
       outcomes_image_hashes = outcomes_image_hashes.presence || []
+      outcomes_image_hashes.each_with_index { |hash, i| outcomes[i][:image_hash] = hash }
       token_address = market_alt_data[3]
 
       {

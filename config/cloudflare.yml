@@ -1,0 +1,12 @@
+default: &default
+  api_token: <%= ENV['CLOUDFLARE_API_TOKEN'] %>
+  account_id: <%= ENV['CLOUDFLARE_ACCOUNT_ID'] %>
+
+production:
+  <<: *default
+
+staging:
+  <<: *default
+
+development:
+  <<: *default

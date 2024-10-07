@@ -104,6 +104,10 @@ module Api
         create_params["draft_#{key}"] = value if value.present?
       end
 
+      if market_params[:image_url].present? && IpfsService.is_ipfs_hash?(market_params[:image_url])
+        create_params[:image_ipfs_hash] = IpfsService.ipfs_hash_from_url(market_params[:image_url])
+      end
+
       tournament_group = TournamentGroup.find_by(id: market_params[:land_id])
       tournament = Tournament.find_by(id: market_params[:tournament_id])
 
@@ -111,6 +115,9 @@ module Api
 
       market = Market.new(create_params)
       market_params[:outcomes].each do |outcome_params|
+        if outcome_params[:image_url].present? && IpfsService.is_ipfs_hash?(outcome_params[:image_url])
+          outcome_params[:image_ipfs_hash] = IpfsService.ipfs_hash_from_url(outcome_params[:image_url])
+        end
         market.outcomes.build(
           outcome_params.merge(draft_price: outcome_params[:price]).except(:price)
         )
@@ -160,17 +167,35 @@ module Api
         update_params["draft_#{key}"] = value if value.present?
       end
 
+      if market_params[:image_url].present? && IpfsService.is_ipfs_hash?(market_params[:image_url])
+        update_params[:image_ipfs_hash] = IpfsService.ipfs_hash_from_url(market_params[:image_url])
+      end
+
       # update slug
       update_params[:slug] = nil if update_params[:title].present?
 
       # destroying outcomes and rebuilding them
       market.outcomes.destroy_all
       market_params[:outcomes].each do |outcome_params|
+        if outcome_params[:image_url].present?
+          if IpfsService.is_ipfs_hash?(outcome_params[:image_url])
+            outcome_params[:image_ipfs_hash] = IpfsService.ipfs_hash_from_url(outcome_params[:image_url])
+          else
+            # trying to find image in IPFS mappings
+            ipfs_mapping = IpfsMapping.find_by(url: outcome_params[:image_url])
+            outcome_params[:image_ipfs_hash] = ipfs_mapping.ipfs_hash if ipfs_mapping.present?
+          end
+        end
         market.outcomes.build(
           outcome_params.merge(draft_price: outcome_params[:price]).except(:price)
         )
       end
       market.update!(update_params)
+
+      if market_params[:tournament_id].present? && market.tournament_ids != [market_params[:tournament_id]]
+        tournament = Tournament.find_by!(id: market_params[:tournament_id])
+        market.tournament_ids = [tournament.id]
+      end
 
       render json: market,
         show_price_charts: true,
@@ -248,8 +273,10 @@ module Api
         :resolution_title,
         :resolution_source,
         :image_url,
+        :image_ipfs_hash,
+        :banner_url,
         topics: [],
-        outcomes: %i[title image_url price],
+        outcomes: %i[title image_url image_ipfs_hash price],
       )
     end
 
@@ -257,6 +284,9 @@ module Api
       params.require(:market).permit(
         :liquidity,
         :timeout,
+        :fee,
+        :treasury_fee,
+        :treasury
       )
     end
   end

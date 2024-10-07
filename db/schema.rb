@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2024_09_11_155103) do
+ActiveRecord::Schema.define(version: 2024_10_07_103139) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -154,6 +154,14 @@ ActiveRecord::Schema.define(version: 2024_09_11_155103) do
     t.index ["slug"], name: "index_group_leaderboards_on_slug", unique: true
   end
 
+  create_table "ipfs_mappings", force: :cascade do |t|
+    t.string "ipfs_hash", null: false
+    t.string "url", null: false
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["ipfs_hash"], name: "index_ipfs_mappings_on_ipfs_hash", unique: true
+  end
+
   create_table "likes", force: :cascade do |t|
     t.bigint "user_id", null: false
     t.string "likeable_type", null: false
@@ -172,6 +180,7 @@ ActiveRecord::Schema.define(version: 2024_09_11_155103) do
     t.integer "eth_market_id"
     t.string "image_url"
     t.float "draft_price"
+    t.string "image_ipfs_hash"
     t.index ["market_id", "eth_market_id"], name: "index_market_outcomes_on_market_id_and_eth_market_id", unique: true
     t.index ["market_id"], name: "index_market_outcomes_on_market_id"
   end
@@ -202,6 +211,11 @@ ActiveRecord::Schema.define(version: 2024_09_11_155103) do
     t.integer "draft_timeout"
     t.integer "comments_count", default: 0
     t.integer "likes_count", default: 0
+    t.datetime "scheduled_at"
+    t.float "draft_fee"
+    t.float "draft_treasury_fee"
+    t.string "draft_treasury"
+    t.string "image_ipfs_hash"
     t.index ["eth_market_id", "network_id"], name: "index_markets_on_eth_market_id_and_network_id", unique: true
     t.index ["slug"], name: "index_markets_on_slug", unique: true
   end
