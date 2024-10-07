@@ -172,6 +172,11 @@ module Api
       end
       market.update!(update_params)
 
+      if market_params[:tournament_id].present? && market.tournament_ids != [market_params[:tournament_id]]
+        tournament = Tournament.find_by!(id: market_params[:tournament_id])
+        market.tournament_ids = [tournament.id]
+      end
+
       render json: market,
         show_price_charts: true,
         hide_tournament_markets: true,
