@@ -4,7 +4,7 @@ module Imageable
   IMAGEABLE_FIELDS = %w[].freeze
 
   included do
-    before_save :imageable_migration
+    after_save :imageable_migration
 
     def ipfs_hash_from_url(url)
       url.split('/').last
@@ -51,7 +51,9 @@ module Imageable
 
     def imageable_migration
       self.class::IMAGEABLE_FIELDS.each do |field|
-        puts field
+        # field still not persisted
+        next unless self.persisted?
+
         next if self[field].blank? || !is_ipfs_hash?(self[field])
 
         IpfsMigrateWorker.perform_async(self.class.name, id, field)
