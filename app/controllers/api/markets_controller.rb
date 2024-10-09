@@ -9,7 +9,7 @@ module Api
         .where(network_id: Rails.application.config_for(:ethereum).network_ids)
         .order(created_at: :desc)
         .includes(:outcomes)
-        .includes(:tournaments)
+        .includes(tournaments: :tournament_group)
 
       if params[:id]
         ids = params[:id].split(',').map(&:to_i)
