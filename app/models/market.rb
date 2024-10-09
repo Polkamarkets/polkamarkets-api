@@ -428,8 +428,7 @@ class Market < ApplicationRecord
   end
 
   def refresh_prices!(queue: 'default')
-    Cache::MarketCacheSerializerDeleteWorker.new.perform(id)
-    Cache::MarketEthDataWorker.set(queue: queue).perform_async(id)
+    Cache::MarketRefreshPricesWorker.set(queue: queue).perform_async(id)
   end
 
   def refresh_cache_sync!
@@ -584,6 +583,12 @@ class Market < ApplicationRecord
         .flatten.uniq
         .select { |market| market.id != id && market.published? }.first(5)
     end
+  end
+
+  def refresh_serializer_cache!
+    Cache::MarketCacheSerializerDeleteWorker.new.perform(id)
+    # triggering a serializer action to set cache
+    MarketSerializer.new(self).as_json
   end
 
   def admins
