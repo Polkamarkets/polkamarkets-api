@@ -38,7 +38,7 @@ module Api
       end
 
       render json: markets,
-        simplified_price_charts: true,
+        simplified_price_charts: !!params[:show_price_charts],
         hide_tournament_markets: true,
         scope: serializable_scope,
         status: :ok
