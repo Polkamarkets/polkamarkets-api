@@ -59,7 +59,7 @@ module Api
       markets = markets.select { |market| market.state == params[:state] } if params[:state]
 
       render json: markets,
-        simplified_price_charts: true,
+        simplified_price_charts: !!params[:show_price_charts],
         hide_tournament_markets: true,
         scope: serializable_scope,
         status: :ok
