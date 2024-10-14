@@ -13,11 +13,12 @@ class Activity < ApplicationRecord
     :block_number,
     :token_address
 
-  def self.create_from_prediction_market_action(network_id, action)
+  def self.create_or_update_from_prediction_market_action(network_id, action)
     activity = Activity.find_or_initialize_by(
       network_id: network_id,
       tx_id: action[:tx_id],
-      action: action[:action]
+      action: action[:action],
+      log_index: action[:log_index]
     )
 
     # token address not on action, fetching from eth_data from market model
@@ -34,7 +35,8 @@ class Activity < ApplicationRecord
       outcome_id: action[:outcome_id],
       tx_id: action[:tx_id],
       block_number: action[:block_number],
-      token_address: market.eth_data[:token_address]
+      token_address: market.eth_data[:token_address],
+      log_index: action[:log_index]
     )
 
     activity

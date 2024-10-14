@@ -300,7 +300,8 @@ module Bepro
           ),
           timestamp: event['returnValues']['timestamp'].to_i,
           tx_id: event['transactionHash'],
-          block_number: event['blockNumber']
+          block_number: event['blockNumber'],
+          log_index: event['logIndex']
         }
       end
     end

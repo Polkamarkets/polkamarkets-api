@@ -11,7 +11,7 @@ namespace :activities do
 
       # fetching activity txs from db and making diff
       actions.reject { |action| activity_tx_ids.include?(action[:tx_id]) }.each do |action|
-        Activity.create_from_prediction_market_action(network_id, action)
+        Activity.create_or_update_from_prediction_market_action(network_id, action)
       end
     end
   end
