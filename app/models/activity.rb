@@ -1,5 +1,5 @@
 class Activity < ApplicationRecord
-  validates_uniqueness_of :tx_id, scope: [:action, :network_id]
+  validates_uniqueness_of :log_index, scope: [:action, :network_id, :tx_id], allow_nil: true
 
   validates_presence_of :network_id,
     :timestamp,
