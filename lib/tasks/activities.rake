@@ -7,11 +7,33 @@ namespace :activities do
         Bepro::PredictionMarketContractService.new(network_id: network_id).get_action_events
       end
 
-      activity_tx_ids = Activity.where(network_id: network_id).pluck(:tx_id).uniq
+      activity_txs = {}
+      Activity.where(network_id: network_id).pluck(:tx_id, :log_index).each do |tx_id, log_index|
+        activity_txs[tx_id] ||= {}
+        activity_txs[tx_id][log_index] = true
+      end
 
       # fetching activity txs from db and making diff
-      actions.reject { |action| activity_tx_ids.include?(action[:tx_id]) }.each do |action|
-        Activity.create_or_update_from_prediction_market_action(network_id, action)
+      actions.each do |action|
+        next if activity_txs.dig(action[:tx_id], action[:log_index])
+
+        if activity_txs.dig(action[:tx_id], nil)
+          # legacy activity, updating log index
+          activity = Activity.find_by(
+            network_id: network_id,
+            tx_id: action[:tx_id],
+            address: action[:address],
+            action: action[:action],
+            market_id: action[:market_id],
+            outcome_id: action[:outcome_id],
+            shares: action[:shares],
+            amount: action[:value],
+            log_index: nil
+          )
+          activity.update(log_index: action[:log_index]) if activity
+        else
+          Activity.create_or_update_from_prediction_market_action(network_id, action)
+        end
       end
     end
   end
