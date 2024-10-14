@@ -102,7 +102,16 @@ module Api
         end
       end
 
+      should_update_markets_cache = !tournament.published? && tournament_params[:published]
+
       if tournament.update(update_params)
+        if should_update_markets_cache
+          # triggering a cache refresh for all markets in the tournament
+          tournament.markets.each do |market|
+            Cache::MarketRefreshPricesWorker.perform_async(market.id)
+          end
+        end
+
         render json: tournament
       else
         render json: tournament.errors, status: :unprocessable_entity
