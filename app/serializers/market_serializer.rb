@@ -41,12 +41,14 @@ class MarketSerializer < BaseSerializer
     :comments,
     :featured,
     :publish_status,
-    :image_ipfs_hash
+    :image_ipfs_hash,
+    # relationships as attributes, due to serializer caching optimizations
+    :tournaments
   )
   attribute :related_markets, if: :show_related_markets?
 
   has_many :outcomes, class_name: "MarketOutcome", serializer: MarketOutcomeSerializer
-  has_many :tournaments, serializer: TournamentSerializer, if: :show_tournaments?
+  # has_many :tournaments, serializer: TournamentSerializer, if: :show_tournaments?
 
   def question
     object.question_data
@@ -58,6 +60,12 @@ class MarketSerializer < BaseSerializer
 
   def show_tournaments?
     true
+  end
+
+  def tournaments
+    object.tournaments.map do |tournament|
+      TournamentSerializer.new(tournament, hide_tournament_markets: true)
+    end
   end
 
   def related_markets

@@ -9,7 +9,7 @@ module Api
         .where(network_id: Rails.application.config_for(:ethereum).network_ids)
         .order(created_at: :desc)
         .includes(:outcomes)
-        .includes(:tournaments)
+        .includes(tournaments: :tournament_group)
 
       if params[:id]
         ids = params[:id].split(',').map(&:to_i)
@@ -38,7 +38,7 @@ module Api
       end
 
       render json: markets,
-        simplified_price_charts: true,
+        simplified_price_charts: !!params[:show_price_charts],
         hide_tournament_markets: true,
         scope: serializable_scope,
         status: :ok
