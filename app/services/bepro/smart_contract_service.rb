@@ -110,8 +110,7 @@ module Bepro
       end
     end
 
-    def get_events(event_name:, filter: {}, store_events: false)
-      from_block = 0
+    def get_events(event_name:, filter: {}, store_events: false, from_block: nil, to_block: nil)
       past_events = []
       events = []
 
@@ -130,7 +129,10 @@ module Bepro
         api_url: api_url
       )
 
-      if eth_query.last_block_number.present?
+      if from_block.present? || to_block.present?
+        uri << "&fromBlock=#{from_block}" if from_block.present?
+        uri << "&toBlock=#{to_block}" if to_block.present?
+      elsif eth_query.last_block_number.present?
         uri << "&fromBlock=#{eth_query.last_block_number}"
       end
 
@@ -159,6 +161,9 @@ module Bepro
           raise "BeproService :: Events Error"
         end
       end
+
+      # custom range provided, no need to store events
+      return events if from_block.present? || to_block.present?
 
       if store_events
         return [] if events.blank?

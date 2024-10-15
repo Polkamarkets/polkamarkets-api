@@ -275,13 +275,15 @@ module Bepro
       end
     end
 
-    def get_action_events(market_id: nil, address: nil)
+    def get_action_events(market_id: nil, address: nil, from_block: nil, to_block: nil)
       events = get_events(
         event_name: 'MarketActionTx',
         filter: {
           marketId: market_id.to_s,
           user: address,
-        }
+        },
+        from_block: from_block,
+        to_block: to_block
       )
 
       events.map do |event|

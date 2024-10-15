@@ -40,4 +40,9 @@ class Activity < ApplicationRecord
 
     activity
   end
+
+  def self.max_block_number_by_network_id(network_id)
+    # TODO: change block_number to integer
+    where(network_id: network_id).maximum('CAST(block_number AS INTEGER)').to_i
+  end
 end

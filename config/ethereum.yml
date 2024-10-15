@@ -16,6 +16,7 @@ default: &default
       arbitration_network_id: <%= ENV["ETHEREUM_NETWORK_#{network_id}_ARBITRATION_NETWORK_ID"].to_s %>
       image_url: "<%= ENV["ETHEREUM_NETWORK_#{network_id}_IMAGE_URL"].to_s %>"
       burn_from_block: <%= ENV["ETHEREUM_NETWORK_#{network_id}_BURN_FROM_BLOCK"].to_i %>
+      block_range: <%= ENV["ETHEREUM_NETWORK_#{network_id}_BLOCK_RANGE"].to_i %>
   <% end %>
   <% ENV["STATS_NETWORK_IDS"].to_s.split(',') do |network_id| %>
     stats_network_<%= network_id %>:
