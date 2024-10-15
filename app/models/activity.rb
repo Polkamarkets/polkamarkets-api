@@ -17,7 +17,6 @@ class Activity < ApplicationRecord
     activity = Activity.find_or_initialize_by(
       network_id: network_id,
       tx_id: action[:tx_id],
-      action: action[:action],
       log_index: action[:log_index]
     )
 
