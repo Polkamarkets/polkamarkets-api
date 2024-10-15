@@ -318,6 +318,27 @@ module Bepro
       )
     end
 
+    def get_market_created_events(market_id: nil, address: nil)
+      events = get_events(
+        event_name: 'MarketCreated',
+        filter: {
+          marketId: market_id.to_s,
+          user: address,
+        }
+      )
+
+      events.map do |event|
+        {
+          address: event['returnValues']['user'],
+          market_id: event['returnValues']['marketId'].to_i,
+          outcomes: event['returnValues']['outcomes'].to_i,
+          question: event['returnValues']['question'],
+          image: event['returnValues']['image'],
+          token: event['returnValues']['token']
+        }
+      end
+    end
+
     def get_market_resolved_events(market_id: nil, address: nil)
       events = get_events(
         event_name: 'MarketResolved',

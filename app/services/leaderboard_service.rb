@@ -108,6 +108,19 @@ class LeaderboardService
     leaderboard.sort_by { |user, data| -data[:earnings] }
   end
 
+  def calculate_network_leaderboard(network_id)
+    market_ids = Market.where(network_id: network_id).pluck(:eth_market_id).compact
+
+    market_leaderboards = market_ids.map do |market_id|
+      calculate_market_leaderboard(network_id, market_id)
+    end
+
+    leaderboard = merge_market_leaderboards(market_leaderboards)
+
+    # sorting by holdings
+    leaderboard.sort_by { |user, data| -data[:earnings] }
+  end
+
   def merge_market_leaderboards(market_leaderboards)
     leaderboard = market_leaderboards.reduce({}) do |acc, market_leaderboard|
       market_leaderboard.each do |user, data|
@@ -120,6 +133,29 @@ class LeaderboardService
         acc[user][:winnings] += data[:winnings]
         acc[user][:transactions] += data[:transactions]
       end
+
+      acc
+    end
+  end
+
+  def sum_leaderboard_data(leaderboard)
+    leaderboard.reduce({
+      won_predictions: 0,
+      earnings: 0,
+      volume: 0,
+      holdings_value: 0,
+      holdings_cost: 0,
+      winnings: 0,
+      transactions: 0,
+      users: leaderboard.count
+    }) do |acc, data|
+      acc[:won_predictions] += data[1][:won_predictions]
+      acc[:earnings] += data[1][:earnings]
+      acc[:volume] += data[1][:volume]
+      acc[:holdings_value] += data[1][:holdings_value]
+      acc[:holdings_cost] += data[1][:holdings_cost]
+      acc[:winnings] += data[1][:winnings]
+      acc[:transactions] += data[1][:transactions]
 
       acc
     end
@@ -147,6 +183,19 @@ class LeaderboardService
     leaderboard_legacy = format_in_legacy_format(network_id, leaderboard)
 
     Rails.cache.write("leaderboard:tournament_group:#{network_id}:#{tournament_group_id}", leaderboard_legacy)
+
+    leaderboard_legacy
+  end
+
+  def get_network_leaderboard(network_id, refresh: false)
+    if Rails.cache.exist?("leaderboard:network:#{network_id}") && !refresh
+      return Rails.cache.read("leaderboard:network:#{network_id}")
+    end
+
+    leaderboard = calculate_network_leaderboard(network_id)
+    leaderboard_legacy = format_in_legacy_format(network_id, leaderboard)
+
+    Rails.cache.write("leaderboard:network:#{network_id}", leaderboard_legacy)
 
     leaderboard_legacy
   end

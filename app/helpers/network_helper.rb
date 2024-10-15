@@ -11,6 +11,12 @@ module NetworkHelper
     end
   end
 
+  def network_markets_created(network_id)
+    Rails.cache.fetch("api:markets_created:#{network_id}", expires_in: 24.hours) do
+      Bepro::PredictionMarketContractService.new(network_id: network_id).get_market_created_events
+    end
+  end
+
   def network_bonds(network_id)
     Rails.cache.fetch("api:bonds:#{network_id}", expires_in: 24.hours) do
       Bepro::RealitioErc20ContractService.new(network_id: network_id).get_bond_events
