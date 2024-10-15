@@ -59,44 +59,19 @@ class StatsService
     @networks = ethereum_networks + stats_networks
   end
 
-  def get_stats(from: nil, to: nil)
+  def get_stats
     # TODO: volume chart
     # TODO: TVL chart
     stats = networks.map do |network|
       network_id = network[:network_id]
-      actions = network_actions(network_id)
+      leaderboard_service = LeaderboardService.new
+      network_leaderboard = leaderboard_service.calculate_network_leaderboard(network[:network_id])
+      network_stats = leaderboard_service.sum_leaderboard_data(network_leaderboard)
       bonds = network_bonds(network_id)
-      market_ids = actions.map { |action| action[:market_id] }.uniq
+      markets_created = network_markets_created(network_id).count
 
-      create_market_actions = market_ids.map do |market_id|
-        # first action represents market creation
-        action = actions.find { |action| action[:market_id] == market_id }
-      end
-
-      # filtering by timestamps, if provided
-      actions.select! do |action|
-        (!from || action[:timestamp] >= from) &&
-          (!to || action[:timestamp] <= to)
-      end
-
-      bonds.select! do |bond|
-        (!from || bond[:timestamp] >= from) &&
-          (!to || bond[:timestamp] <= to)
-      end
-
-      create_market_actions.select! do |action|
-        (!from || action[:timestamp] >= from) &&
-          (!to || action[:timestamp] <= to)
-      end
-
-      markets_created = create_market_actions.count
-      volume = actions.select { |v| ['buy', 'sell'].include?(v[:action]) }
       bonds_volume = bonds.sum { |bond| bond[:value] }
       bonds_volume_eur = bonds.sum { |bond| bond[:value] * token_rate_at('polkamarkets', 'eur', bond[:timestamp]) }
-      volume_eur = Rails.application.config_for(:ethereum).fantasy_enabled ?
-        volume.sum { |a| a[:value] } : volume.sum { |a| action_rate(a, network_id) }
-
-      users = actions.map { |a| a[:address] }.uniq.count
 
       [
         network_id,
@@ -104,9 +79,9 @@ class StatsService
           markets_created: markets_created,
           bond_volume: bonds_volume,
           bond_volume_eur: bonds_volume_eur,
-          volume_eur: volume_eur,
-          users: users,
-          transactions: actions.count
+          volume_eur: network_stats[:volume],
+          users: network_stats[:users],
+          transactions: network_stats[:transactions]
         }
       ]
     end.to_h

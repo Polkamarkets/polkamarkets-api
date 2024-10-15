@@ -15,6 +15,10 @@ class EthQuery < ApplicationRecord
     SidekiqJobFinderService.new.pending_job?('EthEventsWorker', worker_args)
   end
 
+  def self.max_block_number_by_network_id(network_id)
+    where(network_id: network_id).maximum(:last_block_number)
+  end
+
   private
 
   def worker_args

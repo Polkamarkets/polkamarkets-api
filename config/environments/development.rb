@@ -46,6 +46,12 @@ Rails.application.configure do
 
   config.hosts << /.*\.ngrok\-free\.app/
 
+  if ENV["RAILS_LOG_TO_STDOUT"].present?
+    logger           = ActiveSupport::Logger.new(STDOUT)
+    logger.formatter = config.log_formatter
+    config.logger    = ActiveSupport::TaggedLogging.new(logger)
+  end
+
   # Raises error for missing translations.
   # config.action_view.raise_on_missing_translations = true
 

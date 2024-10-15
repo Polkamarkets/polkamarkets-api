@@ -275,13 +275,15 @@ module Bepro
       end
     end
 
-    def get_action_events(market_id: nil, address: nil)
+    def get_action_events(market_id: nil, address: nil, from_block: nil, to_block: nil)
       events = get_events(
         event_name: 'MarketActionTx',
         filter: {
           marketId: market_id.to_s,
           user: address,
-        }
+        },
+        from_block: from_block,
+        to_block: to_block
       )
 
       events.map do |event|
@@ -300,7 +302,8 @@ module Bepro
           ),
           timestamp: event['returnValues']['timestamp'].to_i,
           tx_id: event['transactionHash'],
-          block_number: event['blockNumber']
+          block_number: event['blockNumber'],
+          log_index: event['logIndex']
         }
       end
     end
@@ -313,6 +316,27 @@ module Bepro
           user: address,
         }
       )
+    end
+
+    def get_market_created_events(market_id: nil, address: nil)
+      events = get_events(
+        event_name: 'MarketCreated',
+        filter: {
+          marketId: market_id.to_s,
+          user: address,
+        }
+      )
+
+      events.map do |event|
+        {
+          address: event['returnValues']['user'],
+          market_id: event['returnValues']['marketId'].to_i,
+          outcomes: event['returnValues']['outcomes'].to_i,
+          question: event['returnValues']['question'],
+          image: event['returnValues']['image'],
+          token: event['returnValues']['token']
+        }
+      end
     end
 
     def get_market_resolved_events(market_id: nil, address: nil)
