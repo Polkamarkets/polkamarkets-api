@@ -10,9 +10,10 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2024_10_15_091305) do
+ActiveRecord::Schema.define(version: 2024_10_17_173506) do
 
   # These are extensions that must be enabled in order to support this database
+  enable_extension "pg_stat_statements"
   enable_extension "plpgsql"
 
   create_table "achievement_tokens", force: :cascade do |t|
@@ -82,6 +83,20 @@ ActiveRecord::Schema.define(version: 2024_10_15_091305) do
     t.index ["network_id", "tx_id", "log_index"], name: "index_activities_on_network_id_and_tx_id_and_log_index"
     t.index ["timestamp", "network_id"], name: "index_activities_on_timestamp_and_network_id"
     t.index ["timestamp"], name: "index_activities_on_timestamp"
+  end
+
+  create_table "claims", force: :cascade do |t|
+    t.string "network_id", null: false
+    t.string "wallet_address", null: false
+    t.integer "amount", null: false
+    t.datetime "recorded_at", precision: 6
+    t.boolean "claimed", default: false
+    t.string "transaction_hash"
+    t.string "claim_type", null: false
+    t.jsonb "data"
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.string "receiver_address"
   end
 
   create_table "comments", force: :cascade do |t|
@@ -307,6 +322,7 @@ ActiveRecord::Schema.define(version: 2024_10_15_091305) do
     t.boolean "published", default: false
     t.boolean "comments_enabled", default: true
     t.string "metadata_url"
+    t.boolean "computed_claims", default: false
     t.index ["slug"], name: "index_tournaments_on_slug", unique: true
     t.index ["tournament_group_id"], name: "index_tournaments_on_tournament_group_id"
   end
