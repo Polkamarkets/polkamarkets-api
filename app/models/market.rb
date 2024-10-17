@@ -191,7 +191,7 @@ class Market < ApplicationRecord
   end
 
   def topics
-    return self["topics"] if eth_data.blank?
+    return self["topics"] if self["topics"].present? || eth_data.blank?
 
     eth_data[:topics] || []
   end
