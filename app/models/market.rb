@@ -3,6 +3,7 @@ class Market < ApplicationRecord
   include Immutable
   include Reportable
   include Likeable
+  include Imageable
   extend FriendlyId
   friendly_id :title, use: :slugged
 
@@ -37,7 +38,8 @@ class Market < ApplicationRecord
   scope :open, -> { published.where('expires_at > ?', DateTime.now) }
   scope :resolved, -> { published.where('expires_at < ?', DateTime.now) }
 
-  IMMUTABLE_FIELDS = [:title]
+  IMMUTABLE_FIELDS = [:title].freeze
+  IMAGEABLE_FIELDS = [:image_url, :banner_url].freeze
 
   def self.all_voided_market_ids
     Rails.cache.fetch('markets:voided', expires_in: 5.minutes) do
@@ -204,7 +206,7 @@ class Market < ApplicationRecord
   end
 
   def topics
-    return self["topics"] if eth_data.blank?
+    return self["topics"] if self["topics"].present? || eth_data.blank?
 
     eth_data[:topics] || []
   end
@@ -233,19 +235,19 @@ class Market < ApplicationRecord
   end
 
   def fee
-    return nil if eth_data.blank?
+    return self[:draft_fee] if eth_data.blank?
 
     eth_data[:fee]
   end
 
   def treasury_fee
-    return nil if eth_data.blank?
+    return self[:draft_treasury_fee] if eth_data.blank?
 
     eth_data[:treasury_fee]
   end
 
   def treasury
-    return nil if eth_data.blank?
+    return self[:draft_treasury] if eth_data.blank?
 
     eth_data[:treasury]
   end
@@ -441,8 +443,7 @@ class Market < ApplicationRecord
   end
 
   def refresh_prices!(queue: 'default')
-    Cache::MarketCacheSerializerDeleteWorker.new.perform(id)
-    Cache::MarketEthDataWorker.set(queue: queue).perform_async(id)
+    Cache::MarketRefreshPricesWorker.set(queue: queue).perform_async(id)
   end
 
   def refresh_cache_sync!
@@ -464,14 +465,17 @@ class Market < ApplicationRecord
   end
 
   def image_url
-    # return Rails.application.routes.url_helpers.rails_blob_url(image) if image.present?
+    return self['image_url'] if self['image_url'].present?
 
-    return if self['image_url'].blank?
+    return nil if image_ipfs_hash.blank?
 
-    # TODO: save image_hash only and concatenate with ipfs hosting provider
-    image_hash = self['image_url'].split('/').last
+    IpfsService.image_url_from_hash(image_ipfs_hash)
+  end
 
-    IpfsService.image_url_from_hash(image_hash)
+  def image_ipfs_hash
+    return self[:image_ipfs_hash] if eth_data.blank?
+
+    eth_data[:image_hash]
   end
 
   def update_banner_image
@@ -594,6 +598,12 @@ class Market < ApplicationRecord
         .flatten.uniq
         .select { |market| market.id != id && market.published? }.first(5)
     end
+  end
+
+  def refresh_serializer_cache!
+    Cache::MarketCacheSerializerDeleteWorker.new.perform(id)
+    # triggering a serializer action to set cache
+    MarketSerializer.new(self).as_json
   end
 
   def admins

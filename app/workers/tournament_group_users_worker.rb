@@ -3,7 +3,7 @@ class TournamentGroupUsersWorker
 
   def perform(tournament_group_id)
     tournament_group = TournamentGroup.find_by(id: tournament_group_id)
-    return if tournament_group.blank? || tournament_group.token.blank?
+    return if tournament_group.blank? || tournament_group.token.blank? || tournament_group.whitelabel?
 
     # fetching mint actions and creating user associations
     mint_events = Bepro::Erc20ContractService.new(

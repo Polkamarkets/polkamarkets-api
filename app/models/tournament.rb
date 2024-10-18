@@ -1,6 +1,7 @@
 class Tournament < ApplicationRecord
-  extend FriendlyId
   include Reportable
+  include Imageable
+  extend FriendlyId
 
   friendly_id :title, use: :slugged
 
@@ -30,6 +31,8 @@ class Tournament < ApplicationRecord
     :upvotes,
     :downvotes
   ].freeze
+
+  IMAGEABLE_FIELDS = [:image_url].freeze
 
   def markets_network_id_validation
     markets.each do |market|
