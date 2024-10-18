@@ -18,6 +18,10 @@ class RewardListenerWorker
       claimed_events.each do |event|
         claim_amount = 0
         claims.each do |claim|
+          if claim.claimed
+            next
+          end
+
           claim_amount += claim.amount
 
           if claim_amount > event[:amount]
