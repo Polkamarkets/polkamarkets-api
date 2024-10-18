@@ -273,6 +273,8 @@ module Api
         :resolution_title,
         :resolution_source,
         :image_url,
+        :scheduled_at,
+        :featured,
         :image_ipfs_hash,
         :banner_url,
         topics: [],

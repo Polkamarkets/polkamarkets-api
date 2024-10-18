@@ -9,6 +9,7 @@ class MarketSerializer < BaseSerializer
     :description,
     :created_at,
     :expires_at,
+    :scheduled_at,
     :fee,
     :treasury_fee,
     :treasury,
