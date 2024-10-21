@@ -717,7 +717,8 @@ class Market < ApplicationRecord
           field: field,
           old_value: values[0],
           new_value: values[1],
-          edited_at: version.created_at
+          edited_at: version.created_at,
+          edited_by: User.find_by(id: version.whodunnit).try(:username)
         }
       end
     end
@@ -733,7 +734,7 @@ class Market < ApplicationRecord
             old_value: values[0],
             new_value: values[1],
             edited_at: version.created_at,
-            edited_by: User.find_by(version.whodunnit).try(:username)
+            edited_by: User.find_by(id: version.whodunnit).try(:username)
           }
         end
       end
