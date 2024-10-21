@@ -688,7 +688,12 @@ class Market < ApplicationRecord
 
     prediction_market_contract_service = Bepro::PredictionMarketContractService.new(network_id: network_id)
 
-    tx = prediction_market_contract_service.mint_and_create_market(args)
+    tournament_group = tournament_groups.first
+
+    tx = tournament_group.whitelabel? ?
+      prediction_market_contract_service.create_market(args) :
+      prediction_market_contract_service.mint_and_create_market(args)
+
     eth_market_id_from_tx = tx["events"]["MarketCreated"][0]["returnValues"]["marketId"]
 
     # triggering market update

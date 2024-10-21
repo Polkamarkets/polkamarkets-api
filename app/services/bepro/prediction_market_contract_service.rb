@@ -437,7 +437,30 @@ module Bepro
       distribution
     end
 
+    def approve_token_before_create_market(token, amount, check_balance = false)
+      token_contract = Bepro::Erc20ContractService.new(
+        network_id: network_id,
+        contract_address: token
+      )
+
+      token_allowance = token_contract.allowance(executor_address, contract_address)
+
+      if token_allowance < from_big_number_to_float(amount)
+        token_contract.approve(
+          spender: contract_address,
+          amount: 10 ** 50
+        )
+      end
+
+      if check_balance
+        token_balance = token_contract.balance_of(executor_address)
+        raise 'Insufficient balance to create market' if token_balance < from_big_number_to_float(amount)
+      end
+    end
+
     def create_market(args)
+      approve_token_before_create_market(args[:token], args[:value], true)
+
       execute(
         method: 'createMarket',
         args: [
@@ -447,24 +470,7 @@ module Bepro
     end
 
     def mint_and_create_market(args)
-      # checking token approval
-      token = args[:token]
-
-      token_contract = Bepro::Erc20ContractService.new(
-        network_id: network_id,
-        contract_address: token
-      )
-
-      spender =
-
-      token_allowance = token_contract.allowance(executor_address, contract_address)
-
-      if token_allowance < from_big_number_to_float(args[:value])
-        token_contract.approve(
-          spender: contract_address,
-          amount: 10 ** 50
-        )
-      end
+      approve_token_before_create_market(args[:token], args[:value], false)
 
       execute(
         method: 'mintAndCreateMarket',
