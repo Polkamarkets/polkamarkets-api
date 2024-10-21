@@ -43,6 +43,7 @@ class MarketSerializer < BaseSerializer
     :featured,
     :publish_status,
     :image_ipfs_hash,
+    :edit_history,
     # relationships as attributes, due to serializer caching optimizations
     :tournaments
   )
