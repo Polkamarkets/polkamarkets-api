@@ -395,5 +395,83 @@ module Bepro
     def weth_address
       call(method: 'WETH')
     end
+
+    def generate_question_string(
+      title,
+      description,
+      category,
+      subcategory,
+      topics,
+      resolution_source,
+      resolution_title,
+      draft_slug,
+      outcome_titles
+    )
+
+      question = []
+      question << "#{title};#{description}"
+      # delimiting with "" and joining with ","
+      question << outcome_titles.map { |title| "\"#{title}\"" }.join(',')
+      question << [
+       topics.to_a.join(','),
+       subcategory.to_s,
+       resolution_source.to_s,
+       resolution_title.to_s,
+       draft_slug.to_s
+      ].join(';')
+      question.join(DELIMITER)
+    end
+
+    def generate_image_string(image_hash, outcomes_image_hashes)
+      "#{image_hash}#{DELIMITER}#{outcomes_image_hashes.join(',')}"
+    end
+
+    def calculate_odds_distribution(odds)
+      distribution = []
+      prod = odds.reduce { |a, b| a * b }
+
+      odds.each do |odd|
+        distribution.push((prod / odd * 1000000).to_i)
+      end
+
+      distribution
+    end
+
+    def create_market(args)
+      execute(
+        method: 'createMarket',
+        args: [
+          args
+        ]
+      )
+    end
+
+    def mint_and_create_market(args)
+      # checking token approval
+      token = args[:token]
+
+      token_contract = Bepro::Erc20ContractService.new(
+        network_id: network_id,
+        contract_address: token
+      )
+
+      spender =
+
+      token_allowance = token_contract.allowance(executor_address, contract_address)
+
+      if token_allowance < from_big_number_to_float(args[:value])
+        token_contract.approve(
+          spender: contract_address,
+          amount: 10 ** 50
+        )
+      end
+
+      execute(
+        method: 'mintAndCreateMarket',
+        args: [
+          args
+        ]
+      )
+    end
   end
 end

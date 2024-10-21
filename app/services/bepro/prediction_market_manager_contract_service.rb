@@ -20,6 +20,18 @@ module Bepro
       )
     end
 
+    def get_land_data(token_address)
+      land_data = call(method: 'lands', args: [token_address])
+
+      {
+        address: land_data[0],
+        active: land_data[1],
+        lock_amount: from_big_number_to_float(land_data[2]),
+        lock_user: land_data[3],
+        realitio_address: land_data[4],
+      }
+    end
+
     def get_land_admins(token_address)
       return [] if contract_address.blank?
 
