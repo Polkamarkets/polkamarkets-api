@@ -93,6 +93,17 @@ class TournamentGroup < ApplicationRecord
     end
   end
 
+  def land_data(refresh: false)
+    return {} if token.blank?
+
+    Rails.cache.fetch("tournament_groups:#{id}:land_data", expires_in: 24.hours, force: refresh) do
+      Bepro::PredictionMarketManagerContractService.new(
+        network_id: network_id,
+        contract_address: token_controller_address
+      ).get_land_data(token[:address])
+    end
+  end
+
   def rank_by
     # returning most common rank_by criteria amongst tournaments
     tournaments.map(&:rank_by).tally.max_by { |_, v| v }&.first || 'claim_winnings_count,earnings_eur'

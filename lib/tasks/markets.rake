@@ -18,6 +18,28 @@ namespace :markets do
     end
   end
 
+  desc "checks for markets that are scheduled to be published"
+  task :check_scheduled_markets, [:symbol] => :environment do |task, args|
+    Rails.application.config_for(:ethereum).network_ids.each do |network_id|
+      # fetching markets scheduled to be published
+      markets = Market.where(
+        network_id: network_id,
+        publish_status: :draft,
+      ).where(
+        'scheduled_at < ?', Time.now
+      )
+
+      # publishing markets
+      markets.each do |market|
+        begin
+          market.create_and_publish!
+        rescue => e
+          Sentry.capture_exception(e)
+        end
+      end
+    end
+  end
+
   task :check_expiring_markets, [:symbol] => :environment do |task, args|
     # fetching markets expiring in the next 24 hours
     markets = Market.where(
