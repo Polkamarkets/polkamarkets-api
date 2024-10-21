@@ -31,7 +31,6 @@ namespace :markets do
 
       # publishing markets
       markets.each do |market|
-        puts "Publishing market #{market.id}"
         begin
           market.create_and_publish!
         rescue => e
