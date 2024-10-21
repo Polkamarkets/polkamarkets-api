@@ -728,6 +728,7 @@ class Market < ApplicationRecord
       outcome.versions.where('created_at > ?', published_at).map do |version|
         version.changeset.each do |field, values|
           next unless field == 'title'
+          next if values[0].blank? || values[1].blank?
 
           edits << {
             field: "answer #{i + 1}",
