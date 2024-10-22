@@ -188,13 +188,11 @@ module Api
             outcome_params[:image_ipfs_hash] = ipfs_mapping.ipfs_hash if ipfs_mapping.present?
           end
         end
-        outcome_params.merge!(draft_price: outcome_params[:price]) if market.eth_market_id.blank?
-        outcome_params.except!(:price)
         if market.eth_market_id.blank?
-          market.outcomes.build(outcome_params.except(:price))
+          market.outcomes.build(outcome_params.merge(draft_price: outcome_params[:price]).except(:price))
         else
           outcome = market.outcomes[index]
-          outcome.update!(outcome_params)
+          outcome.update!(outcome_params.except(:price))
         end
       end
       market.update!(update_params)
