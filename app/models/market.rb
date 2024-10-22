@@ -197,13 +197,13 @@ class Market < ApplicationRecord
   end
 
   def resolution_source
-    return self["resolution_source"] if eth_data.blank?
+    return self["resolution_source"] if self["resolution_source"].present? || eth_data.blank?
 
     eth_data[:resolution_source]
   end
 
   def resolution_title
-    return self["resolution_title"] if eth_data.blank?
+    return self["resolution_title"] if self["resolution_title"].present? || eth_data.blank?
 
     eth_data[:resolution_title]
   end

@@ -158,13 +158,15 @@ module Api
     def update
       market = Market.find_by!(slug: params[:id])
 
-      raise "Market is not in draft state" if market.eth_market_id.present?
+      raise "Market outcomes length don't match" if market.eth_market_id.present? && market.outcomes.count != market_params[:outcomes].count
 
       raise "Market has not enough outcomes" if market_params[:outcomes].count < 2
 
       update_params = market_params.except(:outcomes, :land_id, :tournament_id)
-      market_draft_params.each do |key, value|
-        update_params["draft_#{key}"] = value if value.present?
+      if market.eth_market_id.blank?
+        market_draft_params.each do |key, value|
+          update_params["draft_#{key}"] = value if value.present?
+        end
       end
 
       if market_params[:image_url].present? && IpfsService.is_ipfs_hash?(market_params[:image_url])
@@ -175,8 +177,8 @@ module Api
       update_params[:slug] = nil if update_params[:title].present?
 
       # destroying outcomes and rebuilding them
-      market.outcomes.destroy_all
-      market_params[:outcomes].each do |outcome_params|
+      market.outcomes.destroy_all if market.eth_market_id.blank?
+      market_params[:outcomes].each_with_index do |outcome_params, index|
         if outcome_params[:image_url].present?
           if IpfsService.is_ipfs_hash?(outcome_params[:image_url])
             outcome_params[:image_ipfs_hash] = IpfsService.ipfs_hash_from_url(outcome_params[:image_url])
@@ -186,9 +188,14 @@ module Api
             outcome_params[:image_ipfs_hash] = ipfs_mapping.ipfs_hash if ipfs_mapping.present?
           end
         end
-        market.outcomes.build(
-          outcome_params.merge(draft_price: outcome_params[:price]).except(:price)
-        )
+        outcome_params.merge!(draft_price: outcome_params[:price]) if market.eth_market_id.blank?
+        outcome_params.except!(:price)
+        if market.eth_market_id.blank?
+          market.outcomes.build(outcome_params.except(:price))
+        else
+          outcome = market.outcomes[index]
+          outcome.update!(outcome_params)
+        end
       end
       market.update!(update_params)
 
