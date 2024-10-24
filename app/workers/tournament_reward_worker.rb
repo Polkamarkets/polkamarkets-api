@@ -18,7 +18,11 @@ class TournamentRewardWorker
       rank = index + 1
       reward = tournament.rewards.find { |reward| rank >= reward['from'] && rank <= reward['to'] }
 
-      ClaimService.new.create_claim(tournament.network_id, user_data[:user], reward['value'], 'tournament', { tournament_id: tournament.id })
+      claim_service = ClaimService.new
+
+      token_address = claim_service.get_wallet_address_preferred_token(tournament.network_id, user_data[:user], reward['token_addresses'])
+
+      claim_service.create_claim(tournament.network_id, user_data[:user], reward['value'], token_address, 'tournament', { tournament_id: tournament.id })
     end
 
     tournament.update!(computed_claims: true)
