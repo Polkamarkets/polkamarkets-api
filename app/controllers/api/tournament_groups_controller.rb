@@ -4,7 +4,10 @@ module Api
     before_action :authenticate_user!, only: %i[join create]
 
     def index
-      tournament_groups = TournamentGroup.order(position: :asc).all
+      tournament_groups = TournamentGroup
+        .order(position: :asc)
+        .where(network_id: Rails.application.config_for(:ethereum).network_ids)
+        .all
       show_redeem_code = false
 
       if params[:admin].present?

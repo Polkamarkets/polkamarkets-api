@@ -1,7 +1,6 @@
 class Market < ApplicationRecord
   include NetworkHelper
   include BigNumberHelper
-  include Immutable
   include Reportable
   include Likeable
   include Imageable
@@ -35,13 +34,15 @@ class Market < ApplicationRecord
     published: 2,
   }
 
+  has_paper_trail
+
   scope :published, -> { where('published_at < ?', DateTime.now).where.not(eth_market_id: nil) }
   scope :unpublished, -> { where('published_at is NULL OR published_at > ?', DateTime.now).or(where(eth_market_id: nil)) }
   scope :open, -> { published.where('expires_at > ?', DateTime.now) }
   scope :resolved, -> { published.where('expires_at < ?', DateTime.now) }
 
-  IMMUTABLE_FIELDS = [:title].freeze
   IMAGEABLE_FIELDS = [:image_url, :banner_url].freeze
+  EDITABLE_FIELDS = %i[title description resolution_source resolution_title].freeze
 
   def self.all_voided_market_ids
     Rails.cache.fetch('markets:voided', expires_in: 5.minutes) do
@@ -196,13 +197,13 @@ class Market < ApplicationRecord
   end
 
   def resolution_source
-    return self["resolution_source"] if eth_data.blank?
+    return self["resolution_source"] if self["resolution_source"].present? || eth_data.blank?
 
     eth_data[:resolution_source]
   end
 
   def resolution_title
-    return self["resolution_title"] if eth_data.blank?
+    return self["resolution_title"] if self["resolution_title"].present? || eth_data.blank?
 
     eth_data[:resolution_title]
   end
@@ -700,5 +701,47 @@ class Market < ApplicationRecord
     Market.create_from_eth_market_id!(network_id, eth_market_id_from_tx)
 
     reload
+  end
+
+  def edit_history
+    return [] unless published?
+
+    edits = []
+
+    # only considering changes after market was published
+    versions.where('created_at > ?', published_at).each do |version|
+      version.changeset.each do |field, values|
+        next unless EDITABLE_FIELDS.include?(field.to_sym)
+        next if values[0].blank? || values[1].blank?
+
+        edits << {
+          field: field,
+          old_value: values[0],
+          new_value: values[1],
+          edited_at: version.created_at,
+          edited_by: User.find_by(id: version.whodunnit).try(:username)
+        }
+      end
+    end
+
+    # also checking outcomes
+    outcomes.each_with_index do |outcome, i|
+      outcome.versions.where('created_at > ?', published_at).map do |version|
+        version.changeset.each do |field, values|
+          next unless field == 'title'
+          next if values[0].blank? || values[1].blank?
+
+          edits << {
+            field: "answer #{i + 1}",
+            old_value: values[0],
+            new_value: values[1],
+            edited_at: version.created_at,
+            edited_by: User.find_by(id: version.whodunnit).try(:username)
+          }
+        end
+      end
+    end
+
+    edits.sort_by { |edit| edit[:edited_at] }.reverse
   end
 end
