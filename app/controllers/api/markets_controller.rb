@@ -1,7 +1,7 @@
 module Api
   class MarketsController < BaseController
     before_action :get_market, only: %i[show comments holders reload reload_prices feed]
-    before_action :authenticate_admin!, only: %i[draft update destroy feature unfeature]
+    before_action :authenticate_admin!, :set_paper_trail_whodunnit, only: %i[draft update destroy feature unfeature]
     before_action :authenticate_user!, only: %i[publish]
 
     def index

@@ -8,10 +8,6 @@ module Api
 
     rescue_from ActiveRecord::RecordNotFound, with: :render_not_found
 
-    before_action :set_paper_trail_whodunnit
-
-    # TODO: authentication
-
     def render_not_found
       render json: { error: 'Not Found' }, status: :not_found
     end

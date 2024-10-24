@@ -712,6 +712,7 @@ class Market < ApplicationRecord
     versions.where('created_at > ?', published_at).each do |version|
       version.changeset.each do |field, values|
         next unless EDITABLE_FIELDS.include?(field.to_sym)
+        next if values[0].blank? || values[1].blank?
 
         edits << {
           field: field,
