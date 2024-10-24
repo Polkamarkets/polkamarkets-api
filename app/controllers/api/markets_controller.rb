@@ -173,8 +173,8 @@ module Api
         update_params[:image_ipfs_hash] = IpfsService.ipfs_hash_from_url(market_params[:image_url])
       end
 
-      # update slug
-      update_params[:slug] = nil if update_params[:title].present?
+      # update slug if market is not published
+      update_params[:slug] = nil if update_params[:title].present? && market.eth_market_id.blank?
 
       # destroying outcomes and rebuilding them
       market.outcomes.destroy_all if market.eth_market_id.blank?

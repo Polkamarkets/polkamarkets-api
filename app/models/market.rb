@@ -709,7 +709,7 @@ class Market < ApplicationRecord
     edits = []
 
     # only considering changes after market was published
-    versions.where('created_at > ?', published_at).map do |version|
+    versions.where('created_at > ?', published_at).each do |version|
       version.changeset.each do |field, values|
         next unless EDITABLE_FIELDS.include?(field.to_sym)
 
@@ -741,6 +741,6 @@ class Market < ApplicationRecord
       end
     end
 
-    edits.sort_by { |edit| edit[:created_at] }.reverse
+    edits.sort_by { |edit| edit[:edited_at] }.reverse
   end
 end
