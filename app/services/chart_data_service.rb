@@ -40,10 +40,9 @@ class ChartDataService
     points = TIMEFRAMES[timeframe] / step
 
     # 'all' timeframe step / points can be recalculated
-    if timeframe == 'all' && start_timestamp
-      step_days = ((now.to_i - start_timestamp.to_i) / TIMEFRAMES[timeframe].to_f).ceil
-
-      step = step_days.days
+    if timeframe == 'all' && start_timestamp && (now - start_timestamp) > 60.days
+      step = 12.hours
+      points = (now - start_timestamp) / step
     end
 
     # subracting one candle (last candle -> now)
@@ -78,14 +77,14 @@ class ChartDataService
 
   def self.step_for(timeframe)
     case timeframe
-    when '24h' # 24 candles
-      1.hour
-    when '7d' # 14 candles
-      12.hours
-    when '30d' # 30 candles
-      1.day
+    when '24h' # max 288 candles
+      5.minutes
+    when '7d' # max 336 candles
+      30.minutes
+    when '30d' # max 180 candles
+      4.hours
     when 'all'
-      1.day
+      4.hours
     else
       raise "ChartDataService :: Timeframe #{timeframe} not supported"
     end
@@ -97,18 +96,35 @@ class ChartDataService
     # TODO: double check timezones issue
     case timeframe
     when '24h'
-      datetime.beginning_of_hour
+      # getting past date rounded to the nearest 5 minutes
+      datetime = datetime.beginning_of_minute
+      # making sure minute is a multiple of 5
+      until datetime.min % 5 == 0 do
+        datetime = datetime - 1.minute
+      end
+      datetime
     when '7d'
-      datetime = datetime.beginning_of_hour
-      # making sure hour is a multiple of 12
-      until datetime.hour % 12 == 0 do
-        datetime = datetime - 1.hour
+      # getting past date rounded to the nearest 30 minutes
+      datetime = datetime.beginning_of_minute
+      # making sure minute is a multiple of 5
+      until datetime.min % 30 == 0 do
+        datetime = datetime - 1.minute
       end
       datetime
     when '30d'
-      datetime.beginning_of_day
+      datetime = datetime.beginning_of_hour
+      # making sure hour is a multiple of 12
+      until datetime.hour % 4 == 0 do
+        datetime = datetime - 1.hour
+      end
+      datetime
     when 'all'
-      datetime.beginning_of_day
+      datetime = datetime.beginning_of_hour
+      # making sure hour is a multiple of 12
+      until datetime.hour % 4 == 0 do
+        datetime = datetime - 1.hour
+      end
+      datetime
     else
       raise "ChartDataService :: Timeframe #{timeframe} not supported"
     end
