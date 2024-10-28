@@ -700,6 +700,9 @@ class Market < ApplicationRecord
     # triggering market update
     Market.create_from_eth_market_id!(network_id, eth_market_id_from_tx)
 
+    # publishing tournaments
+    tournaments.each { |tournament| tournament.update(published: true) unless tournament.published }
+
     reload
   end
 
