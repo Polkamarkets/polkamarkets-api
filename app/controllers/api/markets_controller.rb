@@ -195,12 +195,15 @@ module Api
           outcome.update!(outcome_params.except(:price))
         end
       end
-      market.update!(update_params)
 
       if market_params[:tournament_id].present? && market.tournament_ids != [market_params[:tournament_id]]
         tournament = Tournament.find_by!(id: market_params[:tournament_id])
         market.tournament_ids = [tournament.id]
+        # triggering cache update
+        market.touch
       end
+
+      market.update!(update_params)
 
       render json: market,
         show_price_charts: true,
