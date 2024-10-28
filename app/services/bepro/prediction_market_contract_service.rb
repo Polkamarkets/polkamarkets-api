@@ -428,7 +428,14 @@ module Bepro
 
     def calculate_odds_distribution(odds)
       distribution = []
+      # returning empty array if all odds are the same
+      return [] if odds.uniq.length == 1
+
       prod = odds.reduce { |a, b| a * b }
+      if prod < 1e-6
+        # updating prod to avoid division by zero
+        prod *= 10**(-Math.log10(prod).ceil)
+      end
 
       odds.each do |odd|
         distribution.push((prod / odd * 1000000).to_i)
