@@ -19,17 +19,8 @@ class Tournament < ApplicationRecord
   scope :unpublished, -> { where(published: false) }
 
   RANK_CRITERIA = [
-    :markets_created,
-    :volume_eur,
-    :tvl_volume_eur,
-    :liquidity_eur,
-    :tvl_liquidity_eur,
     :earnings_eur,
-    :bond_volume,
     :claim_winnings_count,
-    :transactions,
-    :upvotes,
-    :downvotes
   ].freeze
 
   IMAGEABLE_FIELDS = [:image_url].freeze
@@ -41,7 +32,7 @@ class Tournament < ApplicationRecord
   end
 
   def rank_by
-    self[:rank_by] || 'claim_winnings_count,earnings_eur'
+    self[:rank_by] || 'claim_winnings_count'
   end
 
   def rank_by_validation
@@ -60,8 +51,13 @@ class Tournament < ApplicationRecord
       errors.add(:rewards, 'reward is not valid') unless reward['from'].present? &&
         reward['to'].present? &&
         (reward['reward'].present? || reward['title'].present?) && # TODO: remove reward['reward'] legacy
-        reward['from'] <= reward['to']
+        reward['from'] <= reward['to'] &&
+        ((reward['rank_by'].present? && RANK_CRITERIA.include?(reward['rank_by'].to_sym)) || single_ranking?)
     end
+  end
+
+  def single_ranking?
+    rank_by.split(',').size <= 1
   end
 
   def expires_at
