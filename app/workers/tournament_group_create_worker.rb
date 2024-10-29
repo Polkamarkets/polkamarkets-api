@@ -8,7 +8,16 @@ class TournamentGroupCreateWorker
     controller_contract_service =
       Bepro::PredictionMarketControllerContractService.new(network_id: tournament_group.network_id)
 
-    created_land = controller_contract_service.create_land(tournament_group.title, tournament_group.symbol)
+    token_amount_to_claim = Rails.application.config_for(:ethereum).token_amount_to_claim > 0 ?
+      Rails.application.config_for(:ethereum).token_amount_to_claim : 1000
+    token_to_answer = Rails.application.config_for(:ethereum).dig(:"network_#{network_id}", :erc20_contract_address)
+
+    created_land = controller_contract_service.create_land(
+      tournament_group.title,
+      tournament_group.symbol,
+      token_amount_to_claim,
+      token_to_answer
+    )
 
     token_address = created_land['events']['LandCreated'][0]['returnValues']['token']
 

@@ -1,5 +1,5 @@
 class TournamentSerializer < BaseSerializer
-  cache expires_in: 24.hours
+  cache expires_in: 24.hours, except: [:markets]
 
   attributes(
     :id,
@@ -22,9 +22,15 @@ class TournamentSerializer < BaseSerializer
     :comments_enabled
   )
 
-  has_many :markets, serializer: TournamentMarketSerializer, if: :show_markets?
+  attribute :markets, if: :show_markets?
 
   belongs_to :tournament_group, key: :land, if: :show_tournament_group?
+
+  def markets
+    object.markets.select { |market| market.published? }.map do |market|
+      TournamentMarketSerializer.new(market)
+    end
+  end
 
   def show_tournament_group?
     !instance_options[:show_tournaments]

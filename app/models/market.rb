@@ -1,6 +1,6 @@
 class Market < ApplicationRecord
   include NetworkHelper
-  include Immutable
+  include BigNumberHelper
   include Reportable
   include Likeable
   include Imageable
@@ -22,6 +22,7 @@ class Market < ApplicationRecord
   has_one_attached :image
 
   has_and_belongs_to_many :tournaments
+  has_many :tournament_groups, through: :tournaments
 
   validates :outcomes, length: { minimum: 2 } # currently supporting only binary markets
 
@@ -33,13 +34,15 @@ class Market < ApplicationRecord
     published: 2,
   }
 
+  has_paper_trail
+
   scope :published, -> { where('published_at < ?', DateTime.now).where.not(eth_market_id: nil) }
   scope :unpublished, -> { where('published_at is NULL OR published_at > ?', DateTime.now).or(where(eth_market_id: nil)) }
   scope :open, -> { published.where('expires_at > ?', DateTime.now) }
   scope :resolved, -> { published.where('expires_at < ?', DateTime.now) }
 
-  IMMUTABLE_FIELDS = [:title].freeze
   IMAGEABLE_FIELDS = [:image_url, :banner_url].freeze
+  EDITABLE_FIELDS = %i[title description resolution_source resolution_title].freeze
 
   def self.all_voided_market_ids
     Rails.cache.fetch('markets:voided', expires_in: 5.minutes) do
@@ -138,6 +141,15 @@ class Market < ApplicationRecord
     market
   end
 
+  def scheduled_at_validation
+    return if scheduled_at.blank?
+    return if expires_at.blank?
+    return if published?
+
+    errors.add(:scheduled_at, 'cannot be in the past') if scheduled_at < DateTime.now
+    errors.add(:scheduled_at, 'cannot be after market expiration') if scheduled_at > expires_at
+  end
+
   def eth_data(refresh: false)
     return nil if eth_market_id.blank?
 
@@ -178,14 +190,20 @@ class Market < ApplicationRecord
     self["created_at"]
   end
 
+  def scheduled_at
+    return nil if published?
+
+    self["scheduled_at"]
+  end
+
   def resolution_source
-    return self["resolution_source"] if eth_data.blank?
+    return self["resolution_source"] if self["resolution_source"].present? || eth_data.blank?
 
     eth_data[:resolution_source]
   end
 
   def resolution_title
-    return self["resolution_title"] if eth_data.blank?
+    return self["resolution_title"] if self["resolution_title"].present? || eth_data.blank?
 
     eth_data[:resolution_title]
   end
@@ -595,5 +613,138 @@ class Market < ApplicationRecord
     return [] if tournaments.blank?
 
     tournaments.map(&:admins).flatten.uniq
+  end
+
+  def duplicate!
+    # creates a draft market with the same outcomes
+    new_market = dup
+
+    new_market.title = "#{title} (Copy)"
+    new_market.eth_market_id = nil
+    new_market.published_at = nil
+    new_market.publish_status = :draft
+    new_market.scheduled_at = nil
+
+    outcomes.each do |outcome|
+      new_market.outcomes << outcome.dup
+    end
+
+    new_market.tournament_ids = tournament_ids
+
+    new_market.save!
+    new_market
+  end
+
+  def prepare_draft_for_market_creation_args
+    arbitrator =
+      Rails.application.config_for(:ethereum).dig(
+        :"network_#{network_id}",
+        :arbitration_proxy_contract_address
+      ).to_s.downcase.presence || '0x000000000000000000000000000000000000dead'
+
+    tournament_group = tournament_groups.first
+
+    raise "Market has no active tournament group" if tournament_group.blank? || tournament_group.token.blank?
+
+    prediction_market_contract_service = Bepro::PredictionMarketContractService.new(network_id: network_id)
+
+    {
+      value: from_integer_to_big_number(draft_liquidity || 1000, 18).to_s,
+      closesAt: expires_at.to_i,
+      outcomes: outcomes.count,
+      token: tournament_group.token[:address],
+      distribution: prediction_market_contract_service.calculate_odds_distribution(
+        outcomes.map { |outcome| outcome.draft_price.presence || 1.0 / outcomes.count }
+      ),
+      question: prediction_market_contract_service.generate_question_string(
+        title,
+        description,
+        category,
+        subcategory,
+        topics,
+        resolution_source,
+        resolution_title,
+        slug,
+        outcomes.map(&:title)
+      ),
+      image: prediction_market_contract_service.generate_image_string(
+        image_ipfs_hash,
+        outcomes.map(&:image_ipfs_hash)
+      ),
+      arbitrator: arbitrator,
+      fee: "0",
+      treasuryFee: "0",
+      treasury: draft_treasury || "0x0000000000000000000000000000000000000000",
+      realitio: tournament_group.land_data[:realitio_address],
+      realitioTimeout: draft_timeout || 3600,
+      manager: tournament_group.token_controller_address,
+    }
+  end
+
+  def create_and_publish!
+    raise "Market is already published" if eth_market_id.present? || published?
+    raise "Expiration date is in the past" if expires_at < DateTime.now
+
+    args = prepare_draft_for_market_creation_args
+
+    prediction_market_contract_service = Bepro::PredictionMarketContractService.new(network_id: network_id)
+
+    tournament_group = tournament_groups.first
+
+    tx = tournament_group.whitelabel? ?
+      prediction_market_contract_service.create_market(args) :
+      prediction_market_contract_service.mint_and_create_market(args)
+
+    eth_market_id_from_tx = tx["events"]["MarketCreated"][0]["returnValues"]["marketId"]
+
+    # triggering market update
+    Market.create_from_eth_market_id!(network_id, eth_market_id_from_tx)
+
+    # publishing tournaments
+    tournaments.each { |tournament| tournament.update(published: true) unless tournament.published }
+
+    reload
+  end
+
+  def edit_history
+    return [] unless published?
+
+    edits = []
+
+    # only considering changes after market was published
+    versions.where('created_at > ?', published_at).each do |version|
+      version.changeset.each do |field, values|
+        next unless EDITABLE_FIELDS.include?(field.to_sym)
+        next if values[0].blank? || values[1].blank?
+
+        edits << {
+          field: field,
+          old_value: values[0],
+          new_value: values[1],
+          edited_at: version.created_at,
+          edited_by: User.find_by(id: version.whodunnit).try(:username)
+        }
+      end
+    end
+
+    # also checking outcomes
+    outcomes.each_with_index do |outcome, i|
+      outcome.versions.where('created_at > ?', published_at).map do |version|
+        version.changeset.each do |field, values|
+          next unless field == 'title'
+          next if values[0].blank? || values[1].blank?
+
+          edits << {
+            field: "answer #{i + 1}",
+            old_value: values[0],
+            new_value: values[1],
+            edited_at: version.created_at,
+            edited_by: User.find_by(id: version.whodunnit).try(:username)
+          }
+        end
+      end
+    end
+
+    edits.sort_by { |edit| edit[:edited_at] }.reverse
   end
 end

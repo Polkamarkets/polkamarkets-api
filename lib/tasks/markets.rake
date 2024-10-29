@@ -18,6 +18,28 @@ namespace :markets do
     end
   end
 
+  desc "checks for markets that are scheduled to be published"
+  task :check_scheduled_markets, [:symbol] => :environment do |task, args|
+    Rails.application.config_for(:ethereum).network_ids.each do |network_id|
+      # fetching markets scheduled to be published
+      markets = Market.where(
+        network_id: network_id,
+        publish_status: :draft,
+      ).where(
+        'scheduled_at < ?', Time.now
+      )
+
+      # publishing markets
+      markets.each do |market|
+        begin
+          market.create_and_publish!
+        rescue => e
+          Sentry.capture_exception(e)
+        end
+      end
+    end
+  end
+
   task :check_expiring_markets, [:symbol] => :environment do |task, args|
     # fetching markets expiring in the next 24 hours
     markets = Market.where(
@@ -74,17 +96,10 @@ namespace :markets do
   end
 
   desc "features markets published in the last 24 hours"
-  task :feature_markets, [:symbol] => :environment do |task, args|
-    # unfeaturing all markets
-    Market
-      .where(featured: true)
-      .where('published_at < ?', 24.hours.ago)
+  task :unfeature_markets, [:symbol] => :environment do |task, args|
+    # unfeaturing all closed markets
+    Market.where(featured: true)
+      .where('expires_at < ?', DateTime.now)
       .each { |m| m.update(featured: false) }
-
-    # featuring markets published in the last 24 hours
-    Market
-      .where(published_at: 24.hours.ago..Time.now)
-      .where(featured: false)
-      .each { |m| m.update(featured: true) }
   end
 end

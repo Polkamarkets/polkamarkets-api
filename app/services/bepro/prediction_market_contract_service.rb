@@ -395,5 +395,96 @@ module Bepro
     def weth_address
       call(method: 'WETH')
     end
+
+    def generate_question_string(
+      title,
+      description,
+      category,
+      subcategory,
+      topics,
+      resolution_source,
+      resolution_title,
+      draft_slug,
+      outcome_titles
+    )
+
+      question = []
+      question << "#{title};#{description}"
+      # delimiting with "" and joining with ","
+      question << outcome_titles.map { |title| "\"#{title}\"" }.join(',')
+      question << [
+       topics.to_a.join(','),
+       subcategory.to_s,
+       resolution_source.to_s,
+       resolution_title.to_s,
+       draft_slug.to_s
+      ].join(';')
+      question.join(DELIMITER)
+    end
+
+    def generate_image_string(image_hash, outcomes_image_hashes)
+      "#{image_hash}#{DELIMITER}#{outcomes_image_hashes.join(',')}"
+    end
+
+    def calculate_odds_distribution(odds)
+      distribution = []
+      # returning empty array if all odds are the same
+      return [] if odds.uniq.length == 1
+
+      prod = odds.reduce { |a, b| a * b }
+      if prod < 1e-6
+        # updating prod to avoid division by zero
+        prod *= 10**(-Math.log10(prod).ceil)
+      end
+
+      odds.each do |odd|
+        distribution.push((prod / odd * 1000000).to_i)
+      end
+
+      distribution
+    end
+
+    def approve_token_before_create_market(token, amount, check_balance = false)
+      token_contract = Bepro::Erc20ContractService.new(
+        network_id: network_id,
+        contract_address: token
+      )
+
+      token_allowance = token_contract.allowance(executor_address, contract_address)
+
+      if token_allowance < from_big_number_to_float(amount)
+        token_contract.approve(
+          spender: contract_address,
+          amount: 10 ** 50
+        )
+      end
+
+      if check_balance
+        token_balance = token_contract.balance_of(executor_address)
+        raise 'Insufficient balance to create market' if token_balance < from_big_number_to_float(amount)
+      end
+    end
+
+    def create_market(args)
+      approve_token_before_create_market(args[:token], args[:value], true)
+
+      execute(
+        method: 'createMarket',
+        args: [
+          args
+        ]
+      )
+    end
+
+    def mint_and_create_market(args)
+      approve_token_before_create_market(args[:token], args[:value], false)
+
+      execute(
+        method: 'mintAndCreateMarket',
+        args: [
+          args
+        ]
+      )
+    end
   end
 end

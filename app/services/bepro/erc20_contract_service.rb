@@ -24,6 +24,13 @@ module Bepro
       from_big_number_to_float(call(method: 'balanceOf', args: user), decimals)
     end
 
+    def allowance(owner, spender)
+      # if contract is not deployed, returning 0 as default
+      return 0 if contract_address.blank?
+
+      from_big_number_to_float(call(method: 'allowance', args: [owner, spender]), decimals)
+    end
+
     def decimals
       @_decimals ||= call(method: 'decimals')
     end
@@ -39,6 +46,10 @@ module Bepro
 
     def mint_tokens(to:, amount:)
       execute(method: 'mint', args: [to, from_integer_to_big_number(amount, decimals).to_s])
+    end
+
+    def approve(spender:, amount:)
+      execute(method: 'approve', args: [spender, from_integer_to_big_number(amount, decimals).to_s])
     end
 
     def transfer_events(from: nil, to: nil)

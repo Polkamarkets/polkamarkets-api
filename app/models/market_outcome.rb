@@ -1,5 +1,4 @@
 class MarketOutcome < ApplicationRecord
-  include Immutable
   include Imageable
 
   validates_presence_of :title, :market
@@ -9,8 +8,9 @@ class MarketOutcome < ApplicationRecord
 
   belongs_to :market, inverse_of: :outcomes
 
-  IMMUTABLE_FIELDS = [:title].freeze
   IMAGEABLE_FIELDS = [:image_url].freeze
+
+  has_paper_trail
 
   def eth_data(refresh: false)
     return nil if eth_market_id.blank? || market.eth_market_id.blank?
@@ -29,7 +29,7 @@ class MarketOutcome < ApplicationRecord
     timeframes.map do |timeframe|
       expires_at = ChartDataService.next_datetime_for(timeframe)
       # caching chart until next candlestick
-      expires_in = market.should_refresh_cache? ? (expires_at.to_i - DateTime.now.to_i).seconds : nil
+      expires_in = market.should_refresh_cache? && expires_at > DateTime.now ? (expires_at.to_i - DateTime.now.to_i).seconds : nil
 
       price_chart =
         Rails.cache.fetch(

@@ -111,6 +111,12 @@ module Bepro
       end
     end
 
+    def executor_address
+      raise "Executor not defined" if @admin_private_key.blank?
+
+      Eth::Key.new(priv: @admin_private_key).address.to_s
+    end
+
     def get_events(event_name:, filter: {}, store_events: false, from_block: nil, to_block: nil)
       past_events = []
       events = []

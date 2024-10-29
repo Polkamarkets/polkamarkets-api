@@ -9,6 +9,7 @@ class MarketSerializer < BaseSerializer
     :description,
     :created_at,
     :expires_at,
+    :scheduled_at,
     :fee,
     :treasury_fee,
     :treasury,
@@ -42,6 +43,7 @@ class MarketSerializer < BaseSerializer
     :featured,
     :publish_status,
     :image_ipfs_hash,
+    :edit_history,
     # relationships as attributes, due to serializer caching optimizations
     :tournaments
   )
