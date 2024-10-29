@@ -10,10 +10,9 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2024_10_24_172923) do
+ActiveRecord::Schema.define(version: 2024_10_29_121812) do
 
   # These are extensions that must be enabled in order to support this database
-  enable_extension "pg_stat_statements"
   enable_extension "plpgsql"
 
   create_table "achievement_tokens", force: :cascade do |t|
@@ -294,6 +293,8 @@ ActiveRecord::Schema.define(version: 2024_10_24_172923) do
     t.integer "users_count", default: 0
     t.string "symbol"
     t.jsonb "admins", default: []
+    t.boolean "streaks_enabled", default: false
+    t.jsonb "streaks_config", default: {}
     t.index ["slug"], name: "index_tournament_groups_on_slug", unique: true
   end
 
