@@ -89,6 +89,60 @@ module Api
       end
     end
 
+    def streaks
+      raise "Token not sent" if params[:token].blank?
+      # TODO: implement
+      mock_data = {
+        streaks: 3,
+        claimed: 0.015,
+        to_claim: 0.002,
+        values: [
+          {
+            date: (DateTime.now - 4.days).to_date,
+            value: 0.005,
+            completed: true,
+            is_streak: true,
+            is_streak_end: false,
+            pending: false,
+          },
+          {
+            date: (DateTime.now - 3.days).to_date,
+            value: 0.01,
+            completed: true,
+            is_streak: true,
+            is_streak_end: true,
+            pending: false,
+          },
+          {
+            date: (DateTime.now - 2.days).to_date,
+            value: 0.005,
+            completed: false,
+            is_streak: false,
+            is_streak_end: false,
+            pending: false,
+          },
+          {
+            date: (DateTime.now - 1.days).to_date,
+            value: 0.005,
+            completed: false,
+            is_streak: false,
+            is_streak_end: false,
+            pending: false,
+          },
+          {
+            date: DateTime.now.to_date,
+            value: 0.002,
+            completed: false,
+            is_streak: false,
+            is_streak_end: false,
+            pending: true,
+          },
+        ]
+      }
+
+      render json: mock_data, status: :ok
+    end
+
     private
 
     def user_params
