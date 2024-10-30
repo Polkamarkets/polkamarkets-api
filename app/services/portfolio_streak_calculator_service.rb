@@ -70,6 +70,12 @@ class PortfolioStreakCalculatorService
       end
     end
 
+    # only showing values since last miss (including last miss)
+    last_miss = streak[:values].reverse.find { |v| !v[:completed] }
+    if last_miss
+      streak[:values].select! { |v| v[:date] >= last_miss[:date] }
+    end
+
     if streak[:values].count >= streaks_values.size
       streak[:values] = streak[:values].last(streaks_values.size)
     else
