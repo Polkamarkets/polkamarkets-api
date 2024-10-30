@@ -124,7 +124,7 @@ module Api
           {
             date: (DateTime.now - 1.days).to_date,
             value: 0.005,
-            completed: false,
+            completed: true,
             is_streak: false,
             is_streak_end: false,
             pending: false,
