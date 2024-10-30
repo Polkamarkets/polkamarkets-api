@@ -496,6 +496,12 @@ class Portfolio < ApplicationRecord
     end
   end
 
+  def streaks(tournament_group_id, refresh: false)
+    Rails.cache.fetch("portfolios:network_#{network_id}:#{eth_address}:#{tournament_group_id}:streaks", force: refresh) do
+      PortfolioStreakCalculatorService.new(id, tournament_group_id).calculate_streaks
+    end
+  end
+
   def refresh_cache!(queue: 'default')
     # disabling cache delete for now
     # $redis_store.keys("portfolios:#{eth_address}*").each { |key| $redis_store.del key }
