@@ -46,8 +46,8 @@ class PortfolioStreakCalculatorService
         pending: false
       }
 
+      value[:value] = streaks_values[streak_index]
       if days_with_action.include?(day)
-        value[:value] = streaks_values[streak_index]
         streak_index = (streak_index + 1) % streaks_values.size
         streak_completed = streak_index == 0
         value[:completed] = true
@@ -59,7 +59,6 @@ class PortfolioStreakCalculatorService
         streak_index = 0
         if DateTime.now.to_date == day
           value[:pending] = true
-          value[:value] = streaks_values[streak_index]
           streak_index = (streak_index + 1) % streaks_values.size
         end
       end
