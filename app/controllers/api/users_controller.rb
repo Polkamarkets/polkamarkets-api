@@ -3,14 +3,10 @@ module Api
     before_action :authenticate_user!, only: [:update, :destroy]
 
     before_action :set_paper_trail_whodunnit
+    before_action :get_user, only: [:show, :streaks]
 
     def show
-      # trying to fetch by wallet or slug
-      user = User.where("lower(wallet_address) = ? OR lower(slug) = ?", params[:id].downcase, params[:id].downcase).first
-
-      raise ActiveRecord::RecordNotFound if user.nil?
-
-      render json: user, status: :ok
+      render json: @user, status: :ok
     end
 
     def register_waitlist
@@ -91,59 +87,27 @@ module Api
 
     def streaks
       raise "Token not sent" if params[:token].blank?
-      # TODO: implement
-      mock_data = {
-        streaks: 3,
-        claimed: 0.015,
-        to_claim: 0.002,
-        values: [
-          {
-            date: (DateTime.now - 4.days).to_date,
-            value: 0.005,
-            completed: true,
-            is_streak: true,
-            is_streak_end: false,
-            pending: false,
-          },
-          {
-            date: (DateTime.now - 3.days).to_date,
-            value: 0.01,
-            completed: true,
-            is_streak: true,
-            is_streak_end: true,
-            pending: false,
-          },
-          {
-            date: (DateTime.now - 2.days).to_date,
-            value: 0.005,
-            completed: false,
-            is_streak: false,
-            is_streak_end: false,
-            pending: false,
-          },
-          {
-            date: (DateTime.now - 1.days).to_date,
-            value: 0.005,
-            completed: true,
-            is_streak: false,
-            is_streak_end: false,
-            pending: false,
-          },
-          {
-            date: DateTime.now.to_date,
-            value: 0.002,
-            completed: false,
-            is_streak: false,
-            is_streak_end: false,
-            pending: true,
-          },
-        ]
-      }
 
-      render json: mock_data, status: :ok
+      # case insensitive search
+      tournament_group = TournamentGroup.all.find do |tg|
+        tg.token&.dig(:address)&.downcase == params[:token].downcase ||
+          tg.token&.dig(:symbol)&.downcase == params[:token].downcase
+      end
+      raise ActiveRecord::RecordNotFound if tournament_group.nil?
+
+      portfolio = Portfolio.find_or_create_by!(eth_address: @user.wallet_address.downcase, network_id: tournament_group.network_id)
+
+      render json: portfolio.streaks(tournament_group.id), status: :ok
     end
 
     private
+
+    def get_user
+      # trying to fetch by wallet or slug
+      @user = User.where("lower(wallet_address) = ? OR lower(slug) = ?", params[:id].downcase, params[:id].downcase).first
+
+      raise ActiveRecord::RecordNotFound if @user.nil?
+    end
 
     def user_params
       params.permit(
