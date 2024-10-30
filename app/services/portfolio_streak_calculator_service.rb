@@ -57,7 +57,11 @@ class PortfolioStreakCalculatorService
         # TODO streak[:claimed]
       else
         streak_index = 0
-        value[:pending] = true if DateTime.now.to_date == day
+        if DateTime.now.to_date == day
+          value[:pending] = true
+          value[:value] = streaks_values[streak_index]
+          streak_index = (streak_index + 1) % streaks_values.size
+        end
       end
 
       streak[:values] << value
@@ -81,7 +85,6 @@ class PortfolioStreakCalculatorService
     else
       # adding future days
       (streaks_values.size - streak[:values].count).times do
-        streak_index = (streak_index + 1) % streaks_values.size
         streak[:values] << {
           date: streak[:values].last[:date] + 1.day,
           value: streaks_values[streak_index],
@@ -90,6 +93,7 @@ class PortfolioStreakCalculatorService
           is_streak_end: false,
           pending: false
         }
+        streak_index = (streak_index + 1) % streaks_values.size
       end
     end
 
