@@ -32,8 +32,17 @@ namespace :markets do
       # publishing markets
       markets.each do |market|
         begin
+          if market.schedule_tries >= Market::MAX_SCHEDULE_TRIES
+            # resetting schedule status
+            market.update(schedule_tries: 0, scheduled_at: nil)
+            Sentry.capture_message("Market #{market.id} reached max schedule tries")
+            next
+          end
+
           market.create_and_publish!
         rescue => e
+          market.update(schedule_tries: market.schedule_tries + 1)
+
           Sentry.capture_exception(e)
         end
       end
