@@ -49,6 +49,24 @@ namespace :markets do
     end
   end
 
+  task :check_publishing_markets, [:symbol] => :environment do |task, args|
+    Rails.application.config_for(:ethereum).network_ids.each do |network_id|
+      # fetching markets scheduled to be published
+      markets = Market.where(
+        network_id: network_id,
+        publish_status: :pending,
+      ).where(
+        'updated_at < ?', Time.now - 1.hour
+      )
+
+      # resetting markets to draft
+      markets.each do |market|
+        Sentry.capture_message("Market #{market.id} reset to draft")
+        market.update(publish_status: :draft)
+      end
+    end
+  end
+
   task :check_expiring_markets, [:symbol] => :environment do |task, args|
     # fetching markets expiring in the next 24 hours
     markets = Market.where(
