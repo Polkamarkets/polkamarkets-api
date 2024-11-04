@@ -32,10 +32,37 @@ namespace :markets do
       # publishing markets
       markets.each do |market|
         begin
+          if market.schedule_tries >= Market::MAX_SCHEDULE_TRIES
+            # resetting schedule status
+            market.update(schedule_tries: 0, scheduled_at: nil)
+            Sentry.capture_message("Market #{market.id} reached max schedule tries")
+            next
+          end
+
           market.create_and_publish!
         rescue => e
+          market.update(schedule_tries: market.schedule_tries + 1)
+
           Sentry.capture_exception(e)
         end
+      end
+    end
+  end
+
+  task :check_publishing_markets, [:symbol] => :environment do |task, args|
+    Rails.application.config_for(:ethereum).network_ids.each do |network_id|
+      # fetching markets scheduled to be published
+      markets = Market.where(
+        network_id: network_id,
+        publish_status: :pending,
+      ).where(
+        'updated_at < ?', Time.now - 1.hour
+      )
+
+      # resetting markets to draft
+      markets.each do |market|
+        Sentry.capture_message("Market #{market.id} reset to draft")
+        market.update(publish_status: :draft)
       end
     end
   end
