@@ -39,6 +39,18 @@ module Api
       render json: tournament
     end
 
+    def accuracy_report
+      tournament = Tournament.friendly.find(params[:id])
+
+      accuracy_report = tournament
+        .markets
+        .select { |m| m.state == 'resolved' }
+        .map(&:accuracy_report)
+        .join("\n")
+
+      render json: accuracy_report
+    end
+
     def show_markets
       tournament = Tournament.friendly.find(params[:id])
 
