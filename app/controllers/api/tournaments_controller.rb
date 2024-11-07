@@ -179,7 +179,7 @@ module Api
           :expires_at,
           :published,
           :comments_enabled,
-          rewards: [:from, :to, :reward, :title, :description, :image_url],
+          rewards: [:from, :to, :reward, :title, :description, :image_url, :rank_by],
           topics: [],
           market_ids: []
         )

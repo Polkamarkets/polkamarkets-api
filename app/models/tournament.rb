@@ -60,7 +60,19 @@ class Tournament < ApplicationRecord
       errors.add(:rewards, 'reward is not valid') unless reward['from'].present? &&
         reward['to'].present? &&
         (reward['reward'].present? || reward['title'].present?) && # TODO: remove reward['reward'] legacy
-        reward['from'] <= reward['to']
+        reward['from'] <= reward['to'] &&
+        reward['rank_by'].blank? || RANK_CRITERIA.include?(reward['rank_by'].to_sym)
+    end
+  end
+
+  def rewards
+    return [] if self[:rewards].blank?
+
+    self[:rewards].map do |reward|
+      # adding rank_by criteria if not present
+      reward['rank_by'] ||= rank_by.split(',').first
+
+      reward
     end
   end
 
