@@ -43,6 +43,7 @@ class Market < ApplicationRecord
 
   IMAGEABLE_FIELDS = [:image_url, :banner_url].freeze
   EDITABLE_FIELDS = %i[title description resolution_source resolution_title].freeze
+  MAX_SCHEDULE_TRIES = 3.freeze
 
   def self.all_voided_market_ids
     Rails.cache.fetch('markets:voided', expires_in: 5.minutes) do
@@ -746,5 +747,28 @@ class Market < ApplicationRecord
     end
 
     edits.sort_by { |edit| edit[:edited_at] }.reverse
+  end
+
+  def accuracy_report
+    return "Market #{market.slug} is not resolved" unless resolved?
+
+    question_title = title.gsub("\n", ' ')
+    outcome_titles = outcomes.map(&:title).map(&:upcase).join(', ')
+    most_probable_outcome = outcomes.to_a.max_by(&:closing_price)
+    most_probable_outcome_title = most_probable_outcome.title.upcase
+    most_probable_outcome_probability = "#{(most_probable_outcome.closing_price * 100.0).round}%"
+    winning_outcome_title = voided ? 'Voided' : outcomes.find { |o| o.eth_market_id == resolved_outcome_id }.title.upcase
+    correct = most_probable_outcome_title == winning_outcome_title ? 1 : ''
+    incorrect = most_probable_outcome_title == winning_outcome_title || voided ? '' : 1
+
+    [
+      question_title,
+      outcome_titles,
+      most_probable_outcome_title,
+      most_probable_outcome_probability,
+      winning_outcome_title,
+      correct,
+      incorrect
+    ].join(';')
   end
 end

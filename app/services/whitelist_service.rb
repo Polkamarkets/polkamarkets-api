@@ -30,6 +30,8 @@ class WhitelistService
         Rails.application.config_for(:whitelist).spreadsheet_range,
       )
 
+      spreadsheet.select! { |row| row[0].present? && row[1].present? }
+
       spreadsheet.map do |row|
         {
           username: row[0].to_s.gsub("*", ""),

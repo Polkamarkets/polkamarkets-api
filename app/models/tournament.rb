@@ -61,7 +61,7 @@ class Tournament < ApplicationRecord
   end
 
   def expires_at
-    self[:expires_at] || markets.map(&:expires_at).max
+    [self[:expires_at], markets.map(&:expires_at).max].compact.max
   end
 
   def closed?

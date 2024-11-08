@@ -1,6 +1,6 @@
 module Api
   class MarketsController < BaseController
-    before_action :get_market, only: %i[show comments holders reload reload_prices feed]
+    before_action :get_market, only: %i[show comments holders reload reload_prices feed accuracy_report]
     before_action :authenticate_admin!, :set_paper_trail_whodunnit, only: %i[draft update destroy feature unfeature]
     before_action :authenticate_user!, only: %i[publish]
 
@@ -239,6 +239,10 @@ module Api
 
     def feed
       render json: @market.feed, status: :ok
+    end
+
+    def accuracy_report
+      render json: @market.accuracy_report, status: :ok
     end
 
     def feature
