@@ -42,6 +42,12 @@ module Api
       rank_by = leaderboard_record.rank_by
       sort_params = rank_by.split(',').map(&:to_sym)
 
+      if params[:rank_by].present? && sort_params.include?(params[:rank_by].to_sym)
+        # moving the rank_by param to the first position
+        sort_params.delete(params[:rank_by].to_sym)
+        sort_params.unshift(params[:rank_by].to_sym)
+      end
+
       leaderboard.sort_by! do |user|
         sort_params.map { |param| -user[param] }
       end
