@@ -3,6 +3,7 @@ class TournamentGroup < ApplicationRecord
   include Reportable
   include Redeemable
   include Imageable
+  include OgImageable
   extend FriendlyId
 
   friendly_id :title, use: :slugged
@@ -22,6 +23,7 @@ class TournamentGroup < ApplicationRecord
 
   SOCIALS = %w[instagram twitter telegram facebook youtube linkedin medium discord].freeze
   IMAGEABLE_FIELDS = [:image_url, :banner_url].freeze
+  OG_IMAGEABLE_PATH = 'lands'
 
   def self.tokens
     # caching value for 1h

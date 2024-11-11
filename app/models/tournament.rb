@@ -1,6 +1,7 @@
 class Tournament < ApplicationRecord
   include Reportable
   include Imageable
+  include OgImageable
   extend FriendlyId
 
   friendly_id :title, use: :slugged
@@ -33,6 +34,8 @@ class Tournament < ApplicationRecord
   ].freeze
 
   IMAGEABLE_FIELDS = [:image_url].freeze
+
+  OG_IMAGEABLE_PATH = 'contests'
 
   def markets_network_id_validation
     markets.each do |market|

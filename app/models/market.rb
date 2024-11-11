@@ -4,6 +4,7 @@ class Market < ApplicationRecord
   include Reportable
   include Likeable
   include Imageable
+  include OgImageable
   extend FriendlyId
   friendly_id :title, use: :slugged
 
@@ -44,6 +45,7 @@ class Market < ApplicationRecord
   IMAGEABLE_FIELDS = [:image_url, :banner_url].freeze
   EDITABLE_FIELDS = %i[title description resolution_source resolution_title].freeze
   MAX_SCHEDULE_TRIES = 3.freeze
+  OG_IMAGEABLE_PATH = 'questions'
 
   def self.all_voided_market_ids
     Rails.cache.fetch('markets:voided', expires_in: 5.minutes) do
