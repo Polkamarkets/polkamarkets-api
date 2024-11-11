@@ -56,6 +56,17 @@ class Tournament < ApplicationRecord
     end
   end
 
+  def rewards
+    return [] if self[:rewards].blank?
+
+    self[:rewards].map do |reward|
+      # adding rank_by criteria if not present
+      reward['rank_by'] ||= rank_by.split(',').first
+
+      reward
+    end
+  end
+
   def single_ranking?
     rank_by.split(',').size <= 1
   end
