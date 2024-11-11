@@ -129,15 +129,8 @@ class Market < ApplicationRecord
       market.save!
     end
 
-    # updating banner image asynchrounously
-    MarketBannerWorker.perform_async(market.id)
-
     # triggering workers to upgrade cache data
     market.refresh_cache!(queue: 'critical')
-    market.refresh_news!(queue: 'critical')
-
-    # triggering discord bot 5 minutes later (so it allows banner image to be updated)
-    Discord::PublishMarketCreatedWorker.perform_in(5.minutes, market.id)
 
     market
   end
@@ -484,7 +477,7 @@ class Market < ApplicationRecord
 
   def update_banner_image
     banner_image_url = BannerbearService.new.create_banner_image(self)
-    self.update(banner_url: banner_image_url)
+    self.update(banner_url: banner_image_url) if banner_image_url.present?
   end
 
   # realitio data
