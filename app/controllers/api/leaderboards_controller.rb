@@ -83,7 +83,7 @@ module Api
       return user_not_found if user_leaderboard.blank?
 
       # filtering leaderboard by users with same origin
-      leaderboard.select! { |user| user[:origin] == user_leaderboard[:origin] }
+      # leaderboard.select! { |user| user[:origin] == user_leaderboard[:origin] }
 
       # adding the rank per parameter to the user leaderboard
       rank = {
