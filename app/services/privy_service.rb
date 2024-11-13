@@ -18,7 +18,16 @@ class PrivyService
 
     raise "PrivyService :: Get User Data Error" unless response.status.success?
 
-    parse_data(JSON.parse(response_body.to_s))
+    data = parse_data(JSON.parse(response_body.to_s))
+
+    return data if data[:login_type] != 'cross_app'
+
+    cross_app_account_data = data[:linked_accounts].find { |account| account['type'] == 'cross_app' }
+
+    return data if cross_app_account_data.blank?
+
+    data[:address] = cross_app_account_data.dig("embedded_wallets")&.first&.dig("address")
+    data
   end
 
   def search_users(query: {})
@@ -44,6 +53,8 @@ class PrivyService
       linked_account['address']
     when 'custom_auth'
       linked_account['custom_user_id']
+    when 'cross_app'
+      linked_account.dig("smart_wallets")&.first&.dig("address")
     else
       nil
     end
