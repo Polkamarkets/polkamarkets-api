@@ -8,17 +8,25 @@ module OgImageable
       OgImageWorker.perform_async(self.class.name, id)
     end
 
-    def upload_og_image(file)
-      cloudflare_service = CloudflareService.new
-      response = cloudflare_service.add_image(file)
+    def upload_og_image(file_path)
+      begin
+        file = File.open(file_path)
 
-      variant = response['result']['variants'].find { |v| v.include?('public') }
-      raise "No public variant found for OG image" if variant.blank?
+        cloudflare_service = CloudflareService.new
+        response = cloudflare_service.add_image(file)
 
-      update(og_image_url: variant)
+        variant = response['result']['variants'].find { |v| v.include?('public') }
+        raise "No public variant found for OG image" if variant.blank?
+
+        self.og_image_url = variant
+        self.save!
+      ensure
+        File.delete(file_path) if File.exist?(file_path)
+
+      end
     end
 
-    def og_image_url
+    def og_image_url_before_upload
       "#{ENV['OG_IMAGES_URL']}/og/#{self.class::OG_IMAGEABLE_PATH}/#{slug}"
     end
   end
