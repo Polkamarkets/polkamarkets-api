@@ -131,15 +131,8 @@ class Market < ApplicationRecord
       market.save!
     end
 
-    # updating banner image asynchrounously
-    MarketBannerWorker.perform_async(market.id)
-
     # triggering workers to upgrade cache data
     market.refresh_cache!(queue: 'critical')
-    market.refresh_news!(queue: 'critical')
-
-    # triggering discord bot 5 minutes later (so it allows banner image to be updated)
-    Discord::PublishMarketCreatedWorker.perform_in(5.minutes, market.id)
 
     market
   end
@@ -486,7 +479,7 @@ class Market < ApplicationRecord
 
   def update_banner_image
     banner_image_url = BannerbearService.new.create_banner_image(self)
-    self.update(banner_url: banner_image_url)
+    self.update(banner_url: banner_image_url) if banner_image_url.present?
   end
 
   # realitio data
@@ -759,16 +752,16 @@ class Market < ApplicationRecord
     most_probable_outcome = outcomes.to_a.max_by(&:closing_price)
     most_probable_outcome_title = most_probable_outcome.title.upcase
     most_probable_outcome_probability = "#{(most_probable_outcome.closing_price * 100.0).round}%"
-    winning_outcome = voided ? 'Voided' : outcomes.find { |o| o.eth_market_id == resolved_outcome_id }.title.upcase
-    correct = most_probable_outcome == winning_outcome ? 1 : ''
-    incorrect = most_probable_outcome == winning_outcome || voided ? '' : 1
+    winning_outcome_title = voided ? 'Voided' : outcomes.find { |o| o.eth_market_id == resolved_outcome_id }.title.upcase
+    correct = most_probable_outcome_title == winning_outcome_title ? 1 : ''
+    incorrect = most_probable_outcome_title == winning_outcome_title || voided ? '' : 1
 
     [
       question_title,
       outcome_titles,
       most_probable_outcome_title,
       most_probable_outcome_probability,
-      winning_outcome,
+      winning_outcome_title,
       correct,
       incorrect
     ].join(';')

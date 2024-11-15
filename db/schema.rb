@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2024_11_06_192256) do
+ActiveRecord::Schema.define(version: 2024_11_11_161810) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -311,6 +311,7 @@ ActiveRecord::Schema.define(version: 2024_11_06_192256) do
     t.boolean "comments_enabled", default: true
     t.string "metadata_url"
     t.string "og_image_url"
+    t.string "avatar_url"
     t.index ["slug"], name: "index_tournaments_on_slug", unique: true
     t.index ["tournament_group_id"], name: "index_tournaments_on_tournament_group_id"
   end

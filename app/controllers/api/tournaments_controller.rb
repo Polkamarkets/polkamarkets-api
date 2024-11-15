@@ -172,6 +172,7 @@ module Api
           :title,
           :description,
           :image_url,
+          :avatar_url,
           :network_id,
           :land_id,
           :rank_by,
@@ -179,7 +180,7 @@ module Api
           :expires_at,
           :published,
           :comments_enabled,
-          rewards: [:from, :to, :reward, :title, :description, :image_url],
+          rewards: [:from, :to, :reward, :title, :description, :image_url, :rank_by, :label],
           topics: [],
           market_ids: []
         )
