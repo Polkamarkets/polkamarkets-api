@@ -38,6 +38,7 @@ Rails.application.routes.draw do
         get :holders
         post :feature
         post :unfeature
+        get :accuracy_report
       end
 
       collection do
@@ -87,6 +88,7 @@ Rails.application.routes.draw do
         post :move_down
         get :markets, to: 'tournaments#show_markets'
         post :add_market
+        get :accuracy_report
       end
     end
     # TODO remove; legacy

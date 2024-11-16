@@ -6,7 +6,7 @@ class Cache::PortfolioActionEventsWorker
     return if portfolio.blank?
 
     portfolio.action_events(refresh: true)
-    # forcing holdings chart refresh
+    # forcing portfolio holdings_value refresh
     portfolio.holdings_value(refresh: true)
     # forcing portfolio holdings_cost refresh
     portfolio.holdings_cost(refresh: true)

@@ -39,6 +39,18 @@ module Api
       render json: tournament
     end
 
+    def accuracy_report
+      tournament = Tournament.friendly.find(params[:id])
+
+      accuracy_report = tournament
+        .markets
+        .select { |m| m.state == 'resolved' }
+        .map(&:accuracy_report)
+        .join("\n")
+
+      render json: accuracy_report
+    end
+
     def show_markets
       tournament = Tournament.friendly.find(params[:id])
 
@@ -160,6 +172,7 @@ module Api
           :title,
           :description,
           :image_url,
+          :avatar_url,
           :network_id,
           :land_id,
           :rank_by,
@@ -167,7 +180,7 @@ module Api
           :expires_at,
           :published,
           :comments_enabled,
-          rewards: [:from, :to, :reward, :title, :description, :image_url],
+          rewards: [:from, :to, :reward, :title, :description, :image_url, :rank_by, :label],
           topics: [],
           market_ids: []
         )

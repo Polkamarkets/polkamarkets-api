@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2024_10_29_121812) do
+ActiveRecord::Schema.define(version: 2024_11_11_161810) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -235,6 +235,7 @@ ActiveRecord::Schema.define(version: 2024_10_29_121812) do
     t.float "draft_treasury_fee"
     t.string "draft_treasury"
     t.string "image_ipfs_hash"
+    t.integer "schedule_tries", default: 0
     t.index ["eth_market_id", "network_id"], name: "index_markets_on_eth_market_id_and_network_id", unique: true
     t.index ["slug"], name: "index_markets_on_slug", unique: true
   end
@@ -325,6 +326,7 @@ ActiveRecord::Schema.define(version: 2024_10_29_121812) do
     t.boolean "comments_enabled", default: true
     t.string "metadata_url"
     t.boolean "computed_claims", default: false
+    t.string "avatar_url"
     t.index ["slug"], name: "index_tournaments_on_slug", unique: true
     t.index ["tournament_group_id"], name: "index_tournaments_on_tournament_group_id"
   end
