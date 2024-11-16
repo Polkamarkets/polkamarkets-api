@@ -57,6 +57,8 @@ module Api
       elsif current_user.wallet_address.nil?
         if current_user.login_type == 'wallet'
           update_data['wallet_address'] = current_user.login_public_key
+        elsif current_user.login_type == 'cross_app'
+          update_data['wallet_address'] = current_user.user_idps.find_by(provider: 'cross_app')&.uid
         else
           particle_service = ParticleService.new
           smart_account_address = particle_service.get_smart_account_addres(address: current_user.login_public_key)

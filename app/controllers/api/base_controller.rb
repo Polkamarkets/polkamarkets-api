@@ -61,6 +61,7 @@ module Api
           # updating user idps
           privy_user_data[:linked_accounts].each do |linked_account|
             idp_uid = PrivyService.new.uid_from_linked_account_data(linked_account)
+            next if idp_uid.blank?
             user_idp = user.user_idps.find_or_initialize_by(provider: linked_account['type'], uid: idp_uid)
             user_idp.data = linked_account
             user_idp.save!
