@@ -15,8 +15,8 @@ class RewardSenderWorker
         # updating the RewardsDistributor smart contract with the total amount
         total_amount_by_token.each do |token_address, amount|
           Bepro::RewardsDistributorContractService.new(
-            network_id: claim.network_id
-          ).set_claim_amount(claim.wallet_address, claim.amount, claim.token_address)
+            network_id: network_id
+          ).set_claim_amount(user, amount, token_address)
 
           Claim.where(
             wallet_address: user,

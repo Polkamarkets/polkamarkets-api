@@ -21,7 +21,7 @@ module Bepro
         method: 'increaseUserClaimAmount',
         args: [
           user_address,
-          from_integer_to_big_number(amount, 18).to_s,
+          from_float_to_big_number(amount, 18).to_s,
           preferred_token,
         ])
     end
@@ -31,7 +31,7 @@ module Bepro
         method: 'setUserClaimAmount',
         args: [
           user_address,
-          from_integer_to_big_number(amount, 18).to_s,
+          from_float_to_big_number(amount, 18).to_s,
           preferred_token,
         ])
     end
