@@ -80,7 +80,7 @@ class PortfolioStreakCalculatorService
     return streak unless current
 
     # only showing values since last miss (including last miss)
-    last_miss = streak[:values].reverse.find { |v| !v[:completed] }
+    last_miss = streak[:values].reverse.find { |v| !v[:completed] && !v[:pending] }
     if last_miss
       streak[:values].select! { |v| v[:date] >= last_miss[:date] }
     end
