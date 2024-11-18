@@ -1,7 +1,7 @@
 class RewardListenerWorker
   include Sidekiq::Worker
 
-  def perform()
+  def perform
     # Fetch data from claims table and use admin account to update RewardsDistributor smart contract
     claims = Claim.where.not(recorded_at: nil)
         .where(claimed: false)

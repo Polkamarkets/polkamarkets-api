@@ -16,13 +16,23 @@ module Bepro
       )
     end
 
-    def add_claim_amount(user_address, amount, prefered_token)
+    def add_claim_amount(user_address, amount, preferred_token)
       execute(
         method: 'increaseUserClaimAmount',
         args: [
           user_address,
           from_integer_to_big_number(amount, 18).to_s,
-          prefered_token,
+          preferred_token,
+        ])
+    end
+
+    def set_claim_amount(user_address, amount, preferred_token)
+      execute(
+        method: 'setUserClaimAmount',
+        args: [
+          user_address,
+          from_integer_to_big_number(amount, 18).to_s,
+          preferred_token,
         ])
     end
 

@@ -6,7 +6,11 @@ class PortfolioStreakCalculatorService
     @tournament_group_id = tournament_group_id
   end
 
-  def calculate_streaks(refresh: false)
+  def get_current_streak
+    calculate_streaks(current: true)
+  end
+
+  def calculate_streaks(refresh: false, current: false)
     return unless tournament_group_id.present? && portfolio_id.present?
 
     tournament_group = TournamentGroup.find(tournament_group_id)
@@ -72,6 +76,8 @@ class PortfolioStreakCalculatorService
         end
       end
     end
+
+    return streak unless current
 
     # only showing values since last miss (including last miss)
     last_miss = streak[:values].reverse.find { |v| !v[:completed] }

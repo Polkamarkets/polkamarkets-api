@@ -497,8 +497,8 @@ class Portfolio < ApplicationRecord
   end
 
   def streaks(tournament_group_id, refresh: false)
-    Rails.cache.fetch("portfolios:network_#{network_id}:#{eth_address}:#{tournament_group_id}:streaks", force: refresh) do
-      PortfolioStreakCalculatorService.new(id, tournament_group_id).calculate_streaks
+    Rails.cache.fetch("portfolios:network_#{network_id}:#{eth_address}:#{tournament_group_id}:streaks", force: refresh, expires_in: DateTime.now.end_of_day.to_i - DateTime.now.to_i) do
+      PortfolioStreakCalculatorService.new(id, tournament_group_id).get_current_streak
     end
   end
 

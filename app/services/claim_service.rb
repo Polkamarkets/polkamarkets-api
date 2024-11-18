@@ -1,5 +1,5 @@
 class ClaimService
-  def create_claim(network_id, wallet_address, amount,token_address, claim_type, data)
+  def create_claim(network_id, wallet_address, amount, token_address, claim_type, data)
     Claim.create!(
       network_id: network_id,
       wallet_address: wallet_address,
@@ -7,7 +7,7 @@ class ClaimService
       token_address: token_address,
       claim_type: claim_type,
       data: data
-      )
+    )
   end
 
   def get_wallet_address_preferred_token(network_id, wallet_address, token_addresses)
