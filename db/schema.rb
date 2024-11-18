@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2024_11_11_161810) do
+ActiveRecord::Schema.define(version: 2024_11_18_002900) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -87,7 +87,7 @@ ActiveRecord::Schema.define(version: 2024_11_11_161810) do
   create_table "claims", force: :cascade do |t|
     t.string "network_id", null: false
     t.string "wallet_address", null: false
-    t.integer "amount", null: false
+    t.float "amount", null: false
     t.datetime "recorded_at", precision: 6
     t.boolean "claimed", default: false
     t.string "transaction_hash"
