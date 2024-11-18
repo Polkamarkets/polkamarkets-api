@@ -10,6 +10,7 @@ class TournamentGroup < ApplicationRecord
   validates_presence_of :title, :description
   validate :network_id_validation
   validate :social_urls_validation
+  validate :streaks_config_validation
 
   has_many :tournaments, -> { order(position: :asc) }, inverse_of: :tournament_group, dependent: :nullify
   has_many :markets, through: :tournaments
@@ -48,6 +49,17 @@ class TournamentGroup < ApplicationRecord
     end
   end
 
+  def streaks_config_validation
+    return if streaks_config.blank?
+
+    return errors.add(:streaks_config, 'streaks config must be a hash') unless streaks_config.is_a?(Hash)
+
+    streaks_config.deep_symbolize_keys!
+
+    errors.add(:streaks_config, 'streaks config must have token addresses') unless streaks_config[:token_addresses].present? && streaks_config[:token_addresses].is_a?(Array)
+    errors.add(:streaks_config, 'streaks config must have values') unless streaks_config[:values].present? && streaks_config[:values].is_a?(Array) && streaks_config[:values].all? { |v| v.to_f > 0 }
+  end
+
   def network_id
     # TODO: improve this
     return self[:network_id] if self[:network_id].present?
@@ -68,13 +80,13 @@ class TournamentGroup < ApplicationRecord
   def token(refresh: false)
     return tokens.first if token_address.blank?
 
-    Rails.cache.fetch("tournament_groups:#{id}:token", expires_in: 24.hours, force: refresh) do
+    Rails.cache.fetch("tournament_groups:#{id}:token", force: refresh) do
       token = Bepro::Erc20ContractService.new(network_id: network_id, contract_address: token_address).token_info
       wrapped = token_address.downcase == network_weth_address(network_id).downcase
 
       token.merge(
         wrapped: wrapped
-      )
+      ) if token.present?
     end
   end
 

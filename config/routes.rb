@@ -61,6 +61,9 @@ Rails.application.routes.draw do
         get :check_slug
         put '/', to: 'users#update'
       end
+      member do
+        get :streaks
+      end
     end
 
     resources :articles, only: [:index]

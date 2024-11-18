@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2024_11_11_161810) do
+ActiveRecord::Schema.define(version: 2024_11_18_002900) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -82,6 +82,21 @@ ActiveRecord::Schema.define(version: 2024_11_11_161810) do
     t.index ["network_id", "tx_id", "log_index"], name: "index_activities_on_network_id_and_tx_id_and_log_index"
     t.index ["timestamp", "network_id"], name: "index_activities_on_timestamp_and_network_id"
     t.index ["timestamp"], name: "index_activities_on_timestamp"
+  end
+
+  create_table "claims", force: :cascade do |t|
+    t.string "network_id", null: false
+    t.string "wallet_address", null: false
+    t.float "amount", null: false
+    t.datetime "recorded_at", precision: 6
+    t.boolean "claimed", default: false
+    t.string "transaction_hash"
+    t.string "claim_type", null: false
+    t.jsonb "data"
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.string "receiver_address"
+    t.string "token_address"
   end
 
   create_table "comments", force: :cascade do |t|
@@ -279,6 +294,8 @@ ActiveRecord::Schema.define(version: 2024_11_11_161810) do
     t.integer "users_count", default: 0
     t.string "symbol"
     t.jsonb "admins", default: []
+    t.boolean "streaks_enabled", default: false
+    t.jsonb "streaks_config", default: {}
     t.index ["slug"], name: "index_tournament_groups_on_slug", unique: true
   end
 
@@ -308,6 +325,7 @@ ActiveRecord::Schema.define(version: 2024_11_11_161810) do
     t.boolean "published", default: false
     t.boolean "comments_enabled", default: true
     t.string "metadata_url"
+    t.boolean "computed_claims", default: false
     t.string "avatar_url"
     t.index ["slug"], name: "index_tournaments_on_slug", unique: true
     t.index ["tournament_group_id"], name: "index_tournaments_on_tournament_group_id"
