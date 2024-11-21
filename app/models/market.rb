@@ -46,6 +46,7 @@ class Market < ApplicationRecord
   EDITABLE_FIELDS = %i[title description resolution_source resolution_title].freeze
   MAX_SCHEDULE_TRIES = 3.freeze
   OG_IMAGEABLE_PATH = 'questions'
+  OG_IMAGEABLE_FIELDS = %i[title].freeze
 
   def self.all_voided_market_ids
     Rails.cache.fetch('markets:voided', expires_in: 5.minutes) do

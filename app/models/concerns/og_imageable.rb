@@ -1,8 +1,15 @@
 module OgImageable
   extend ActiveSupport::Concern
 
+  OG_IMAGEABLE_FIELDS = %w[].freeze
+
   included do
     after_create :update_og_image_async
+    after_update :update_og_image_async, if: -> { og_imageable_fields_changed? }
+
+    def og_imageable_fields_changed?
+      self.class::OG_IMAGEABLE_FIELDS.any? { |field| saved_change_to_attribute?(field) }
+    end
 
     def update_og_image_async
       OgImageWorker.perform_async(self.class.name, id)
