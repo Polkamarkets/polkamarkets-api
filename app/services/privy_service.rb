@@ -1,9 +1,8 @@
 
 class PrivyService
-  attr_accessor :api_url, :app_id, :app_secret
+  attr_accessor :app_id, :app_secret
 
   def initialize
-    @api_url = Rails.application.config_for(:privy).api_url
     @app_id = Rails.application.config_for(:privy).app_id
     @app_secret = Rails.application.config_for(:privy).app_secret
   end
@@ -30,13 +29,13 @@ class PrivyService
     data
   end
 
-  def search_users(query: {})
-    uri = privy_url + "/users/search"
+  def search_users_by_wallet_address(wallet_address)
+    uri = privy_url + "/users/wallet/address"
 
     response = HTTP.basic_auth(user: app_id, pass: app_secret)
       .headers('privy-app-id' => app_id)
       .headers('Content-Type' => 'application/json')
-      .post(uri, body: query.to_json)
+      .post(uri, json: {address: wallet_address})
 
     raise "PrivyService :: Search Users Error" unless response.status.success?
 
