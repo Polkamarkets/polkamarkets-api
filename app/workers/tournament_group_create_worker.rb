@@ -10,7 +10,7 @@ class TournamentGroupCreateWorker
 
     token_amount_to_claim = Rails.application.config_for(:ethereum).token_amount_to_claim > 0 ?
       Rails.application.config_for(:ethereum).token_amount_to_claim : 1000
-    token_to_answer = Rails.application.config_for(:ethereum).dig(:"network_#{network_id}", :erc20_contract_address)
+    token_to_answer = Rails.application.config_for(:ethereum).dig(:"network_#{tournament_group.network_id}", :erc20_contract_address)
 
     created_land = controller_contract_service.create_land(
       tournament_group.title,
