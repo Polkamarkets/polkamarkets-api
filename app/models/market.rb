@@ -466,9 +466,12 @@ class Market < ApplicationRecord
   def image_url
     return self['image_url'] if self['image_url'].present?
 
-    return nil if image_ipfs_hash.blank?
+    return IpfsService.image_url_from_hash(image_ipfs_hash) if image_ipfs_hash.present?
 
-    IpfsService.image_url_from_hash(image_ipfs_hash)
+    # if there's only image for the first outcome, we use it as image_url
+    if image_url.blank? && outcomes.first.image_url.present? && outcomes[1..-1].all? { |o| o.image_url.blank? }
+      return markets.outcomes.first.image_url
+    end
   end
 
   def image_ipfs_hash
