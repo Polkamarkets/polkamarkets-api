@@ -34,6 +34,7 @@ class MarketSerializer < BaseSerializer
     :trading_view_symbol,
     :question,
     :banner_url,
+    :og_image_url,
     :news,
     :votes,
     :users,

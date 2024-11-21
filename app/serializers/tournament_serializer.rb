@@ -11,6 +11,7 @@ class TournamentSerializer < BaseSerializer
     :created_at,
     :image_url,
     :avatar_url,
+    :og_image_url,
     :metadata_url,
     :expires_at,
     :users,

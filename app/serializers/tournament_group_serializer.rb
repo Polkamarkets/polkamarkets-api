@@ -16,6 +16,7 @@ class TournamentGroupSerializer < BaseSerializer
     :users,
     :image_url,
     :banner_url,
+    :og_image_url,
     :metadata_url,
     :tags,
     :social_urls,
