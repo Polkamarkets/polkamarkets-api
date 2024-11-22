@@ -762,7 +762,7 @@ class Market < ApplicationRecord
       winning_outcome_title,
       correct,
       incorrect,
-      created_at.strftime('%Y/%m/%d'),
+      published_at.strftime('%Y/%m/%d'),
       expires_at.strftime('%Y/%m/%d'),
       topics.sort.join(', ')
     ].join(';')
