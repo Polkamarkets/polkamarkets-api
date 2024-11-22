@@ -743,7 +743,7 @@ class Market < ApplicationRecord
   end
 
   def accuracy_report
-    return "Market #{market.slug} is not resolved" unless resolved? && published?
+    return "Market #{slug} is not resolved" unless resolved? && published?
 
     question_title = title.gsub("\n", ' ')
     outcome_titles = outcomes.map(&:title).map(&:upcase).join(', ')

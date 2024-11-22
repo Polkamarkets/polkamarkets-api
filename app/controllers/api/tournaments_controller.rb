@@ -44,7 +44,7 @@ module Api
 
       accuracy_report = tournament
         .markets
-        .select { |m| m.state == 'resolved' }
+        .select { |m| m.resolved? && m.published? }
         .map(&:accuracy_report)
         .join("\n")
 
