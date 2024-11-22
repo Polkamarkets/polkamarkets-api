@@ -761,7 +761,10 @@ class Market < ApplicationRecord
       most_probable_outcome_probability,
       winning_outcome_title,
       correct,
-      incorrect
+      incorrect,
+      created_at.strftime('%Y/%m/%d'),
+      expires_at.strftime('%Y/%m/%d'),
+      topics.sort.join(', ')
     ].join(';')
   end
 end
