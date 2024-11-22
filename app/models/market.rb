@@ -470,8 +470,8 @@ class Market < ApplicationRecord
     return IpfsService.image_url_from_hash(image_ipfs_hash) if image_ipfs_hash.present?
 
     # if there's only image for the first outcome, we use it as image_url
-    if image_url.blank? && outcomes.first.image_url.present? && outcomes[1..-1].all? { |o| o.image_url.blank? }
-      return markets.outcomes.first.image_url
+    if outcomes.first.image_url.present? && outcomes[1..-1].all? { |o| o.image_url.blank? }
+      return outcomes.first.image_url
     end
   end
 
