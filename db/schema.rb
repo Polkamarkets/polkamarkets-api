@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2024_11_11_161810) do
+ActiveRecord::Schema.define(version: 2024_11_23_113524) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -281,6 +281,7 @@ ActiveRecord::Schema.define(version: 2024_11_11_161810) do
     t.string "symbol"
     t.jsonb "admins", default: []
     t.string "og_image_url"
+    t.string "og_theme"
     t.index ["slug"], name: "index_tournament_groups_on_slug", unique: true
   end
 
@@ -312,6 +313,7 @@ ActiveRecord::Schema.define(version: 2024_11_11_161810) do
     t.string "metadata_url"
     t.string "og_image_url"
     t.string "avatar_url"
+    t.string "og_image_url"
     t.index ["slug"], name: "index_tournaments_on_slug", unique: true
     t.index ["tournament_group_id"], name: "index_tournaments_on_tournament_group_id"
   end

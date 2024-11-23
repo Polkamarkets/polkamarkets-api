@@ -770,4 +770,8 @@ class Market < ApplicationRecord
       incorrect
     ].join(';')
   end
+
+  def og_theme
+    tournament_groups.first&.og_theme
+  end
 end

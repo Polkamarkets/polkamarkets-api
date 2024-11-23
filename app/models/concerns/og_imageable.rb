@@ -40,7 +40,9 @@ module OgImageable
     end
 
     def og_image_web_url
-      "#{Rails.application.config_for(:polkamarkets).web_url}/og/#{self.class::OG_IMAGEABLE_PATH}/#{slug}"
+      url = "#{Rails.application.config_for(:polkamarkets).web_url}/og/#{self.class::OG_IMAGEABLE_PATH}/#{slug}"
+      url += "?theme=#{og_theme}" if respond_to?(:og_theme) && og_theme.present?
+      url
     end
   end
 end

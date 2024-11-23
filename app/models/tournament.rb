@@ -107,4 +107,8 @@ class Tournament < ApplicationRecord
 
     tournament_group.admins
   end
+
+  def og_theme
+    tournament_group&.og_theme
+  end
 end
