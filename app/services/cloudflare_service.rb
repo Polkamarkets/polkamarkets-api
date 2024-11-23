@@ -16,6 +16,13 @@ class CloudflareService
     add_image(file)
   end
 
+  def cloudflare_id_from_image_url(url)
+    # https://imagedelivery.net/YN1-rdnufJQJCgu3i1CbVw/5f7ecb7d-4a30-4a41-7381-a7777a540c00/public
+    return nil unless url.include?('imagedelivery.net')
+
+    url.split('/')[-2]
+  end
+
   def add_image(file)
     uri = cloudflare_api_url + "images/v1"
 
@@ -25,6 +32,23 @@ class CloudflareService
         file: HTTP::FormData::File.new(file),
         requireSignedURLs: false
       })
+
+    unless response.status.success?
+      raise "Cloudflare #{response.status} :: #{response.body.to_s}"
+    end
+
+    JSON.parse(response.body.to_s)
+  end
+
+  def delete_image_from_url(image_url)
+    image_id = cloudflare_id_from_image_url(image_url)
+    return if image_id.blank?
+
+    uri = cloudflare_api_url + "images/v1/#{image_id}"
+
+    response = HTTP
+      .headers("Authorization" => "Bearer #{api_token}")
+      .delete(uri)
 
     unless response.status.success?
       raise "Cloudflare #{response.status} :: #{response.body.to_s}"
