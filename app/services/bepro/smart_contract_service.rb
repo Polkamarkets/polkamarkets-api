@@ -13,6 +13,8 @@ module Bepro
       'arbitration',
       'arbitrationProxy',
       'rewardsDistributor',
+      'simpleAccount',
+      'accountCore',
     ].freeze
 
     attr_accessor :contract_name, :contract_address, :api_url, :network_id
