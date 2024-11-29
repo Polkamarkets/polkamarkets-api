@@ -24,15 +24,18 @@ class LeaderboardService
       when 'buy'
         users[address][:earnings] -= action[:value]
         users[address][:volume] += action[:value]
-        users[address][:holdings][action[:outcome_id]] ||= { shares: 0, shares_total: 0, shares_value: 0 }
+        users[address][:holdings][action[:outcome_id]] ||= { shares: 0, shares_total: 0, shares_value: 0, value: 0 }
+        users[address][:holdings][action[:outcome_id]][:value] += action[:value]
         users[address][:holdings][action[:outcome_id]][:shares] += action[:shares]
         users[address][:holdings][action[:outcome_id]][:shares_total] += action[:shares]
         users[address][:holdings][action[:outcome_id]][:shares_value] += action[:value]
+        users[address][:holdings][action[:outcome_id]][:timestamp] ||= action[:timestamp]
       when 'sell'
         users[address][:earnings] += action[:value]
         users[address][:volume] += action[:value]
-        users[address][:holdings][action[:outcome_id]] ||= { shares: 0, shares_total: 0, shares_value: 0 }
+        users[address][:holdings][action[:outcome_id]] ||= { shares: 0, shares_total: 0, shares_value: 0, value: 0 }
         users[address][:holdings][action[:outcome_id]][:shares] -= action[:shares]
+        users[address][:holdings][action[:outcome_id]][:value] -= action[:value]
       end
     end
 
@@ -44,6 +47,15 @@ class LeaderboardService
 
       holdings_cost = data[:holdings].sum do |outcome_id, holdings|
         holdings[:shares] > 1 ? holdings[:shares_value] / holdings[:shares_total] * holdings[:shares] : 0
+      end
+
+      holdings_count = data[:holdings].count { |outcome_id, holdings| holdings[:shares] > 1 }
+      holdings_most_bought_outcome_id = nil
+      if holdings_count > 1
+        # fetching most bought outcome
+        holdings_most_bought_outcome_id = data[:holdings].sort_by do |outcome_id, holdings|
+          [-holdings[:value], holdings[:timestamp]]
+        end.first.first
       end
 
       result = {
@@ -61,7 +73,8 @@ class LeaderboardService
 
       if market_is_resolved &&
           data[:holdings][market_resolved_outcome_id].present? &&
-          data[:holdings][market_resolved_outcome_id][:shares] > 1
+          data[:holdings][market_resolved_outcome_id][:shares] > 1 &&
+          (holdings_count <= 1 || holdings_most_bought_outcome_id == market_resolved_outcome_id)
         result[:won_prediction] = true
       end
 
