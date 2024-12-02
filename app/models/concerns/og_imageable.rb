@@ -16,6 +16,8 @@ module OgImageable
     end
 
     def update_og_image
+      return false
+
       begin
         file_path = ScreenshotService.new.capture(og_image_web_url)
 
