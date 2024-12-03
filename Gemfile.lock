@@ -92,6 +92,7 @@ GEM
     concurrent-ruby (1.1.10)
     connection_pool (2.2.5)
     crass (1.0.6)
+    date (3.4.1)
     declarative (0.0.20)
     discordrb (3.4.0)
       discordrb-webhooks (~> 3.3.0)
@@ -195,6 +196,11 @@ GEM
     minitest (5.15.0)
     msgpack (1.5.1)
     multi_json (1.15.0)
+    net-imap (0.5.1)
+      date
+      net-protocol
+    net-pop (0.1.2)
+      net-protocol
     net-protocol (0.2.2)
       timeout
     net-smtp (0.5.0)
@@ -389,6 +395,8 @@ DEPENDENCIES
   http
   jbuilder (~> 2.7)
   listen (~> 3.2)
+  net-imap
+  net-pop
   net-smtp
   newrelic_rpm
   news-api
