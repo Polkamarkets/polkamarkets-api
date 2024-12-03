@@ -90,3 +90,4 @@ gem 'net-smtp', require: false
 gem 'net-imap', require: false
 gem 'net-pop', require: false
 gem 'psych', '< 4'
+gem 'jwt', '~> 2.5.0'
