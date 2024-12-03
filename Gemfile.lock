@@ -195,6 +195,10 @@ GEM
     minitest (5.15.0)
     msgpack (1.5.1)
     multi_json (1.15.0)
+    net-protocol (0.2.2)
+      timeout
+    net-smtp (0.5.0)
+      net-protocol
     netrc (0.11.0)
     newrelic_rpm (8.6.0)
     news-api (0.2.0)
@@ -220,6 +224,7 @@ GEM
       method_source (~> 1.0)
     pry-rails (0.3.9)
       pry (>= 0.10.4)
+    psych (3.3.4)
     public_suffix (4.0.6)
     puma (4.3.12)
       nio4r (~> 2.0)
@@ -335,6 +340,7 @@ GEM
     thor (1.2.1)
     thread_safe (0.3.6)
     tilt (2.0.10)
+    timeout (0.4.2)
     trailblazer-option (0.1.2)
     turbolinks (5.2.1)
       turbolinks-source (~> 5.2)
@@ -383,12 +389,14 @@ DEPENDENCIES
   http
   jbuilder (~> 2.7)
   listen (~> 3.2)
+  net-smtp
   newrelic_rpm
   news-api
   pagy
   paper_trail
   pg (>= 0.18, < 2.0)
   pry-rails
+  psych (< 4)
   puma (~> 4.1)
   puppeteer-ruby
   rack-cors
@@ -408,7 +416,7 @@ DEPENDENCIES
   webpacker (~> 4.0)
 
 RUBY VERSION
-   ruby 3.0.3p157
+   ruby 3.1.0p0
 
 BUNDLED WITH
    2.3.11
