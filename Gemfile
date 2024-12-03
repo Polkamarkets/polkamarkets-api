@@ -87,4 +87,6 @@ gem 'puppeteer-ruby'
 
 # ruby 3.03 -> 3.1.0 update
 gem 'net-smtp', require: false
+gem 'net-imap', require: false
+gem 'net-pop', require: false
 gem 'psych', '< 4'
