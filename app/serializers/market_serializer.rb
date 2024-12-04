@@ -67,7 +67,7 @@ class MarketSerializer < BaseSerializer
 
   def tournaments
     object.tournaments.map do |tournament|
-      TournamentSerializer.new(tournament, hide_tournament_markets: true)
+      TournamentSerializer.new(tournament, hide_tournament_markets: true).as_json
     end
   end
 
