@@ -69,9 +69,9 @@ class TournamentGroup < ApplicationRecord
   end
 
   def token(refresh: false)
-    return tokens.first if token_address.blank?
-
     Rails.cache.fetch("tournament_groups:#{id}:token", expires_in: 24.hours, force: refresh) do
+      next tokens.first if token_address.blank?
+
       token = Bepro::Erc20ContractService.new(network_id: network_id, contract_address: token_address).token_info
       wrapped = token_address.downcase == network_weth_address(network_id).downcase
 
