@@ -125,6 +125,8 @@ module Api
 
       market.save!
       tournament.markets << market
+      tournament.touch if tournament.present?
+      tournament_group.touch if tournament_group.present?
 
       render json: market,
         show_price_charts: true,
@@ -201,6 +203,8 @@ module Api
         market.tournament_ids = [tournament.id]
         # triggering cache update
         market.touch
+        tournament.touch
+        tournament.tournament_group&.touch
       end
 
       market.update!(update_params)
