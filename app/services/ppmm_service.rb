@@ -52,13 +52,50 @@ class PpmmService
     raise "User has insufficient shares" if user[:shares][outcome_id].to_f < shares_to_sell
 
     # Update market, outcome, and user
-    proceeds = shares_to_sell * calculate_weight(calculate_probability(market, outcome), market[:k]) * (1 - market[:fee])
     outcome[:amount] -= value
     outcome[:shares] -= shares_to_sell
     user[:amount][outcome_id] -= value
     user[:shares][outcome_id] -= shares_to_sell
 
+    shares_to_sell
+  end
+
+  def sell_shares(user_id, market_id, outcome_id, shares_to_sell)
+    market = @markets[market_id]
+    outcome = find_outcome(market, outcome_id)
+    user = find_user(market, user_id)
+
+    # Calculate proceeds
+    proceeds = calculate_sell_value(market_id, outcome_id, shares_to_sell)
+
+    # Ensure user has sufficient shares
+    raise "User has insufficient shares" if user[:shares][outcome_id].to_f < shares_to_sell
+
+    # Update market, outcome, and user
+    outcome[:amount] -= proceeds
+    outcome[:shares] -= shares_to_sell
+    user[:amount][outcome_id] -= proceeds
+    user[:shares][outcome_id] -= shares_to_sell
+
     proceeds
+  end
+
+  def sell_shares_percentage(user_id, market_id, outcome_id, percentage_to_sell)
+    market = @markets[market_id]
+    outcome = find_outcome(market, outcome_id)
+    user = find_user(market, user_id)
+
+    # Ensure the percentage is valid
+    raise "Percentage must be between 0 and 100" if percentage_to_sell <= 0 || percentage_to_sell > 100
+
+    # Calculate the number of shares to sell based on the percentage
+    shares_to_sell = (user[:shares][outcome_id] || 0) * (percentage_to_sell / 100.0)
+
+    # Ensure user has sufficient shares
+    raise "User has insufficient shares" if shares_to_sell > (user[:shares][outcome_id] || 0)
+
+    # Use the sell_shares method to handle the selling process
+    sell_shares(user_id, market_id, outcome_id, shares_to_sell)
   end
 
   # Calculate buy amount (number of shares for a given value)
@@ -89,6 +126,38 @@ class PpmmService
     # Calculate shares
     weight = calculate_weight(weighted_probability, market[:k])
     value / weight
+  end
+
+  def calculate_sell_value(market_id, outcome_id, shares, tolerance: 1e-6, max_iterations: 100)
+    market = @markets[market_id]
+    outcome = find_outcome(market, outcome_id)
+
+    # Initial range for bisection
+    low = 0
+    high = outcome[:amount]  # Assuming the pool amount as an upper bound
+    iterations = 0
+
+    while iterations < max_iterations
+      mid = (low + high) / 2.0
+      calculated_shares = calculate_sell_amount(market_id, outcome_id, mid)
+
+      # Check if we've matched the desired number of shares within the tolerance
+      if (calculated_shares - shares).abs <= tolerance
+        return mid
+      end
+
+      # Adjust the range based on whether we need more or fewer shares
+      if calculated_shares > shares
+        high = mid
+      else
+        low = mid
+      end
+
+      iterations += 1
+    end
+
+    # If we reach here, return the midpoint as the best estimate
+    mid
   end
 
   # Calculate the probability of an outcome based on current pool amounts
