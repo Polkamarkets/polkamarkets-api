@@ -40,7 +40,7 @@ class PpmmService
     user[:total_bought_shares][outcome_id] = user[:total_bought_shares].fetch(outcome_id, 0) + shares_to_buy
     user[:actions][outcome_id] ||= []
     user[:actions][outcome_id] << { type: :buy, amount: value, shares: shares_to_buy, probability: weighted_probability }
-    puts "User #{user_id} bought #{shares_to_buy} shares of outcome #{outcome_id} for $#{value} at P=#{weighted_probability}"
+    puts "User #{user_id} bought #{shares_to_buy.round(2)} shares of outcome #{outcome_id} for $#{value.round(2)} at P=#{weighted_probability.round(2)}"
 
     shares_to_buy
   end
@@ -71,7 +71,7 @@ class PpmmService
     user[:total_sold_shares][outcome_id] = user[:total_sold_shares].fetch(outcome_id, 0) + shares_to_sell
     user[:actions][outcome_id] ||= []
     user[:actions][outcome_id] << { type: :sell, amount: value, shares: shares_to_sell, probability: weighted_probability }
-    puts "User #{user_id} sold #{shares_to_sell} shares of outcome #{outcome_id} for $#{value} at P=#{weighted_probability}"
+    puts "User #{user_id} sold #{shares_to_sell.round(2)} shares of outcome #{outcome_id} for $#{value.round(2)} at P=#{weighted_probability.round(2)}"
 
     shares_to_sell
   end
@@ -100,7 +100,7 @@ class PpmmService
     user[:total_sold_shares][outcome_id] = user[:total_sold_shares].fetch(outcome_id, 0) + shares_to_sell
     user[:actions][outcome_id] ||= []
     user[:actions][outcome_id] << { type: :sell, amount: proceeds, shares: shares_to_sell, probability: weighted_probability }
-    puts "User #{user_id} sold #{shares_to_sell} shares of outcome #{outcome_id} for $#{proceeds} at P=#{weighted_probability}"
+    puts "User #{user_id} sold #{shares_to_sell.round(2)} shares of outcome #{outcome_id} for $#{proceeds.round(2)} at P=#{weighted_probability.round(2)}"
 
     proceeds
   end
