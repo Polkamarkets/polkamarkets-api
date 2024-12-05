@@ -27,6 +27,10 @@ class PpmmService
     shares_to_buy = calculate_buy_amount(market_id, outcome_id, value)
     raise "Minimum shares not met" if shares_to_buy < min_shares_to_buy
 
+    probability_before = calculate_probability(market, outcome)
+    probability_after = calculate_probability_after_buy(market, outcome, value)
+    weighted_probability = calculate_weighted_probability(probability_before, probability_after, market[:w])
+
     # Update market, outcome, and user
     outcome[:amount] += value
     outcome[:shares] += shares_to_buy
@@ -34,6 +38,9 @@ class PpmmService
     user[:total_buy_amount][outcome_id] = user[:total_buy_amount].fetch(outcome_id, 0) + value
     user[:shares][outcome_id] = user[:shares].fetch(outcome_id, 0) + shares_to_buy
     user[:total_bought_shares][outcome_id] = user[:total_bought_shares].fetch(outcome_id, 0) + shares_to_buy
+    user[:actions][outcome_id] ||= []
+    user[:actions][outcome_id] << { type: :buy, amount: value, shares: shares_to_buy, probability: weighted_probability }
+    puts "User #{user_id} bought #{shares_to_buy} shares of outcome #{outcome_id} for $#{value} at P=#{weighted_probability}"
 
     shares_to_buy
   end
@@ -51,11 +58,20 @@ class PpmmService
     # Ensure user has sufficient shares
     raise "User has insufficient shares" if user[:shares][outcome_id].to_f < shares_to_sell
 
+    probability_before = calculate_probability(market, outcome)
+    probability_after = calculate_probability_after_sell(market, outcome, value)
+    weighted_probability = calculate_weighted_probability(probability_before, probability_after, market[:w])
+
     # Update market, outcome, and user
     outcome[:amount] -= value
     outcome[:shares] -= shares_to_sell
     user[:amount][outcome_id] -= value
+    user[:total_sell_amount][outcome_id] = user[:total_sell_amount].fetch(outcome_id, 0) + value
     user[:shares][outcome_id] -= shares_to_sell
+    user[:total_sold_shares][outcome_id] = user[:total_sold_shares].fetch(outcome_id, 0) + shares_to_sell
+    user[:actions][outcome_id] ||= []
+    user[:actions][outcome_id] << { type: :sell, amount: value, shares: shares_to_sell, probability: weighted_probability }
+    puts "User #{user_id} sold #{shares_to_sell} shares of outcome #{outcome_id} for $#{value} at P=#{weighted_probability}"
 
     shares_to_sell
   end
@@ -71,11 +87,20 @@ class PpmmService
     # Ensure user has sufficient shares
     raise "User has insufficient shares" if user[:shares][outcome_id].to_f < shares_to_sell
 
+    probability_before = calculate_probability(market, outcome)
+    probability_after = calculate_probability_after_sell(market, outcome, proceeds)
+    weighted_probability = calculate_weighted_probability(probability_before, probability_after, market[:w])
+
     # Update market, outcome, and user
     outcome[:amount] -= proceeds
     outcome[:shares] -= shares_to_sell
     user[:amount][outcome_id] -= proceeds
+    user[:total_sell_amount][outcome_id] = user[:total_sell_amount].fetch(outcome_id, 0) + proceeds
     user[:shares][outcome_id] -= shares_to_sell
+    user[:total_sold_shares][outcome_id] = user[:total_sold_shares].fetch(outcome_id, 0) + shares_to_sell
+    user[:actions][outcome_id] ||= []
+    user[:actions][outcome_id] << { type: :sell, amount: proceeds, shares: shares_to_sell, probability: weighted_probability }
+    puts "User #{user_id} sold #{shares_to_sell} shares of outcome #{outcome_id} for $#{proceeds} at P=#{weighted_probability}"
 
     proceeds
   end
@@ -200,7 +225,16 @@ class PpmmService
   def find_or_create_user(market, user_id)
     user = market[:users].find { |u| u[:id] == user_id }
     unless user
-      user = { id: user_id, amount: {}, shares: {}, total_buy_amount: {}, total_bought_shares: {} }
+      user = {
+        id: user_id,
+        amount: {},
+        shares: {},
+        total_buy_amount: {},
+        total_bought_shares: {},
+        total_sell_amount: {},
+        total_sold_shares: {},
+        actions: {}
+      }
       market[:users] << user
     end
     user
@@ -222,22 +256,27 @@ class PpmmService
 
       puts "Breakdown for Outcome #{outcome_id}"
       # Header with aligned column widths
-      puts format("%-8s | %-8s | %-8s | %-8s | %-8s | %-14s | %-8s | %-8s",
-                  "User ID", "Amount", "Shares", "Share %", "Payout", "Total Received", "Profit", "PnL")
-      puts "-" * 80
+      puts format(
+        "%-8s | %-8s | %-8s | %-8s | %-10s | %-10s | %-14s | %-14s | %-8s | %-8s | %-8s | %-8s ",
+        "User ID", "Amount", "Shares", "Share %",
+        "Avg Buy P", "Avg Sell P", "Total Buy Amt", "Total Sell Amt", "Payout", "Received", "Profit", "PnL (%)"
+      )
+      puts "-" * 150
 
-      # Calculate the total relative amount shares pool for this outcome
-      total_relative_amount_share = market[:users].sum do |user|
-        user_shares = user[:shares].fetch(outcome_id, 0)
-        total_bought_shares = user[:total_bought_shares].fetch(outcome_id, 0)
-        total_buy_amount = user[:total_buy_amount].fetch(outcome_id, 0)
-
-        if total_bought_shares > 0
-          (user_shares / total_bought_shares.to_f) * total_buy_amount
-        else
-          0
-        end
-      end
+      # Totals for summary
+      total_columns = {
+        amount: 0,
+        shares: 0,
+        share_percentage: 0,
+        payout: 0,
+        total_received: 0,
+        profit: 0,
+        pnl: 0,
+        avg_buy_prob: 0,
+        avg_sell_prob: 0,
+        total_buy_amount: 0,
+        total_sell_amount: 0
+      }
 
       market[:users].each do |user|
         # Safely retrieve user's amount and shares, defaulting to 0 if nil
@@ -247,6 +286,7 @@ class PpmmService
         # Get user's total buy stats for this outcome
         total_buy_amount = user[:total_buy_amount].fetch(outcome_id, 0)
         total_bought_shares = user[:total_bought_shares].fetch(outcome_id, 0)
+        total_sell_amount = user[:total_sell_amount].fetch(outcome_id, 0)
 
         # Skip users who have no contributions or shares
         next if total_buy_amount.zero? && total_bought_shares.zero?
@@ -255,9 +295,13 @@ class PpmmService
         share_percentage = total_shares > 0 ? (user_shares / total_shares.to_f * 100) : 0
 
         # Calculate payout from other pools
-        pool_sum = market[:outcomes].sum { |o| o[:id] == outcome_id ? o[:amount] : 0 }
         other_pools_sum = market[:outcomes].sum { |o| o[:id] != outcome_id ? o[:amount] : 0 }
         payout_from_pool = (share_percentage / 100) * other_pools_sum
+
+        # Calculate average buy and sell probabilities from user actions, based on amount, probability and total
+        actions = user[:actions].fetch(outcome_id, [])
+        avg_buy_prob = actions.select { |a| a[:type] == :buy }.sum { |a| a[:probability] * a[:amount] } / total_buy_amount
+        avg_sell_prob = total_sell_amount > 0 ? actions.select { |a| a[:type] == :sell }.sum { |a| a[:probability] * a[:amount] } / total_sell_amount : 0
 
         # Calculate user's relative amount share for this outcome
         relative_amount_share = if total_bought_shares > 0
@@ -266,23 +310,43 @@ class PpmmService
                                   0
                                 end
 
-        # Calculate user's relative amount percentage of the entire relative amount shares pool
-        relative_amount_percentage = total_relative_amount_share > 0 ?
-                                      (relative_amount_share / total_relative_amount_share.to_f) * 100 :
-                                      0
-
         # Total received if outcome wins
-        total_received = payout_from_pool + (relative_amount_percentage / 100) * pool_sum
+        total_received = payout_from_pool + relative_amount_share
 
         # Profit and PnL
         profit = total_received - user_amount
         pnl = total_buy_amount.zero? ? 0 : (profit / total_buy_amount.to_f) * 100
 
         # Print user breakdown with aligned formatting
-        puts format("%-8d | %-8.2f | %-8.2f | %-8.2f | %-8.2f | %-14.2f | %-8.2f | %-8.2f",
-                    user[:id], user_amount, user_shares, share_percentage, payout_from_pool,
-                    total_received, profit, pnl)
+        puts format(
+          "%-8d | %-8.2f | %-8.2f | %-8.2f | %-10.2f | %-10.2f | %-14.2f | %-14.2f | %-8.2f | %-8.2f | %-8.2f | %-8.2f ",
+          user[:id], user_amount, user_shares, share_percentage,
+          avg_buy_prob, avg_sell_prob, total_buy_amount, total_sell_amount, payout_from_pool, total_received, profit, pnl
+        )
+
+        # Add to totals for summary
+        total_columns[:amount] += user_amount
+        total_columns[:shares] += user_shares
+        total_columns[:share_percentage] += share_percentage
+        total_columns[:payout] += payout_from_pool
+        total_columns[:total_received] += total_received
+        total_columns[:profit] += profit
+        total_columns[:pnl] += pnl
+        total_columns[:avg_buy_prob] += avg_buy_prob
+        total_columns[:avg_sell_prob] += avg_sell_prob
+        total_columns[:total_buy_amount] += total_buy_amount
+        total_columns[:total_sell_amount] += total_sell_amount
       end
+
+      # Print totals
+      puts "-" * 150
+      puts format(
+        "%-8s | %-8.2f | %-8.2f | %-8.2f | %-10.2f | %-10.2f | %-14.2f | %-14.2f | %-8.2f | %-8.2f | %-8.2f | %-8.2f",
+        "TOTAL", total_columns[:amount], total_columns[:shares], total_columns[:share_percentage],
+        total_columns[:avg_buy_prob], total_columns[:avg_sell_prob], total_columns[:total_buy_amount],
+        total_columns[:total_sell_amount],
+        total_columns[:payout], total_columns[:total_received], total_columns[:profit], total_columns[:pnl]
+      )
 
       puts "\n"
     end
