@@ -25,15 +25,15 @@ module Api
         tournament_groups = tournament_groups.published
       end
 
-      if params[:token].present?
-        tournament_groups = tournament_groups.select do |tournament_group|
-          tournament_group.tokens.any? { |token| token[:symbol].downcase == params[:token].downcase }
-        end
-      end
-
       if params[:network_id].present?
         tournament_groups = tournament_groups.select do |tournament_group|
           tournament_group.network_id.to_i == params[:network_id].to_i
+        end
+      end
+
+      if params[:token].present?
+        tournament_groups = tournament_groups.select do |tournament_group|
+          tournament_group.token.present? && tournament_group.token[:symbol].downcase == params[:token].downcase
         end
       end
 

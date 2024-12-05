@@ -97,9 +97,11 @@ class Tournament < ApplicationRecord
   end
 
   def token(refresh: false)
-    return tokens.first if tournament_group&.token_address.blank?
+    Rails.cache.fetch("tournaments:#{id}:token", expires_in: 24.hours, force: refresh) do
+      next tokens.first if tournament_group&.token_address.blank?
 
-    tournament_group&.token(refresh: refresh)
+      tournament_group&.token(refresh: refresh)
+    end
   end
 
   def admins
