@@ -116,6 +116,11 @@ module Api
 
       should_update_markets_cache = !tournament.published? && tournament_params[:published]
 
+      # update slug if title changes and tournament is not published
+      if update_params[:title] && update_params[:title] != tournament.title && !tournament.published?
+        tournament.slug = nil
+      end
+
       if tournament.update(update_params)
         if should_update_markets_cache
           # triggering a cache refresh for all markets in the tournament
