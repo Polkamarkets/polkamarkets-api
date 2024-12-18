@@ -9,97 +9,121 @@ class SybilAttackFinderService
       count: 2
     },
     {
-      timeframe: 1.day,
-      count: 3
-    },
-    {
-      timeframe: 1.week,
+      timeframe: 2.hour,
       count: 4
-    }
-  ];
+    },
+  ].freeze;
 
-  def initialize(user, network_id)
-    @user = user
-    @network_id = network_id
-    @actions = network_actions(network_id)
-    @burn_actions = network_burn_actions(network_id).select do |action|
-      action[:block_number] >= Rails.application.config_for(:ethereum).dig(:"network_#{network_id}", :burn_from_block)
-    end
-  end
+  def calculate_markets_sybil_attackers(network_id, market_ids, refresh: false, criteria: CRITERIA)
+    markets = Market.where(eth_market_id: market_ids, network_id: network_id)
 
-  def is_sybil_attacker?
-    is_attacker = false
-    timeframes_to_analyze = []
-    users_to_analyze = []
-    accomplices = []
+    actions = markets.map(&:action_events).flatten
+    users = []
 
-    user_last_burn_block_number = burn_actions.select { |action| action[:from].downcase == user.downcase }&.last&.dig(:block_number) || 0
+    attackers = []
+    actions_by_user = actions.group_by { |action| action[:address] }
+    actions_users = actions.map { |action| action[:address] }.uniq
 
-    # analyzing all sell actions
-    user_actions.select { |action| action[:action] == 'sell' && action[:block_number] > user_last_burn_block_number }.each do |action|
-      # fetching last buy action for this market
-      last_buy_action = user_actions.select do |user_action|
-        user_action[:action] == 'buy' &&
-          user_action[:market_id] == action[:market_id] &&
-          user_action[:timestamp] < action[:timestamp]
-      end.last
+    actions_users.each do |user|
+      is_attacker = false
+      timeframes_to_analyze = []
+      users_to_analyze = []
+      accomplices = []
 
-      raise "No buy action found for user #{user} in market #{action[:market_id]}" if last_buy_action.nil?
+      user_actions = actions_by_user[user]
 
-      # only analyzing timeframes that are no longer than 1 week
-      next if action[:timestamp] - last_buy_action[:timestamp] > 1.week
+      # analyzing all sell actions
+      user_actions.select { |action| action[:action] == 'sell' }.each do |action|
+        # fetching last buy action for this market
+        last_buy_action = user_actions.select do |user_action|
+          user_action[:action] == 'buy' &&
+            user_action[:market_id] == action[:market_id] &&
+            user_action[:timestamp] < action[:timestamp]
+        end.last
 
-      # fetching wallets that performed actions between last buy and current sell
-      users = actions.select do |market_action|
-        market_action[:timestamp] > last_buy_action[:timestamp] &&
-          market_action[:timestamp] < action[:timestamp] &&
-          market_action[:market_id] == action[:market_id] &&
-          market_action[:action] == 'buy' &&
-          market_action[:address] != user
-      end.map { |market_action| market_action[:address] }.uniq
+        raise "No buy action found for user #{user} in market #{action[:market_id]}" if last_buy_action.nil?
 
-      timeframes_to_analyze << {
-        market_id: action[:market_id],
-        timeframe: {
-          start: last_buy_action[:timestamp],
-          end: action[:timestamp],
-          duration: action[:timestamp] - last_buy_action[:timestamp]
-        },
-        users: users
-      }
+        # only analyzing timeframes that are no longer than 1 week
+        next if action[:timestamp] - last_buy_action[:timestamp] > 1.week
 
-      users_to_analyze = (users_to_analyze + users).uniq
-    end
+        # fetching wallets that performed actions between last buy and current sell
+        users = actions.select do |market_action|
+          market_action[:timestamp] > last_buy_action[:timestamp] &&
+            market_action[:timestamp] < action[:timestamp] &&
+            market_action[:market_id] == action[:market_id] &&
+            market_action[:outcome_id] == action[:outcome_id] &&
+            market_action[:action] == 'buy' &&
+            market_action[:address] != user
+        end.map { |market_action| market_action[:address] }.uniq
 
-    users_to_analyze.each do |user|
-      CRITERIA.each do |criteria|
-        timeframe_count = timeframes_to_analyze.select do |timeframe|
-          timeframe[:users].include?(user) &&
-            timeframe[:timeframe][:duration] <= criteria[:timeframe]
-        end.count
+        timeframes_to_analyze << {
+          timeframe: {
+            start: Time.at(last_buy_action[:timestamp]),
+            end: Time.at(action[:timestamp]),
+            duration: action[:timestamp] - last_buy_action[:timestamp]
+          },
+          users: users,
+          market_id: action[:market_id]
+        }
 
-        if timeframe_count >= criteria[:count]
-          accomplices << {
-            user: user,
-            timeframe_count: timeframe_count,
-            timeframe: criteria[:timeframe]
-          }
+        users_to_analyze = (users_to_analyze + users).uniq
+      end
+
+      users_to_analyze.each do |user|
+        criteria.each do |criteria_obj|
+          matched_timeframes = timeframes_to_analyze.select do |timeframe|
+            timeframe[:users].include?(user) &&
+              timeframe[:timeframe][:duration] <= criteria_obj[:timeframe]
+          end
+
+          if matched_timeframes.count >= criteria_obj[:count]
+            accomplices << {
+              user: user,
+              timeframe_count: matched_timeframes.count,
+              timeframe: criteria_obj[:timeframe],
+              details: matched_timeframes.map do |timeframe|
+                { market_id: timeframe[:market_id], timeframe: timeframe[:timeframe] }
+              end
+            }
+          end
         end
       end
+
+      next unless accomplices.count > 0
+
+      attackers.push(
+        {
+          user: user,
+          accomplices: accomplices.map { |accomplice| accomplice[:user] },
+          details: accomplices
+        }
+      )
     end
 
-    if accomplices.count > 0
-      is_attacker = true
-    end
-
-    {
-      is_attacker: is_attacker,
-      accomplices: accomplices.map { |user| user[:user] }.uniq
-    }
+    attackers
   end
 
-  def user_actions
-    @_user_actions ||= actions.select { |action| action[:address].downcase == user.downcase }
+  def calculate_tournament_sybil_attackers(network_id, tournament_id, refresh: false, criteria: CRITERIA)
+    tournament = Tournament.find_by(eth_tournament_id: tournament_id, network_id: network_id)
+    return [] if tournament.blank?
+
+    market_ids = tournament.markets.pluck(:eth_market_id).compact
+
+    calculate_markets_sybil_attackers(network_id, market_ids, refresh: refresh, criteria: criteria)
   end
 
+  def calculate_tournament_group_sybil_attackers(network_id, tournament_group_id, refresh: false, criteria: CRITERIA)
+    tournament_group = TournamentGroup.find_by(eth_tournament_group_id: tournament_group_id, network_id: network_id)
+    return [] if tournament_group.blank?
+
+    market_ids = tournament_group.markets.pluck(:eth_market_id).compact
+
+    calculate_markets_sybil_attackers(network_id, market_ids, refresh: refresh, criteria: criteria)
+  end
+
+  def calculate_network_sybil_attackers(network_id, refresh: false, criteria: CRITERIA)
+    market_ids = Market.where(network_id: network_id).pluck(:eth_market_id).compact
+
+    calculate_markets_sybil_attackers(network_id, market_ids, refresh: refresh, criteria: criteria)
+  end
 end
