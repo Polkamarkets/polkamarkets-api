@@ -12,9 +12,9 @@ class SybilAttackFinderService
       timeframe: 2.hour,
       count: 4
     },
-  ];
+  ].freeze;
 
-  def calculate_markets_sybil_attackers(network_id, market_ids, refresh: false)
+  def calculate_markets_sybil_attackers(network_id, market_ids, refresh: false, criteria: CRITERIA)
     markets = Market.where(eth_market_id: market_ids, network_id: network_id)
 
     actions = markets.map(&:action_events).flatten
@@ -57,7 +57,6 @@ class SybilAttackFinderService
         end.map { |market_action| market_action[:address] }.uniq
 
         timeframes_to_analyze << {
-          market_id: action[:market_id],
           timeframe: {
             start: Time.at(last_buy_action[:timestamp]),
             end: Time.at(action[:timestamp]),
@@ -71,17 +70,17 @@ class SybilAttackFinderService
       end
 
       users_to_analyze.each do |user|
-        CRITERIA.each do |criteria|
+        criteria.each do |criteria_obj|
           matched_timeframes = timeframes_to_analyze.select do |timeframe|
             timeframe[:users].include?(user) &&
-              timeframe[:timeframe][:duration] <= criteria[:timeframe]
+              timeframe[:timeframe][:duration] <= criteria_obj[:timeframe]
           end
 
-          if matched_timeframes.count >= criteria[:count]
+          if matched_timeframes.count >= criteria_obj[:count]
             accomplices << {
               user: user,
               timeframe_count: matched_timeframes.count,
-              timeframe: criteria[:timeframe],
+              timeframe: criteria_obj[:timeframe],
               details: matched_timeframes.map do |timeframe|
                 { market_id: timeframe[:market_id], timeframe: timeframe[:timeframe] }
               end
@@ -104,27 +103,27 @@ class SybilAttackFinderService
     attackers
   end
 
-  def calculate_tournament_sybil_attackers(network_id, tournament_id, refresh: false)
+  def calculate_tournament_sybil_attackers(network_id, tournament_id, refresh: false, criteria: CRITERIA)
     tournament = Tournament.find_by(eth_tournament_id: tournament_id, network_id: network_id)
     return [] if tournament.blank?
 
     market_ids = tournament.markets.pluck(:eth_market_id).compact
 
-    calculate_markets_sybil_attackers(network_id, market_ids, refresh: refresh)
+    calculate_markets_sybil_attackers(network_id, market_ids, refresh: refresh, criteria: criteria)
   end
 
-  def calculate_tournament_group_sybil_attackers(network_id, tournament_group_id, refresh: false)
+  def calculate_tournament_group_sybil_attackers(network_id, tournament_group_id, refresh: false, criteria: CRITERIA)
     tournament_group = TournamentGroup.find_by(eth_tournament_group_id: tournament_group_id, network_id: network_id)
     return [] if tournament_group.blank?
 
     market_ids = tournament_group.markets.pluck(:eth_market_id).compact
 
-    calculate_markets_sybil_attackers(network_id, market_ids, refresh: refresh)
+    calculate_markets_sybil_attackers(network_id, market_ids, refresh: refresh, criteria: criteria)
   end
 
-  def calculate_network_sybil_attackers(network_id, refresh: false)
+  def calculate_network_sybil_attackers(network_id, refresh: false, criteria: CRITERIA)
     market_ids = Market.where(network_id: network_id).pluck(:eth_market_id).compact
 
-    calculate_markets_sybil_attackers(network_id, market_ids, refresh: refresh)
+    calculate_markets_sybil_attackers(network_id, market_ids, refresh: refresh, criteria: criteria)
   end
 end
