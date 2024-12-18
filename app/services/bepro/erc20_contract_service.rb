@@ -37,9 +37,9 @@ module Bepro
 
     def token_info
       {
-        name: call(method: 'name'),
+        name: name,
         address: contract_address,
-        symbol: call(method: 'symbol'),
+        symbol: symbol,
         decimals: decimals,
       }
     end
@@ -50,6 +50,16 @@ module Bepro
 
     def approve(spender:, amount:)
       execute(method: 'approve', args: [spender, from_integer_to_big_number(amount, decimals).to_s])
+    end
+
+    def name
+      Rails.application.config_for(:ethereum).dig(:"network_#{network_id}", :tokens, contract_address, :name) ||
+        call(method: 'name')
+    end
+
+    def symbol
+      Rails.application.config_for(:ethereum).dig(:"network_#{network_id}", :tokens, contract_address, :symbol) ||
+        call(method: 'symbol')
     end
 
     def transfer_events(from: nil, to: nil)
