@@ -126,14 +126,26 @@ module Bepro
       uri = api_url + "/events?contract=#{contract_name}&address=#{contract_address}&eventName=#{event_name}"
       uri << "&filter=#{filter.to_json}" if filter.present?
 
-      eth_query = EthQuery.find_or_create_by(
-        contract_name: contract_name,
-        network_id: network_id,
-        event: event_name,
-        filter: filter.to_json,
-        contract_address: contract_address,
-        api_url: api_url
-      )
+      begin
+        eth_query = EthQuery.find_or_create_by(
+          contract_name: contract_name,
+          network_id: network_id,
+          event: event_name,
+          filter: filter.to_json,
+          contract_address: contract_address,
+          api_url: api_url
+        )
+      rescue => e
+        # concurrent creation, retrying
+        eth_query = EthQuery.find_or_create_by(
+          contract_name: contract_name,
+          network_id: network_id,
+          event: event_name,
+          filter: filter.to_json,
+          contract_address: contract_address,
+          api_url: api_url
+        )
+      end
 
       if from_block.present? || to_block.present?
         uri << "&fromBlock=#{from_block}" if from_block.present?
