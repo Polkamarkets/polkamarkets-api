@@ -206,7 +206,11 @@ module Bepro
             data: event['returnValues'],
             raw_data: event['raw'],
           )
-          eth_query.eth_events << eth_event if eth_query.eth_event_ids.exclude?(eth_event.id)
+          begin
+            eth_query.eth_events << eth_event if eth_query.eth_event_ids.exclude?(eth_event.id)
+          rescue ActiveRecord::RecordNotUnique
+            # concurrent creation, ignoring
+          end
 
           # periodically updating the last block number
           if index % 1000 == 0 &&
