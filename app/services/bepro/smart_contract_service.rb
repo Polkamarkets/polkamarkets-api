@@ -188,39 +188,39 @@ module Bepro
 
         current_block_number = events.map { |event| event['blockNumber'] }.max
 
-        events.each_with_index do |event, index|
-          eth_event = EthEvent.find_or_initialize_by(
-            event: event_name,
-            contract_name: contract_name,
-            network_id: network_id,
-            address: contract_address,
-            transaction_hash: event['transactionHash'],
-            log_index: event['logIndex'] || 0,
-          )
-          eth_event.update!(
-            block_hash: event['blockHash'],
-            block_number: event['blockNumber'],
-            removed: event['removed'],
-            transaction_index: event['transactionIndex'],
-            signature: event['signature'],
-            data: event['returnValues'],
-            raw_data: event['raw'],
-          )
-          begin
+        begin
+          events.each_with_index do |event, index|
+            eth_event = EthEvent.find_or_initialize_by(
+              event: event_name,
+              contract_name: contract_name,
+              network_id: network_id,
+              address: contract_address,
+              transaction_hash: event['transactionHash'],
+              log_index: event['logIndex'] || 0,
+            )
+            eth_event.update!(
+              block_hash: event['blockHash'],
+              block_number: event['blockNumber'],
+              removed: event['removed'],
+              transaction_index: event['transactionIndex'],
+              signature: event['signature'],
+              data: event['returnValues'],
+              raw_data: event['raw'],
+            )
             eth_query.eth_events << eth_event if eth_query.eth_event_ids.exclude?(eth_event.id)
-          rescue ActiveRecord::RecordNotUnique
-            # concurrent creation, ignoring
+
+            # periodically updating the last block number
+            if index % 1000 == 0 &&
+              (eth_query.reload.last_block_number.blank? || event['blockNumber'] > eth_query.last_block_number)
+              eth_query.update!(last_block_number: event['blockNumber'])
+            end
           end
 
-          # periodically updating the last block number
-          if index % 1000 == 0 &&
-            (eth_query.reload.last_block_number.blank? || event['blockNumber'] > eth_query.last_block_number)
-            eth_query.update!(last_block_number: event['blockNumber'])
-          end
+          eth_query.last_block_number = current_block_number + 1 if current_block_number.present?
+          eth_query.save!
+        rescue ActiveRecord::RecordNotUnique
+          # concurrent creation, ignoring
         end
-
-        eth_query.last_block_number = current_block_number + 1 if current_block_number.present?
-        eth_query.save!
 
         return events
       end
