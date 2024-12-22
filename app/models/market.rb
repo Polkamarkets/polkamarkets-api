@@ -84,7 +84,7 @@ class Market < ApplicationRecord
     # first checking slug metadata
     market = Market.find_by(slug: eth_data[:draft_slug], eth_market_id: nil) if eth_data[:draft_slug].present?
     # also checking title
-    market ||= Market.find_by(title: eth_data[:title], eth_market_id: nil)
+    market ||= Market.find_by(title: eth_data[:title], eth_market_id: nil, network_id: network_id)
 
     if market.present?
       market.update!(
