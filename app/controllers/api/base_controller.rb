@@ -1,3 +1,5 @@
+require "eth"
+
 module Api
   class BaseController < ActionController::API
     include ApplicationHelper
@@ -22,6 +24,7 @@ module Api
       if request.headers['Authorization'].present?
         authenticate_or_request_with_http_token do |token|
           jwt_payload = nil
+          is_message_signature = false
 
           begin
             jwt_payload = JWT.decode(
@@ -32,40 +35,68 @@ module Api
               jwks: fetch_jwks(Rails.application.config_for(:privy).jwks_url),
             )
           rescue JWT::ExpiredSignature, JWT::VerificationError, JWT::DecodeError
-            # should be non-blocking
-            return
+            # validate if token is hexadecimal
+            unless token.match?(/\A0x[0-9a-fA-F]+\z/)
+              return
+            end
+
+            is_message_signature = true
           end
+          #
+          if is_message_signature
+            # TODO: define the message to be signed
+            signature_pubkey = Eth::Signature.personal_recover 'Login message', token
+            signature_address = Eth::Util.public_key_to_address signature_pubkey
+            user_address = signature_address.to_s
 
-          privy_user_id = jwt_payload[0]['sub']
-          privy_user_data = PrivyService.new.get_user_data(user_id: privy_user_id)
+            username = "User #{user_address[0..4]}...#{user_address[-3..-1]}"
 
-          email = privy_user_data[:email] || privy_user_data[:username] || privy_user_data[:address] + '@login_type.com'
-          username =
-            privy_user_data[:username] || (privy_user_data[:email].present? ? email.split('@').first : "User #{privy_user_data[:address][0..4]}...#{privy_user_data[:address][-3..-1]}")
-          slug =
-            (privy_user_data[:username] || privy_user_data[:email].present?) ? nil : "user-#{privy_user_data[:address][2..4]}#{privy_user_data[:address][-3..-1]}".downcase
-          avatar = privy_user_data[:avatar]
-          raw_email = privy_user_data[:email]
-          login_public_key = privy_user_data[:address]
-          login_type = privy_user_data[:login_type]
+            user_idp = UserIdp.where("uid ilike '%#{user_address}%'").first
 
-          user = User.find_by(email: email) || User.find_by(login_public_key: login_public_key)
+            if user_idp.present?
+              user = user_idp.user
+            else
+              user = User.find_by(wallet_address: user_address)
 
-          if user.nil?
-            user = User.new(email: email, login_public_key: login_public_key, raw_email: raw_email, username: username, slug: slug, idp_uid: privy_user_id, idp: 'privy')
-            user.save!
+              if user.nil?
+                user = User.new(wallet_address: user_address, username: username, login_type: 'native', email: "#{user_address}@login_type.com")
+                user.save!
+              end
+            end
+
           else
-            user.update(login_public_key: login_public_key, raw_email: raw_email, email: email, idp_uid: privy_user_id, idp: 'privy')
+            privy_user_id = jwt_payload[0]['sub']
+            privy_user_data = PrivyService.new.get_user_data(user_id: privy_user_id)
+  
+            email = privy_user_data[:email] || privy_user_data[:username] || privy_user_data[:address] + '@login_type.com'
+            username =
+              privy_user_data[:username] || (privy_user_data[:email].present? ? email.split('@').first : "User #{privy_user_data[:address][0..4]}...#{privy_user_data[:address][-3..-1]}")
+            slug =
+              (privy_user_data[:username] || privy_user_data[:email].present?) ? nil : "user-#{privy_user_data[:address][2..4]}#{privy_user_data[:address][-3..-1]}".downcase
+            avatar = privy_user_data[:avatar]
+            raw_email = privy_user_data[:email]
+            login_public_key = privy_user_data[:address]
+            login_type = privy_user_data[:login_type]
+  
+            user = User.find_by(email: email) || User.find_by(login_public_key: login_public_key)
+
+            if user.nil?
+              user = User.new(email: email, login_public_key: login_public_key, raw_email: raw_email, username: username, slug: slug, idp_uid: privy_user_id, idp: 'privy')
+              user.save!
+            else
+              user.update(login_public_key: login_public_key, raw_email: raw_email, email: email, idp_uid: privy_user_id, idp: 'privy')
+            end
+  
+            # updating user idps
+            privy_user_data[:linked_accounts].each do |linked_account|
+              idp_uid = PrivyService.new.uid_from_linked_account_data(linked_account)
+              next if idp_uid.blank?
+              user_idp = user.user_idps.find_or_initialize_by(provider: linked_account['type'], uid: idp_uid)
+              user_idp.data = linked_account
+              user_idp.save!
+            end
           end
 
-          # updating user idps
-          privy_user_data[:linked_accounts].each do |linked_account|
-            idp_uid = PrivyService.new.uid_from_linked_account_data(linked_account)
-            next if idp_uid.blank?
-            user_idp = user.user_idps.find_or_initialize_by(provider: linked_account['type'], uid: idp_uid)
-            user_idp.data = linked_account
-            user_idp.save!
-          end
 
           if params[:redeem_code].present? && !user.whitelisted?
             # checking for tournament group with redeem code
