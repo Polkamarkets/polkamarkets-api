@@ -4,6 +4,7 @@ class Market < ApplicationRecord
   include Reportable
   include Likeable
   include Imageable
+  include OgImageable
   extend FriendlyId
   friendly_id :title, use: :slugged
 
@@ -44,6 +45,8 @@ class Market < ApplicationRecord
   IMAGEABLE_FIELDS = [:image_url, :banner_url].freeze
   EDITABLE_FIELDS = %i[title description resolution_source resolution_title].freeze
   MAX_SCHEDULE_TRIES = 3.freeze
+  OG_IMAGEABLE_PATH = 'questions'
+  OG_IMAGEABLE_FIELDS = %i[title].freeze
 
   def self.all_voided_market_ids
     Rails.cache.fetch('markets:voided', expires_in: 5.minutes) do
@@ -81,7 +84,7 @@ class Market < ApplicationRecord
     # first checking slug metadata
     market = Market.find_by(slug: eth_data[:draft_slug], eth_market_id: nil) if eth_data[:draft_slug].present?
     # also checking title
-    market ||= Market.find_by(title: eth_data[:title], eth_market_id: nil)
+    market ||= Market.find_by(title: eth_data[:title], eth_market_id: nil, network_id: network_id)
 
     if market.present?
       market.update!(
@@ -464,9 +467,12 @@ class Market < ApplicationRecord
   def image_url
     return self['image_url'] if self['image_url'].present?
 
-    return nil if image_ipfs_hash.blank?
+    return IpfsService.image_url_from_hash(image_ipfs_hash) if image_ipfs_hash.present?
 
-    IpfsService.image_url_from_hash(image_ipfs_hash)
+    # if there's only image for the first outcome, we use it as image_url
+    if outcomes.first.image_url.present? && outcomes[1..-1].all? { |o| o.image_url.blank? }
+      return outcomes.first.image_url
+    end
   end
 
   def image_ipfs_hash
@@ -743,7 +749,7 @@ class Market < ApplicationRecord
   end
 
   def accuracy_report
-    return "Market #{market.slug} is not resolved" unless resolved?
+    return "Market #{slug} is not resolved" unless resolved? && published?
 
     question_title = title.gsub("\n", ' ')
     outcome_titles = outcomes.map(&:title).map(&:upcase).join(', ')
@@ -761,7 +767,14 @@ class Market < ApplicationRecord
       most_probable_outcome_probability,
       winning_outcome_title,
       correct,
-      incorrect
+      incorrect,
+      published_at.strftime('%Y/%m/%d'),
+      expires_at.strftime('%Y/%m/%d'),
+      topics.sort.join(', ')
     ].join(';')
+  end
+
+  def og_theme
+    tournament_groups.first&.og_theme
   end
 end

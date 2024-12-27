@@ -3,6 +3,7 @@ class TournamentGroup < ApplicationRecord
   include Reportable
   include Redeemable
   include Imageable
+  include OgImageable
   extend FriendlyId
 
   friendly_id :title, use: :slugged
@@ -23,6 +24,8 @@ class TournamentGroup < ApplicationRecord
 
   SOCIALS = %w[instagram twitter telegram facebook youtube linkedin medium discord].freeze
   IMAGEABLE_FIELDS = [:image_url, :banner_url].freeze
+  OG_IMAGEABLE_PATH = 'lands'
+  OG_IMAGEABLE_FIELDS = %i[title image_url banner_url].freeze
 
   def self.tokens
     # caching value for 1h
@@ -78,9 +81,9 @@ class TournamentGroup < ApplicationRecord
   end
 
   def token(refresh: false)
-    return tokens.first if token_address.blank?
+    Rails.cache.fetch("tournament_groups:#{id}:token", expires_in: 24.hours, force: refresh) do
+      next tokens.first if token_address.blank?
 
-    Rails.cache.fetch("tournament_groups:#{id}:token", force: refresh) do
       token = Bepro::Erc20ContractService.new(network_id: network_id, contract_address: token_address).token_info
       wrapped = token_address.downcase == network_weth_address(network_id).downcase
 

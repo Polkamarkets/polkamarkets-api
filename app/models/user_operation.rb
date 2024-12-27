@@ -13,6 +13,25 @@ class UserOperation < ApplicationRecord
 
   EVENT_TOPIC = '0x49628fd1471006c1482da88028e9ce4dbb080b815c9b0344d39e5a8e6ec1419f'.freeze
 
+  def self.fetch_latest_logs(network_id)
+    network_id = network_id.to_i
+
+    case network_id
+    when 10200
+      []
+    else
+      service = EtherscanService.new(network_id)
+      from_block = service.latest_block_number_by_network_id - (Rails.application.config_for(:ethereum).dig(:"network_#{network_id}", :block_range) || 1000)
+
+      service.logs(
+        Rails.application.config_for(:ethereum).bundler_entry_point,
+        [EVENT_TOPIC, nil],
+        from_block: from_block,
+        fetch_all: true
+      )
+    end
+  end
+
   def fill_user_address_from_user_operation
     self.user_address ||= user_operation['sender'] if user_operation.present?
   end

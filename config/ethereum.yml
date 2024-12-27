@@ -18,6 +18,12 @@ default: &default
       image_url: "<%= ENV["ETHEREUM_NETWORK_#{network_id}_IMAGE_URL"].to_s %>"
       burn_from_block: <%= ENV["ETHEREUM_NETWORK_#{network_id}_BURN_FROM_BLOCK"].to_i %>
       block_range: <%= ENV["ETHEREUM_NETWORK_#{network_id}_BLOCK_RANGE"].to_i %>
+      tokens:
+        <% ENV["ETHEREUM_NETWORK_#{network_id}_ERC20_CONTRACT_ADDRESSES"].to_s.split(',') do |contract_address| %>
+          "<%= contract_address %>":
+            name: "<%= ENV["ETHEREUM_NETWORK_#{network_id}_ERC20_#{contract_address}_NAME"].to_s %>"
+            symbol: "<%= ENV["ETHEREUM_NETWORK_#{network_id}_ERC20_#{contract_address}_SYMBOL"].to_s %>"
+        <% end %>
   <% end %>
   <% ENV["STATS_NETWORK_IDS"].to_s.split(',') do |network_id| %>
     stats_network_<%= network_id %>:

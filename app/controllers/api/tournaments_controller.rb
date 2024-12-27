@@ -18,15 +18,15 @@ module Api
         tournaments = tournaments.published
       end
 
-      if params[:token].present?
-        tournaments = tournaments.select do |tournament|
-          tournament.tokens.present? && tournament.tokens.any? { |token| token[:symbol].downcase == params[:token].downcase }
-        end
-      end
-
       if params[:network_id].present?
         tournaments = tournaments.select do |tournament|
           tournament.network_id.to_i == params[:network_id].to_i
+        end
+      end
+
+      if params[:token].present?
+        tournaments = tournaments.select do |tournament|
+          tournament.token.present? && tournament.token[:symbol].downcase == params[:token].downcase
         end
       end
 
@@ -44,7 +44,7 @@ module Api
 
       accuracy_report = tournament
         .markets
-        .select { |m| m.state == 'resolved' }
+        .select { |m| m.resolved? && m.published? }
         .map(&:accuracy_report)
         .join("\n")
 
@@ -115,6 +115,11 @@ module Api
       end
 
       should_update_markets_cache = !tournament.published? && tournament_params[:published]
+
+      # update slug if title changes and tournament is not published
+      if update_params[:title] && update_params[:title] != tournament.title && !tournament.published?
+        tournament.slug = nil
+      end
 
       if tournament.update(update_params)
         if should_update_markets_cache

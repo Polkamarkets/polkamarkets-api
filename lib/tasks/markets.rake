@@ -107,6 +107,19 @@ namespace :markets do
     end
   end
 
+  desc "updates markets og images"
+  task :update_og_images, [:symbol] => :environment do |task, args|
+    Rails.application.config_for(:ethereum).network_ids.each do |network_id|
+      # fetching latest actions
+      Market.includes(:tournament_groups).where(og_image_url: nil).each do |market|
+        next if market.og_theme.blank? || !market.published?
+
+        # updating og image
+        market.update_og_image
+      end
+    end
+  end
+
   desc "refreshes eth cache of markets"
   task :refresh_cache, [:symbol] => :environment do |task, args|
     Market.all.each { |m| m.refresh_cache!(queue: 'low') if m.should_refresh_cache? }
@@ -125,8 +138,10 @@ namespace :markets do
   desc "features markets published in the last 24 hours"
   task :unfeature_markets, [:symbol] => :environment do |task, args|
     # unfeaturing all closed markets
-    Market.where(featured: true)
-      .where('expires_at < ?', DateTime.now)
-      .each { |m| m.update(featured: false) }
+    Market.where(featured: true).each do |market|
+      next if market.expires_at > DateTime.now && !market.resolved?
+
+      market.update(featured: false)
+    end
   end
 end

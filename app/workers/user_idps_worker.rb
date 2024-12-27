@@ -8,7 +8,7 @@ class UserIdpsWorker
     privy_service = PrivyService.new
 
     # finding privy user by embedded wallet address
-    users_data = privy_service.search_users(query: { walletAddresses: [user.login_public_key] })
+    users_data = privy_service.search_users_by_wallet_address(user.login_public_key)
 
     return if users_data['data'].blank?
 

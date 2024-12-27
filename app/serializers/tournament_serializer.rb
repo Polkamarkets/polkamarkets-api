@@ -1,5 +1,5 @@
 class TournamentSerializer < BaseSerializer
-  cache expires_in: 24.hours, except: [:markets]
+  cache expires_in: 24.hours
 
   attributes(
     :id,
@@ -11,6 +11,7 @@ class TournamentSerializer < BaseSerializer
     :created_at,
     :image_url,
     :avatar_url,
+    :og_image_url,
     :metadata_url,
     :expires_at,
     :users,
@@ -29,7 +30,7 @@ class TournamentSerializer < BaseSerializer
 
   def markets
     object.markets.select { |market| market.published? }.map do |market|
-      TournamentMarketSerializer.new(market)
+      TournamentMarketSerializer.new(market).as_json
     end
   end
 
