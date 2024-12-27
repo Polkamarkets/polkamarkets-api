@@ -3,14 +3,10 @@ module Api
     before_action :authenticate_user!, only: [:update, :destroy]
 
     before_action :set_paper_trail_whodunnit
+    before_action :get_user, only: [:show, :streaks]
 
     def show
-      # trying to fetch by wallet or slug
-      user = User.where("lower(wallet_address) = ? OR lower(slug) = ?", params[:id].downcase, params[:id].downcase).first
-
-      raise ActiveRecord::RecordNotFound if user.nil?
-
-      render json: user, status: :ok
+      render json: @user, status: :ok
     end
 
     def register_waitlist
@@ -91,7 +87,29 @@ module Api
       end
     end
 
+    def streaks
+      raise "Token not sent" if params[:token].blank?
+
+      # case insensitive search
+      tournament_group = TournamentGroup.all.find do |tg|
+        tg.token&.dig(:address)&.downcase == params[:token].downcase ||
+          tg.token&.dig(:symbol)&.downcase == params[:token].downcase
+      end
+      raise ActiveRecord::RecordNotFound if tournament_group.nil?
+
+      portfolio = Portfolio.find_or_create_by!(eth_address: @user.wallet_address.downcase, network_id: tournament_group.network_id)
+
+      render json: portfolio.streaks(tournament_group.id), status: :ok
+    end
+
     private
+
+    def get_user
+      # trying to fetch by wallet or slug
+      @user = User.where("lower(wallet_address) = ? OR lower(slug) = ?", params[:id].downcase, params[:id].downcase).first
+
+      raise ActiveRecord::RecordNotFound if @user.nil?
+    end
 
     def user_params
       params.permit(
