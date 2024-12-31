@@ -42,7 +42,15 @@ class Portfolio < ApplicationRecord
 
     @market_actions ||=
       Rails.cache.fetch("portfolios:network_#{network_id}:#{eth_address}:actions", force: refresh) do
-        Bepro::PredictionMarketContractService.new(network_id: network_id).get_action_events(address: eth_address)
+        actions = Bepro::PredictionMarketContractService.new(network_id: network_id).get_action_events(address: eth_address)
+        return actions if aliases.blank?
+
+        # fetching actions for aliases and merging with main address
+        aliases.each do |address|
+          actions += Bepro::PredictionMarketContractService.new(network_id: network_id).get_action_events(address: address)
+        end
+
+        actions.sort_by { |action| action[:timestamp] }
       end
   end
 
@@ -506,5 +514,9 @@ class Portfolio < ApplicationRecord
       Cache::PortfolioLiquidityFeesWorker.set(queue: queue).perform_async(id)
     end
     Cache::PortfolioFeedWorker.set(queue: queue).perform_async(id)
+  end
+
+  def aliases
+    @_aliases ||= User.where('lower(wallet_address) = ?', eth_address.downcase).first&.aliases || []
   end
 end
