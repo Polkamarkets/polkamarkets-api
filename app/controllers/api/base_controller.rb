@@ -42,11 +42,13 @@ module Api
 
             is_message_signature = true
           end
-          #
+
           if is_message_signature
-            # TODO: define the message to be signed
-            signature_pubkey = Eth::Signature.personal_recover 'Login message', token
-            signature_address = Eth::Util.public_key_to_address signature_pubkey
+            # write me a nice login message to show on metamask on a comment below
+            message = "Hello, you are being prompted to sign this message to login."
+
+            signature_pubkey = Eth::Signature.personal_recover(message, token)
+            signature_address = Eth::Util.public_key_to_address(signature_pubkey)
             user_address = signature_address.to_s
 
             username = "User #{user_address[0..4]}...#{user_address[-3..-1]}"
@@ -55,6 +57,15 @@ module Api
 
             if user_idp.present?
               user = user_idp.user
+
+              # updating new wallet address and setting old one as alias
+              if user.wallet_address != user_address
+                user.update(
+                  wallet_address: user_address,
+                  login_type: 'native',
+                  aliases: user.aliases + [user.wallet_address]
+                )
+              end
             else
               user = User.find_by(wallet_address: user_address)
 
@@ -63,11 +74,10 @@ module Api
                 user.save!
               end
             end
-
           else
             privy_user_id = jwt_payload[0]['sub']
             privy_user_data = PrivyService.new.get_user_data(user_id: privy_user_id)
-  
+
             email = privy_user_data[:email] || privy_user_data[:username] || privy_user_data[:address] + '@login_type.com'
             username =
               privy_user_data[:username] || (privy_user_data[:email].present? ? email.split('@').first : "User #{privy_user_data[:address][0..4]}...#{privy_user_data[:address][-3..-1]}")
@@ -77,7 +87,7 @@ module Api
             raw_email = privy_user_data[:email]
             login_public_key = privy_user_data[:address]
             login_type = privy_user_data[:login_type]
-  
+
             user = User.find_by(email: email) || User.find_by(login_public_key: login_public_key)
 
             if user.nil?
@@ -86,7 +96,7 @@ module Api
             else
               user.update(login_public_key: login_public_key, raw_email: raw_email, email: email, idp_uid: privy_user_id, idp: 'privy')
             end
-  
+
             # updating user idps
             privy_user_data[:linked_accounts].each do |linked_account|
               idp_uid = PrivyService.new.uid_from_linked_account_data(linked_account)
