@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2024_11_23_113524) do
+ActiveRecord::Schema.define(version: 2024_12_30_173031) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -366,6 +366,7 @@ ActiveRecord::Schema.define(version: 2024_11_23_113524) do
     t.datetime "inactive_since"
     t.string "idp"
     t.string "idp_uid"
+    t.string "aliases", default: [], array: true
     t.index ["slug"], name: "index_users_on_slug", unique: true
   end
 

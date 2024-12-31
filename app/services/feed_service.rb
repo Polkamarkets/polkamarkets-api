@@ -1,5 +1,5 @@
 class FeedService
-  attr_accessor :address, :market, :network_id, :actions, :markets
+  attr_accessor :address, :aliases, :market, :network_id, :actions, :markets
 
   FEED_ACTIONS = [
     'buy',
@@ -15,15 +15,41 @@ class FeedService
     raise 'cannot initialize FeedService with address + market_id' if address.present? && market_id.present?
 
     @address = address
+    @aliases = User.where('lower(wallet_address) = ?', address.downcase).first&.aliases || []
     @market = Market.find_by!(eth_market_id: market_id, network_id: network_id) if market_id.present?
     @network_id = network_id
   end
 
   def actions
-    @_actions ||= Bepro::PredictionMarketContractService.new(network_id: network_id)
+    return @_actions if @_actions.present?
+
+    @_actions = Bepro::PredictionMarketContractService.new(network_id: network_id)
       .get_action_events(address: address, market_id: market&.eth_market_id)
       .sort_by { |a| -a[:timestamp] }
       .first(LIMIT)
+
+    return @_actions if aliases.blank?
+
+    # adding aliases actions to user's actions
+    @_actions += aliases_actions
+    @_actions.sort_by! { |a| -a[:timestamp] }
+  end
+
+  def aliases_actions
+    return [] if aliases.blank?
+    return @_aliases_actions if @_aliases_actions.present?
+
+    aliases_actions = aliases.map do |alias_address|
+      Bepro::PredictionMarketContractService.new(network_id: network_id)
+        .get_action_events(address: alias_address, market_id: market&.eth_market_id)
+        .sort_by { |a| -a[:timestamp] }
+        .first(LIMIT)
+    end.flatten
+
+    # replacing user's address with alias in actions
+    aliases_actions.each { |action| action[:address] = address }
+
+    @_aliases_actions = aliases_actions.sort_by { |a| -a[:timestamp] }
   end
 
   def vote_actions
@@ -80,6 +106,8 @@ class FeedService
   def serialized_actions
     filtered_actions.map do |action|
       action_market = markets.find { |m| m.eth_market_id == action[:market_id] }
+      next unless action_market.present?
+
       outcome = action_market.outcomes.find { |o| o.eth_market_id == action[:outcome_id] } if action[:action] == 'buy' || action[:action] == 'sell' || action[:action] == 'claim_winnings'
       # determining if add_liquidity action is a create_market action by tx_id
       if action[:action] == 'add_liquidity' && create_event_actions.any? { |e| e['transactionHash'] == action[:tx_id] }
@@ -110,7 +138,7 @@ class FeedService
         timestamp: action[:timestamp],
         ticker: action_market.token[:symbol]
       }
-    end
+    end.compact
   end
 
   def serialized_vote_actions

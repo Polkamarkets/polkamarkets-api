@@ -12,6 +12,8 @@ module OgImageable
     end
 
     def update_og_image_async
+      return unless Rails.env.production?
+
       OgImageWorker.perform_async(self.class.name, id)
     end
 

@@ -24,23 +24,45 @@ class EtherscanService
   end
 
 
-  def logs(contract_address, topics)
+  def logs(contract_address, topics, from_block: nil, to_block: nil, fetch_all: false)
     uri = etherscan_url + "/api?module=logs&action=getLogs&address=#{contract_address}&apikey=#{api_key}"
+    uri += "&fromBlock=#{from_block}" if from_block.present?
+    uri += "&toBlock=#{to_block}" if to_block.present?
 
     topics.each_with_index do |topic, index|
       uri += "&topic#{index}=#{topic}" if topic.present?
     end
 
-    request_etherscan(uri)
+    logs = request_etherscan(uri)
+    fetch_completed = fetch_all && logs.count == 1000
+    return logs unless fetch_completed
+
+    page = 1
+    while fetch_completed
+      page += 1
+      # Etherscan rate limit is 5 requests per second
+      sleep(0.2)
+      response = request_etherscan(uri + "&page=#{page}&offset=1000")
+      logs += response
+      fetch_completed = response.count == 1000
+    end
+
+    logs
   end
 
   def latest_block_number(contract_address)
     contract_txs(contract_address).first['blockNumber'].to_i
   end
 
+  def latest_block_number_by_network_id
+    uri = etherscan_url + "/api?module=proxy&action=eth_blockNumber&apikey=#{api_key}"
+
+    request_etherscan(uri, true).hex
+  end
+
   private
 
-  def request_etherscan(uri)
+  def request_etherscan(uri, as_string = false)
     response = HTTP.get(uri)
 
     unless response.status.success?
@@ -49,7 +71,7 @@ class EtherscanService
 
     result = JSON.parse(response.body.to_s)['result']
 
-    if result.is_a?(String)
+    if result.is_a?(String) && !as_string
       raise "Etherscan :: #{result}"
     end
 
@@ -70,7 +92,7 @@ class EtherscanService
       when 1285
         'https://api-moonriver.moonscan.io'
       when 42220
-        'https://api.celoscan.io/'
+        'https://api.celoscan.io'
       when 44787
         'https://api-alfajores.celoscan.io'
       when 80001

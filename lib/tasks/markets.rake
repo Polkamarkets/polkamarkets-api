@@ -138,8 +138,10 @@ namespace :markets do
   desc "features markets published in the last 24 hours"
   task :unfeature_markets, [:symbol] => :environment do |task, args|
     # unfeaturing all closed markets
-    Market.where(featured: true)
-      .where('expires_at < ?', DateTime.now)
-      .each { |m| m.update(featured: false) }
+    Market.where(featured: true).each do |market|
+      next if market.expires_at > DateTime.now && !market.resolved?
+
+      market.update(featured: false)
+    end
   end
 end
