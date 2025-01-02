@@ -45,11 +45,15 @@ module Bepro
     end
 
     def mint_tokens(to:, amount:)
-      execute(method: 'mint', args: [to, from_integer_to_big_number(amount, decimals).to_s])
+      execute(method: 'mint', args: [to, from_float_to_big_number(amount, decimals).to_s])
     end
 
     def approve(spender:, amount:)
-      execute(method: 'approve', args: [spender, from_integer_to_big_number(amount, decimals).to_s])
+      execute(method: 'approve', args: [spender, from_float_to_big_number(amount, decimals).to_s])
+    end
+
+    def transfer(to:, amount:)
+      execute(method: 'transfer', args: [to, from_float_to_big_number(amount, decimals).to_s])
     end
 
     def name
