@@ -15,7 +15,7 @@ class FeedService
     raise 'cannot initialize FeedService with address + market_id' if address.present? && market_id.present?
 
     @address = address
-    @aliases = User.where('lower(wallet_address) = ?', address.downcase).first&.aliases || []
+    @aliases = address.blank? ? [] : User.where('lower(wallet_address) = ?', address.downcase).first&.aliases || []
     @market = Market.find_by!(eth_market_id: market_id, network_id: network_id) if market_id.present?
     @network_id = network_id
   end
