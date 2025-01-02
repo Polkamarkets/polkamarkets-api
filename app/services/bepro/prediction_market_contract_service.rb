@@ -134,12 +134,15 @@ module Bepro
       outcome_ids = call(method: 'getMarketOutcomeIds', args: market_id)
       outcome_ids.map do |outcome_id|
         outcome_data = call(method: 'getMarketOutcomeData', args: [market_id, outcome_id])
+        shares = from_big_number_to_float(outcome_data[1], network_market_erc20_decimals(network_id, market_id))
+        shares_total = from_big_number_to_float(outcome_data[2], network_market_erc20_decimals(network_id, market_id))
 
         {
           id: outcome_id.to_i,
           title: '', # TODO remove; deprecated
           price: from_big_number_to_float(outcome_data[0]),
-          shares: from_big_number_to_float(outcome_data[1], network_market_erc20_decimals(network_id, market_id)),
+          shares: shares,
+          shares_held: shares_total - shares
         }
       end
     end
