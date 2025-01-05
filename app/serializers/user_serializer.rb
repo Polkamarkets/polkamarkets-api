@@ -7,6 +7,7 @@ class UserSerializer < BaseSerializer
     :description,
     :website_url,
     :created_at,
+    :aliases
   )
 
   def address

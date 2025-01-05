@@ -13,6 +13,6 @@ module BigNumberHelper
   end
 
   def from_float_to_big_number(number, decimals = 18)
-    (number * 10**decimals).to_i
+    (number.to_f * 10**decimals).to_i
   end
 end
