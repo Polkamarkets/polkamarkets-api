@@ -92,6 +92,10 @@ class Tournament < ApplicationRecord
     end
   end
 
+  def resolved?
+    markets.all?(&:resolved?)
+  end
+
   def tokens
     markets.map(&:token).flatten.uniq.compact
   end

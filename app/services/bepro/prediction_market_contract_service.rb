@@ -396,6 +396,8 @@ module Bepro
     end
 
     def weth_address
+      return '0x0000000000000000000000000000000000000000' if contract_address.blank?
+
       call(method: 'WETH')
     end
 

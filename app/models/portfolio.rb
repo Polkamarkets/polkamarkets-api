@@ -40,7 +40,7 @@ class Portfolio < ApplicationRecord
   def action_events(refresh: false)
     return @market_actions if @market_actions.present? && !refresh
 
-    @market_actions ||=
+    @market_actions =
       Rails.cache.fetch("portfolios:network_#{network_id}:#{eth_address}:actions", force: refresh) do
         actions = Bepro::PredictionMarketContractService.new(network_id: network_id).get_action_events(address: eth_address)
         return actions if aliases.blank?
@@ -59,7 +59,7 @@ class Portfolio < ApplicationRecord
 
     return @burn_actions if @burn_actions.present? && !refresh
 
-    @burn_actions ||=
+    @burn_actions =
       Rails.cache.fetch("portfolios:network_#{network_id}:#{eth_address}:burn_actions", force: refresh) do
         Bepro::Erc20ContractService.new(network_id: network_id).burn_events(from: eth_address)
       end
@@ -219,7 +219,7 @@ class Portfolio < ApplicationRecord
   def liquidity_fees_earned(refresh: false)
     return @liquidity_fees_earned if @liquidity_fees_earned.present? && !refresh
 
-    @liquidity_fees_earned ||=
+    @liquidity_fees_earned =
       Rails.cache.fetch("portfolios:network_#{network_id}:#{eth_address}:liquidity_fees", force: refresh) do
         events = Bepro::PredictionMarketContractService.new(network_id: network_id).get_user_liquidity_fees_earned(eth_address)
 
@@ -501,6 +501,12 @@ class Portfolio < ApplicationRecord
   def erc20_balance
     Rails.cache.fetch("portfolios:network_#{network_id}:#{eth_address}:erc20_balance", force: refresh) do
       Bepro::Erc20ContractService.new(network_id: network_id).balance_of(eth_address)
+    end
+  end
+
+  def streaks(tournament_group_id, refresh: false)
+    Rails.cache.fetch("portfolios:network_#{network_id}:#{eth_address}:#{tournament_group_id}:streaks", force: refresh, expires_in: DateTime.now.end_of_day.to_i - DateTime.now.to_i) do
+      PortfolioStreakCalculatorService.new(id, tournament_group_id).get_current_streak
     end
   end
 
