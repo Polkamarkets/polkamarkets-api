@@ -10,6 +10,7 @@ class PortfolioStreakWorker
 
       streaks = PortfolioStreakCalculatorService.new(portfolio_id, tournament_group.id).calculate_streaks(refresh: true)
       claims = Claim.where(network_id: portfolio.network_id, wallet_address: portfolio.eth_address, claim_type: 'streak')
+      token_address = nil
 
       # going through streaks and creating claims
       streaks[:values].each do |streak_value|
@@ -25,7 +26,7 @@ class PortfolioStreakWorker
           claim.data['date'] == data[:date]
         end
 
-        token_address = Claim.get_wallet_address_preferred_token(
+        token_address ||= Claim.get_wallet_address_preferred_token(
           portfolio.network_id,
           portfolio.eth_address,
           tournament_group.streaks_config['token_addresses']

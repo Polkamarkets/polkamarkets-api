@@ -1,6 +1,7 @@
 class Claim < ApplicationRecord
   validates_presence_of :network_id, :wallet_address, :amount, :claim_type, :token_address
   validates :claim_type, inclusion: { in: %w[tournament streak] }
+  validates_uniqueness_of :wallet_address, scope: %i[network_id claim_type data]
 
   def self.get_wallet_address_preferred_token(network_id, wallet_address, token_addresses)
     max = 0.0;

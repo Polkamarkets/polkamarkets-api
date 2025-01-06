@@ -26,12 +26,32 @@ module Bepro
         ])
     end
 
+    def add_claim_amounts(user_addresses, amounts, preferred_token)
+      execute(
+        method: 'increaseUsersClaimAmounts',
+        args: [
+          user_addresses,
+          amounts.map { |amount| from_float_to_big_number(amount, 18).to_s },
+          preferred_token,
+        ])
+    end
+
     def set_claim_amount(user_address, amount, preferred_token)
       execute(
         method: 'setUserClaimAmount',
         args: [
           user_address,
           from_float_to_big_number(amount, 18).to_s,
+          preferred_token,
+        ])
+    end
+
+    def set_claim_amounts(user_addresses, amounts, preferred_token)
+      execute(
+        method: 'setUsersClaimAmounts',
+        args: [
+          user_addresses,
+          amounts.map { |amount| from_float_to_big_number(amount, 18).to_s },
           preferred_token,
         ])
     end
