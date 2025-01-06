@@ -61,6 +61,7 @@ class TournamentGroup < ApplicationRecord
 
     errors.add(:streaks_config, 'streaks config must have token addresses') unless streaks_config[:token_addresses].present? && streaks_config[:token_addresses].is_a?(Array)
     errors.add(:streaks_config, 'streaks config must have values') unless streaks_config[:values].present? && streaks_config[:values].is_a?(Array) && streaks_config[:values].all? { |v| v.to_f > 0 }
+    errors.add(:streaks_config, 'streaks config starts_at must be an integer') if streaks_config[:starts_at].present? && !streaks_config[:starts_at].is_a?(Integer)
   end
 
   def network_id

@@ -23,13 +23,18 @@ class PortfolioStreakCalculatorService
     streaks_values = tournament_group.streaks_config["values"]
 
     action_events.select! { |action_event| market_ids.include?(action_event[:market_id]) }
-    return empty_streak(streaks_values) if action_events.empty?
+    if tournament_group.streaks_config['starts_at'].present?
+      action_events.select! { |action_event| action_event[:timestamp] >= tournament_group.streaks_config['starts_at'] }
+    end
+
+    return empty_streak(tournament_group.streaks_config) if action_events.empty?
 
     streak = {
       streaks: 0,
       claimed: 0,
       to_claim: 0,
-      values: []
+      values: [],
+      tokens: tournament_group.streaks_config['token_addresses']
     }
 
     # creating array of all days since first action
@@ -110,7 +115,7 @@ class PortfolioStreakCalculatorService
       streaks: 0,
       claimed: 0,
       to_claim: 0,
-      values: streaks_config.each_with_index.map do |value, index|
+      values: streaks_config['values'].each_with_index.map do |value, index|
         {
           date: DateTime.now.to_date + index.days,
           value: value,
@@ -119,7 +124,8 @@ class PortfolioStreakCalculatorService
           is_streak_end: false,
           pending: index == 0
         }
-      end
+      end,
+      tokens: streaks_config['token_addresses']
     }
   end
 end
