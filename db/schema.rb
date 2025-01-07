@@ -84,6 +84,21 @@ ActiveRecord::Schema.define(version: 2024_12_30_173031) do
     t.index ["timestamp"], name: "index_activities_on_timestamp"
   end
 
+  create_table "claims", force: :cascade do |t|
+    t.string "network_id", null: false
+    t.string "wallet_address", null: false
+    t.float "amount", null: false
+    t.datetime "recorded_at", precision: 6
+    t.boolean "claimed", default: false
+    t.string "transaction_hash"
+    t.string "claim_type", null: false
+    t.jsonb "data"
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.string "receiver_address"
+    t.string "token_address"
+  end
+
   create_table "comments", force: :cascade do |t|
     t.text "body", null: false
     t.bigint "user_id", null: false
@@ -280,6 +295,8 @@ ActiveRecord::Schema.define(version: 2024_12_30_173031) do
     t.integer "users_count", default: 0
     t.string "symbol"
     t.jsonb "admins", default: []
+    t.boolean "streaks_enabled", default: false
+    t.jsonb "streaks_config", default: {}
     t.string "og_image_url"
     t.string "og_theme"
     t.index ["slug"], name: "index_tournament_groups_on_slug", unique: true
@@ -311,7 +328,7 @@ ActiveRecord::Schema.define(version: 2024_12_30_173031) do
     t.boolean "published", default: false
     t.boolean "comments_enabled", default: true
     t.string "metadata_url"
-    t.string "og_image_url"
+    t.boolean "computed_claims", default: false
     t.string "avatar_url"
     t.string "og_image_url"
     t.index ["slug"], name: "index_tournaments_on_slug", unique: true

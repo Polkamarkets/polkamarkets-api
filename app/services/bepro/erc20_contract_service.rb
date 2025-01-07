@@ -36,6 +36,8 @@ module Bepro
     end
 
     def token_info
+      return nil if contract_address.blank? || api_url.blank?
+
       {
         name: name,
         address: contract_address,
