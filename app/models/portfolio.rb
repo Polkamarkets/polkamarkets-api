@@ -40,18 +40,30 @@ class Portfolio < ApplicationRecord
   def action_events(refresh: false)
     return @market_actions if @market_actions.present? && !refresh
 
-    @market_actions ||=
-      Rails.cache.fetch("portfolios:network_#{network_id}:#{eth_address}:actions", force: refresh) do
-        actions = Bepro::PredictionMarketContractService.new(network_id: network_id).get_action_events(address: eth_address)
-        return actions if aliases.blank?
+    cache_key = "portfolios:network_#{network_id}:#{eth_address}:actions"
 
-        # fetching actions for aliases and merging with main address
-        aliases.each do |address|
-          actions += Bepro::PredictionMarketContractService.new(network_id: network_id).get_action_events(address: address)
-        end
+    actions = Rails.cache.read(cache_key) || []
 
-        actions.sort_by { |action| action[:timestamp] }
+    if actions.blank? || refresh
+      addresses = [eth_address] + aliases
+      addresses.each do |address|
+        last_block_number = actions
+          .select { |action| action[:address].downcase == address.downcase }
+          .max_by { |action| action[:block_number] }&.dig(:block_number) || 0
+
+        new_actions = Bepro::PredictionMarketContractService.new(network_id: network_id).get_action_events(
+          address: address,
+          from_block: last_block_number
+        )
+
+        actions += new_actions
       end
+
+      actions = actions.uniq.sort_by { |action| action[:block_number] }
+      Rails.cache.write(cache_key, actions)
+    end
+
+    actions
   end
 
   def burn_action_events(refresh: false)
