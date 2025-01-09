@@ -221,6 +221,7 @@ module Bepro
             outcome_id: i,
             price: price,
             timestamp: event['returnValues']['timestamp'].to_i,
+            block_number: event['blockNumber']
           }
         end
       end
@@ -228,13 +229,15 @@ module Bepro
       events
     end
 
-    def get_price_events(market_id)
+    def get_price_events(market_id, from_block: nil, to_block: nil)
       if version > 1
         events = get_events(
           event_name: 'MarketOutcomeShares',
           filter: {
             marketId: market_id.to_s,
-          }
+          },
+          from_block: from_block,
+          to_block: to_block
         )
 
         translate_market_outcome_shares_to_prices(events, market_id)
@@ -243,7 +246,9 @@ module Bepro
           event_name: 'MarketOutcomePrice',
           filter: {
             marketId: market_id.to_s,
-          }
+          },
+          from_block: from_block,
+          to_block: to_block
         )
 
         events.map do |event|
@@ -252,6 +257,7 @@ module Bepro
             outcome_id: event['returnValues']['outcomeId'].to_i,
             price: from_big_number_to_float(event['returnValues']['value']),
             timestamp: event['returnValues']['timestamp'].to_i,
+            block_number: event['blockNumber']
           }
         end
       end
