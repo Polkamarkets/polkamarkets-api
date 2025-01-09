@@ -1,5 +1,5 @@
 class FeedService
-  attr_accessor :address, :aliases, :market, :network_id, :actions, :markets
+  attr_accessor :address, :portfolio, :market, :network_id, :actions, :markets
 
   FEED_ACTIONS = [
     'buy',
@@ -15,41 +15,25 @@ class FeedService
     raise 'cannot initialize FeedService with address + market_id' if address.present? && market_id.present?
 
     @address = address
-    @aliases = address.blank? ? [] : User.where('lower(wallet_address) = ?', address.downcase).first&.aliases || []
+    @portfolio = Portfolio.find_or_create_by!(eth_address: address.downcase, network_id: network_id) if address.present?
     @market = Market.find_by!(eth_market_id: market_id, network_id: network_id) if market_id.present?
     @network_id = network_id
+  end
+
+  def fetch_actions
+    if market.present?
+      market.action_events(refresh: true)
+    else
+      portfolio.action_events(refresh: true)
+    end
   end
 
   def actions
     return @_actions if @_actions.present?
 
-    @_actions = Bepro::PredictionMarketContractService.new(network_id: network_id)
-      .get_action_events(address: address, market_id: market&.eth_market_id)
+    @_actions = fetch_actions
       .sort_by { |a| -a[:timestamp] }
       .first(LIMIT)
-
-    return @_actions if aliases.blank?
-
-    # adding aliases actions to user's actions
-    @_actions += aliases_actions
-    @_actions.sort_by! { |a| -a[:timestamp] }
-  end
-
-  def aliases_actions
-    return [] if aliases.blank?
-    return @_aliases_actions if @_aliases_actions.present?
-
-    aliases_actions = aliases.map do |alias_address|
-      Bepro::PredictionMarketContractService.new(network_id: network_id)
-        .get_action_events(address: alias_address, market_id: market&.eth_market_id)
-        .sort_by { |a| -a[:timestamp] }
-        .first(LIMIT)
-    end.flatten
-
-    # replacing user's address with alias in actions
-    aliases_actions.each { |action| action[:address] = address }
-
-    @_aliases_actions = aliases_actions.sort_by { |a| -a[:timestamp] }
   end
 
   def vote_actions
