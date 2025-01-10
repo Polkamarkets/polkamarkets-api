@@ -309,9 +309,27 @@ class Market < ApplicationRecord
   end
 
   def market_prices(refresh: false)
-    Rails.cache.fetch("markets:network_#{network_id}:#{eth_market_id}:events:price", force: refresh) do
-      Bepro::PredictionMarketContractService.new(network_id: network_id).get_price_events(eth_market_id)
+    cache_key = "markets:network_#{network_id}:#{eth_market_id}:events:prices"
+
+    prices = Rails.cache.read(cache_key) || []
+
+    if refresh || prices.blank?
+      # fetching latest prices starting from the last price block number
+      last_block_number = prices.max_by { |price| price[:block_number] }&.dig(:block_number) || 0
+
+      new_prices =
+        Bepro::PredictionMarketContractService.new(network_id: network_id).get_price_events(
+          eth_market_id,
+          from_block: last_block_number
+        )
+
+      prices += new_prices
+      prices = prices.uniq.sort_by { |price| price[:timestamp] }
+
+      Rails.cache.write(cache_key, prices)
     end
+
+    prices
   end
 
   def outcome_prices(timeframe, candles: 12, refresh: false, end_at_resolved_at: false)
@@ -342,14 +360,27 @@ class Market < ApplicationRecord
   def action_events(address: nil, refresh: false)
     return [] if eth_market_id.blank?
 
-    # TODO: review caching both globally and locally
+    cache_key = "markets:network_#{network_id}:#{eth_market_id}:actions"
 
-    market_actions =
-      Rails.cache.fetch("markets:network_#{network_id}:#{eth_market_id}:actions", force: refresh) do
-        Bepro::PredictionMarketContractService.new(network_id: network_id).get_action_events(market_id: eth_market_id)
-      end
+    actions = Rails.cache.read(cache_key) || []
 
-    market_actions.select do |action|
+    if refresh || actions.blank?
+      # fetching latest actions starting from the last action block number
+      last_block_number = actions.max_by { |action| action[:block_number] }&.dig(:block_number) || 0
+
+      new_actions =
+        Bepro::PredictionMarketContractService.new(network_id: network_id).get_action_events(
+          market_id: eth_market_id,
+          from_block: last_block_number
+        )
+
+      actions += new_actions
+      actions = actions.uniq.sort_by { |action| action[:block_number] }
+
+      Rails.cache.write(cache_key, actions)
+    end
+
+    actions.select do |action|
       address.blank? || action[:address].downcase == address.downcase
     end
   end

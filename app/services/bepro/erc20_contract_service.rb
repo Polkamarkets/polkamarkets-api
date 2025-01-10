@@ -66,13 +66,15 @@ module Bepro
         call(method: 'symbol')
     end
 
-    def transfer_events(from: nil, to: nil)
+    def transfer_events(from: nil, to: nil, from_block: nil, to_block: nil)
       events = get_events(
         event_name: 'Transfer',
         filter: {
           from: from,
           to: to
-        }
+        },
+        from_block: from_block,
+        to_block: to_block
       )
 
       events.map do |event|
@@ -85,12 +87,22 @@ module Bepro
       end
     end
 
-    def burn_events(from: nil)
-      transfer_events(from: from, to: '0x0000000000000000000000000000000000000000')
+    def burn_events(from: nil, from_block: nil, to_block: nil)
+      transfer_events(
+        from: from,
+        to: '0x0000000000000000000000000000000000000000',
+        from_block: from_block,
+        to_block: to_block
+      )
     end
 
-    def mint_events(to: nil)
-      transfer_events(from: '0x0000000000000000000000000000000000000000', to: to)
+    def mint_events(to: nil, from_block: nil, to_block: nil)
+      transfer_events(
+        from: '0x0000000000000000000000000000000000000000',
+        to: to,
+        from_block: from_block,
+        to_block: to_block
+      )
     end
   end
 end
