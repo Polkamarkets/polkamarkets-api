@@ -43,6 +43,11 @@ default: &default
     cache_ttl_seconds: <%= ENV["ETHEREUM_CACHE_TTL"] %>
     voting_delta: <%= ENV["ETHEREUM_VOTING_DELTA"] || 3 %>
     blacklist: <%= ENV["ETHEREUM_BLACKLIST"].to_s.split(',') %>
+    tournament_blacklists: <% ENV["ETHEREUM_BLACKLIST_TOURNAMENT_IDS"].to_s.split(',') do |tournament_id| %>
+      "<%= tournament_id %>":
+        earnings_eur: <%= ENV["ETHEREUM_BLACKLIST_TOURNAMENT_#{tournament_id}_EARNINGS_EUR"].to_s.split(',') %>
+        claim_winnings_count: <%= ENV["ETHEREUM_BLACKLIST_TOURNAMENT_#{tournament_id}_CLAIM_WINNINGS_COUNT"].to_s.split(',') %>
+    <% end %>
     bundler_url: <%= ENV["ETHEREUM_BUNDLER_URL"] %>
     bundler_entry_point: "<%= ENV["ETHEREUM_BUNDLER_ENTRY_POINT"].to_s %>"
     bundler_pimlico_url: <%= ENV["ETHEREUM_BUNDLER_PIMLICO_URL"] %>

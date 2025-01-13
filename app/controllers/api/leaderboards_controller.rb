@@ -48,6 +48,17 @@ module Api
         sort_params.unshift(params[:rank_by].to_sym)
       end
 
+      if tournament_leaderboard?
+        # removing blacklisted users from the leaderboard
+        blacklist = Rails.application.config_for(:ethereum).dig(
+          :tournament_blacklists,
+          params[:tournament_id].to_s.to_sym,
+          sort_params.first.to_sym,
+        ) || []
+
+        leaderboard.select! { |user| !blacklist.include?(user[:user]) }
+      end
+
       leaderboard.sort_by! do |user|
         sort_params.map { |param| -user[param] }
       end
