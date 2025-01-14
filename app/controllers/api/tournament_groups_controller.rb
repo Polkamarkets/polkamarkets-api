@@ -184,7 +184,7 @@ module Api
     end
 
     def base_request_ttl
-      1.minute
+      (Rails.application.config_for(:cache).dig(:base_request_tournament_groups_ttl) || 300).to_i.seconds
     end
 
     def tournament_group_params
