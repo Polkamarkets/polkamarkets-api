@@ -49,6 +49,9 @@ module Api
     def show_markets
       tournament_group = TournamentGroup.friendly.find(params[:id])
 
+      cached_response = Rails.cache.read(base_request_cache_key) if base_request?
+      return render json: cached_response, status: :ok if cached_response
+
       markets = tournament_group.markets
         .includes(:outcomes)
         .includes(:tournaments)
@@ -64,6 +67,16 @@ module Api
       end
 
       markets = markets.select { |market| market.state == params[:state] } if params[:state]
+
+      if base_request?
+        cached_response = markets.map do |market|
+          MarketSerializer.new(market, hide_tournament_markets: true).as_json
+        end
+
+        Rails.cache.write(base_request_cache_key, cached_response, expires_in: base_request_ttl)
+
+        return render json: cached_response, status: :ok
+      end
 
       render json: markets,
         simplified_price_charts: !!params[:show_price_charts],
@@ -155,6 +168,18 @@ module Api
     end
 
     private
+
+    def base_request_cache_key
+      "api:tournament_groups:#{params[:id]}:markets"
+    end
+
+    def base_request?
+      serializable_scope.blank? && !params[:show_price_charts] && params[:publish_status].blank?
+    end
+
+    def base_request_ttl
+      1.minute
+    end
 
     def tournament_group_params
       params.require(:land).permit(
