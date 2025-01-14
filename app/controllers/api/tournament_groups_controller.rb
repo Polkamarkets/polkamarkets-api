@@ -49,8 +49,12 @@ module Api
     def show_markets
       tournament_group = TournamentGroup.friendly.find(params[:id])
 
-      cached_response = Rails.cache.read(base_request_cache_key) if base_request?
-      return render json: cached_response, status: :ok if cached_response
+      compressed_response = Rails.cache.read(base_request_cache_key) if base_request?
+      if compressed_response
+        cached_response = Zlib::Inflate.inflate(compressed_response)
+
+        return render json: cached_response, status: :ok
+      end
 
       markets = tournament_group.markets
         .includes(:outcomes)
@@ -73,7 +77,9 @@ module Api
           MarketSerializer.new(market, hide_tournament_markets: true).as_json
         end
 
-        Rails.cache.write(base_request_cache_key, cached_response, expires_in: base_request_ttl)
+        # compress the response to save cache space
+        compressed_response = Zlib::Deflate.deflate(cached_response.to_json, Zlib::BEST_COMPRESSION)
+        Rails.cache.write(base_request_cache_key, compressed_response, expires_in: base_request_ttl)
 
         return render json: cached_response, status: :ok
       end
