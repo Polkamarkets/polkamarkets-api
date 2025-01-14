@@ -170,7 +170,7 @@ module Api
     private
 
     def base_request_cache_key
-      "api:tournament_groups:#{params[:id]}:markets"
+      "api:tournament_groups:#{params[:id]}:markets:#{params[:state] || 'all'}"
     end
 
     def base_request?
