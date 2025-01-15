@@ -23,8 +23,12 @@ class ChartDataService
   end
 
   def value_at(timestamp)
-    # taking into assumption that price_arr was previously sorted (high -> low)
-    items_arr.find { |item| item[:timestamp] < timestamp }
+    # removing no longer needed items from the price_arr which was previously sorted (high -> low)
+    while items_arr.first && items_arr.first[:timestamp] >= timestamp
+      items_arr.shift
+    end
+
+    items_arr.first
   end
 
   def self.timestamps_for(timeframe, start_timestamp = nil, end_timestamp = nil)
@@ -58,13 +62,14 @@ class ChartDataService
   def values_at_timestamps(timestamps)
     # taking into assumption that price_arr was previously sorted (high -> low)
     values = []
+    default_item = items_arr.last
 
     for timestamp in timestamps do
       item = value_at(timestamp)
 
       if item.blank?
         # no more data backwards - pulling first item and stopping backfill
-        item = items_arr.last
+        item = default_item
         values.push({ value: item[item_key], timestamp: item[:timestamp], date: Time.at(item[:timestamp]) })
         break
       end
