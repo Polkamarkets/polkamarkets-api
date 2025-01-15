@@ -49,6 +49,13 @@ module Api
     def show_markets
       tournament_group = TournamentGroup.friendly.find(params[:id])
 
+      compressed_response = Rails.cache.read(base_request_cache_key) if base_request?
+      if compressed_response
+        cached_response = Zlib::Inflate.inflate(compressed_response)
+
+        return render json: cached_response, status: :ok
+      end
+
       markets = tournament_group.markets
         .includes(:outcomes)
         .includes(:tournaments)
@@ -64,6 +71,18 @@ module Api
       end
 
       markets = markets.select { |market| market.state == params[:state] } if params[:state]
+
+      if base_request?
+        cached_response = markets.map do |market|
+          MarketSerializer.new(market, hide_tournament_markets: true).as_json
+        end
+
+        # compress the response to save cache space
+        compressed_response = Zlib::Deflate.deflate(cached_response.to_json, Zlib::BEST_COMPRESSION)
+        Rails.cache.write(base_request_cache_key, compressed_response, expires_in: base_request_ttl)
+
+        return render json: cached_response, status: :ok
+      end
 
       render json: markets,
         simplified_price_charts: !!params[:show_price_charts],
@@ -155,6 +174,18 @@ module Api
     end
 
     private
+
+    def base_request_cache_key
+      "api:tournament_groups:#{params[:id]}:markets:#{params[:state] || 'all'}"
+    end
+
+    def base_request?
+      serializable_scope.blank? && !params[:show_price_charts] && params[:publish_status].blank?
+    end
+
+    def base_request_ttl
+      (Rails.application.config_for(:cache).dig(:base_request_tournament_groups_ttl) || 300).to_i.seconds
+    end
 
     def tournament_group_params
       params.require(:land).permit(

@@ -24,6 +24,18 @@ class IpfsService
     hash.length == 46 && hash.start_with?('Qm')
   end
 
+  def self.get_ipfs_file_size(hash)
+    uri = hosting_url + hash
+
+    response = HTTP.get(uri)
+
+    unless response.status.success?
+      raise "IpfsService #{response.status} :: #{response.body.to_s}"
+    end
+
+    response.body.to_s.length
+  end
+
   def add_from_url(url)
     file = URI.open(url)
     add(file)

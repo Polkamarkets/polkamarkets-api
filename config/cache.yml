@@ -1,0 +1,11 @@
+default: &default
+  base_request_tournament_groups_ttl: <%= ENV['CACHE_BASE_REQUEST_TOURNAMENT_GROUP_TTL'] %>
+
+production:
+  <<: *default
+
+staging:
+  <<: *default
+
+development:
+  <<: *default
