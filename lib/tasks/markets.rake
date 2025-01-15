@@ -127,7 +127,7 @@ namespace :markets do
 
   desc "refreshes serializer cache of markets"
   task :refresh_serializer_cache, [:symbol] => :environment do |task, args|
-    Market.all.each { |m| m.refresh_serializer_cache! }
+    Market.all.each { |m| m.refresh_serializer_cache! if m.published? }
   end
 
   desc "refreshes markets news"

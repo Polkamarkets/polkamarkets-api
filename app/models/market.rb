@@ -495,6 +495,14 @@ class Market < ApplicationRecord
     true
   end
 
+  def refresh_serializer_cache!(queue: 'default')
+    Cache::MarketCacheSerializerRefreshWorker.set(queue: queue).perform_async(id)
+  end
+
+  def refresh_serializer_cache_sync!
+    Cache::MarketCacheSerializerRefreshWorker.new.perform(id)
+  end
+
   def refresh_news!(queue: 'default')
     Cache::MarketNewsWorker.set(queue: queue).perform_async(id)
   end
@@ -636,12 +644,6 @@ class Market < ApplicationRecord
         .flatten.uniq
         .select { |market| market.id != id && market.published? }.first(5)
     end
-  end
-
-  def refresh_serializer_cache!
-    Cache::MarketCacheSerializerDeleteWorker.new.perform(id)
-    # triggering a serializer action to set cache
-    MarketSerializer.new(self).as_json
   end
 
   def admins
