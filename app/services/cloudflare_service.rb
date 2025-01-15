@@ -33,11 +33,33 @@ class CloudflareService
         requireSignedURLs: false
       })
 
-    unless response.status.success?
-      raise "Cloudflare #{response.status} :: #{response.body.to_s}"
-    end
+    parse_cloudflare_response(response)
+  end
 
-    JSON.parse(response.body.to_s)
+  def get_image(image_id)
+    uri = cloudflare_api_url + "images/v1/#{image_id}"
+
+    response = HTTP
+      .headers("Authorization" => "Bearer #{api_token}")
+      .get(uri)
+
+    parse_cloudflare_response(response)
+  end
+
+  def get_image_variant_sizes(image_id, variants: [])
+    image_details = get_image(image_id)
+
+    image_details['result']['variants'].map do |variant|
+      variant_name = variant.split('/').last
+      next if variants.present? && !variants.include?(variant_name)
+
+      variant_response = HTTP.get(variant)
+      variant_size = variant_response.body.to_s.length
+      [
+        variant_name,
+        variant_size
+      ]
+    end.compact.to_h
   end
 
   def delete_image_from_url(image_url)
@@ -50,16 +72,30 @@ class CloudflareService
       .headers("Authorization" => "Bearer #{api_token}")
       .delete(uri)
 
-    unless response.status.success?
-      raise "Cloudflare #{response.status} :: #{response.body.to_s}"
-    end
+    parse_cloudflare_response(response)
+  end
 
-    JSON.parse(response.body.to_s)
+  def get_stats
+    uri = cloudflare_api_url + "images/v1/stats"
+
+    response = HTTP
+      .headers("Authorization" => "Bearer #{api_token}")
+      .get(uri)
+
+    parse_cloudflare_response(response)
   end
 
   private
 
   def cloudflare_api_url
     "https://api.cloudflare.com/client/v4/accounts/#{account_id}/"
+  end
+
+  def parse_cloudflare_response(response)
+    unless response.status.success?
+      raise "Cloudflare #{response.status} :: #{response.body.to_s}"
+    end
+
+    JSON.parse(response.body.to_s)
   end
 end
