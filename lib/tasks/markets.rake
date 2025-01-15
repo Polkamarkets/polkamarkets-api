@@ -125,6 +125,11 @@ namespace :markets do
     Market.all.each { |m| m.refresh_cache!(queue: 'low') if m.should_refresh_cache? }
   end
 
+  desc "refreshes serializer cache of markets"
+  task :refresh_serializer_cache, [:symbol] => :environment do |task, args|
+    Market.all.each { |m| m.refresh_serializer_cache! }
+  end
+
   desc "refreshes markets news"
   task :refresh_news, [:symbol] => :environment do |task, args|
     Market.all.each { |m| m.refresh_news!(queue: 'low') }
