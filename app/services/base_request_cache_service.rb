@@ -12,12 +12,16 @@ class BaseRequestCacheService
     decompress_data(data) if data
   end
 
-  def refresh_markets(state: nil)
-    markets = model.markets.includes(:outcomes).includes(:tournaments).published
-    markets = markets.to_a.select { |market| market.state == state } if state
+  def refresh_markets
+    markets = model.markets.includes(:outcomes).includes(:tournaments).published.to_a
 
-    serialized_markets = ActiveModelSerializers::SerializableResource.new(markets).as_json
-    Rails.cache.write(cache_key(state), compress_data(serialized_markets), expires_in: cache_ttl)
+    states = [nil, 'open', 'closed', 'resolved']
+    states.each do |state|
+      serialized_markets = ActiveModelSerializers::SerializableResource.new(
+        state ? markets.select { |m| m.state == state } : markets,
+      ).as_json
+      Rails.cache.write(cache_key(state), compress_data(serialized_markets), expires_in: cache_ttl)
+    end
   end
 
   private
