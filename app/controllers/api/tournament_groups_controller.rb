@@ -73,9 +73,7 @@ module Api
       markets = markets.select { |market| market.state == params[:state] } if params[:state]
 
       if base_request?
-        cached_response = markets.map do |market|
-          MarketSerializer.new(market, hide_tournament_markets: true).as_json
-        end
+        cached_response = ActiveModel::SerializableResource.new(markets).as_json
 
         # compress the response to save cache space
         compressed_response = Zlib::Deflate.deflate(cached_response.to_json, Zlib::BEST_COMPRESSION)
