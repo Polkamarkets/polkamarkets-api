@@ -53,4 +53,13 @@ namespace :cache do
       end
     end
   end
+
+  desc "refresh base requests cache"
+  task :refresh_base_requests, [:symbol] => :environment do |task, args|
+    Rails.application.config_for(:ethereum).network_ids.map do |network_id|
+      TournamentGroup.where(network_id: network_id).each do |tournament_group|
+        Cache::BaseRequestWorker.perform_async('TournamentGroup', tournament_group.id)
+      end
+    end
+  end
 end
