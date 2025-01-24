@@ -92,8 +92,7 @@ class MarketOutcome < ApplicationRecord
       force: refresh
     ) do
       outcome_prices = market.market_prices(refresh: refresh).select do |price|
-        price[:timestamp] < market.expires_at.to_i
-        price[:outcome_id] == eth_market_id
+        price[:outcome_id] == eth_market_id && price[:timestamp] < market.expires_at.to_i
       end
 
       outcome_prices.blank? ? nil : outcome_prices.last[:price]
