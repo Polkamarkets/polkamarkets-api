@@ -21,7 +21,7 @@ class GoogleSpreadsheetsService
 
     @service.authorization = Google::Auth::ServiceAccountCredentials.make_creds(
       json_key_io: File.open(CREDENTIALS_PATH),
-      scope: Google::Apis::SheetsV4::AUTH_SPREADSHEETS_READONLY
+      scope: Google::Apis::SheetsV4::AUTH_SPREADSHEETS
     )
   end
 
@@ -29,5 +29,11 @@ class GoogleSpreadsheetsService
     range = "#{spreadsheet_tab}!#{range}"
     response = service.get_spreadsheet_values spreadsheet_id, range
     response.values
+  end
+
+  def write_spreadsheet(spreadsheet_id, spreadsheet_tab, range, values)
+    range = "#{spreadsheet_tab}!#{range}"
+    value_range = Google::Apis::SheetsV4::ValueRange.new(values: values)
+    service.update_spreadsheet_value(spreadsheet_id, range, value_range, value_input_option: "RAW")
   end
 end
