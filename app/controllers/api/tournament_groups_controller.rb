@@ -66,7 +66,7 @@ module Api
         markets = markets.published
       end
 
-      markets = markets.select { |market| market.state == params[:state] } if params[:state]
+      markets = markets.select { |market| market.state == params[:state] } if params[:state].present? && params[:state] != 'all'
 
       # base request not cached, enqueue worker
       Cache::BaseRequestWorker.perform_async('TournamentGroup', tournament_group.id) if base_request?
