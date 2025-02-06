@@ -1,4 +1,6 @@
 class EtherscanService
+  include BigNumberHelper
+
   attr_accessor :network_id
 
   def initialize(network_id)
@@ -23,6 +25,12 @@ class EtherscanService
     request_etherscan(uri)
   end
 
+  def account_balance(address)
+    uri = etherscan_url + "/api?module=account&action=balance&address=#{address}&tag=latest&apikey=#{api_key}"
+    res = request_etherscan(uri, true)
+
+    from_big_number_to_float(res)
+  end
 
   def logs(contract_address, topics, from_block: nil, to_block: nil, fetch_all: false)
     uri = etherscan_url + "/api?module=logs&action=getLogs&address=#{contract_address}&apikey=#{api_key}"
