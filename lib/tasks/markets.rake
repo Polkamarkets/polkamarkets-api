@@ -112,7 +112,7 @@ namespace :markets do
     Rails.application.config_for(:ethereum).network_ids.each do |network_id|
       # fetching latest actions
       Market.includes(:tournament_groups).where(og_image_url: nil).each do |market|
-        next if market.og_theme.blank? || !market.published?
+        next if market.og_theme.blank? || !market.published? || market.resolved?
 
         # updating og image
         market.update_og_image
