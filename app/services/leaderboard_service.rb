@@ -17,11 +17,20 @@ class LeaderboardService
 
     actions.each_with_index do |action, index|
       address = action[:address]
-      users[address] ||= { earnings: 0, volume: 0, holdings: {}, won_prediction: false, transactions: 0 }
+      users[address] ||= {
+        earnings: 0,
+        volume: 0,
+        holdings: {},
+        won_prediction: false,
+        lost_prediction: false,
+        transactions: 0,
+        buys: 0
+      }
       users[address][:transactions] += 1
 
       case action[:action]
       when 'buy'
+        users[address][:buys] += 1
         users[address][:earnings] -= action[:value]
         users[address][:volume] += action[:value]
         users[address][:holdings][action[:outcome_id]] ||= { shares: 0, shares_total: 0, shares_value: 0, value: 0 }
@@ -62,6 +71,7 @@ class LeaderboardService
         earnings: data[:earnings] + holdings_value,
         volume: data[:volume],
         transactions: data[:transactions],
+        buys: data[:buys],
         holdings_value: data[:holdings].sum do |outcome_id, holdings|
           !market_is_resolved ? holdings_value : 0
         end,
@@ -76,6 +86,11 @@ class LeaderboardService
           data[:holdings][market_resolved_outcome_id][:shares] > 1 &&
           (holdings_count <= 1 || holdings_most_bought_outcome_id == market_resolved_outcome_id)
         result[:won_prediction] = true
+      elsif market_is_resolved &&
+        data[:holdings][holdings_most_bought_outcome_id].present? &&
+        data[:holdings][holdings_most_bought_outcome_id][:shares] > 1 &&
+        (holdings_most_bought_outcome_id != market_resolved_outcome_id)
+        result[:lost_prediction] = true
       end
 
       result
@@ -137,14 +152,26 @@ class LeaderboardService
   def merge_market_leaderboards(market_leaderboards)
     leaderboard = market_leaderboards.reduce({}) do |acc, market_leaderboard|
       market_leaderboard.each do |user, data|
-        acc[user] ||= { won_predictions: 0, earnings: 0, volume: 0, holdings_value: 0, holdings_cost: 0, winnings: 0, transactions: 0 }
+        acc[user] ||= {
+          won_predictions: 0,
+          lost_predictions: 0,
+          earnings: 0,
+          volume: 0,
+          holdings_value: 0,
+          holdings_cost: 0,
+          winnings: 0,
+          transactions: 0,
+          buys: 0
+        }
         acc[user][:won_predictions] += data[:won_prediction] ? 1 : 0
+        acc[user][:lost_predictions] += data[:lost_prediction] ? 1 : 0
         acc[user][:earnings] += data[:earnings]
         acc[user][:volume] += data[:volume]
         acc[user][:holdings_value] += data[:holdings_value]
         acc[user][:holdings_cost] += data[:holdings_cost]
         acc[user][:winnings] += data[:winnings]
         acc[user][:transactions] += data[:transactions]
+        acc[user][:buys] += data[:buys]
       end
 
       acc
@@ -154,21 +181,25 @@ class LeaderboardService
   def sum_leaderboard_data(leaderboard)
     leaderboard.reduce({
       won_predictions: 0,
+      lost_predictions: 0,
       earnings: 0,
       volume: 0,
       holdings_value: 0,
       holdings_cost: 0,
       winnings: 0,
       transactions: 0,
+      buys: 0,
       users: leaderboard.count
     }) do |acc, data|
       acc[:won_predictions] += data[1][:won_predictions]
+      acc[:lost_predictions] += data[1][:lost_predictions]
       acc[:earnings] += data[1][:earnings]
       acc[:volume] += data[1][:volume]
       acc[:holdings_value] += data[1][:holdings_value]
       acc[:holdings_cost] += data[1][:holdings_cost]
       acc[:winnings] += data[1][:winnings]
       acc[:transactions] += data[1][:transactions]
+      acc[:buys] += data[1][:buys]
 
       acc
     end
@@ -246,7 +277,9 @@ class LeaderboardService
         tvl_liquidity_eur: 0,
         bond_volume: 0,
         claim_winnings_count: data[:won_predictions],
+        lost_winnings_count: data[:lost_predictions],
         transactions: data[:transactions],
+        buys: data[:buys],
         upvotes: 0,
         downvotes: 0,
         malicious: false,
