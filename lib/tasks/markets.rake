@@ -111,7 +111,7 @@ namespace :markets do
   task :update_og_images, [:symbol] => :environment do |task, args|
     Rails.application.config_for(:ethereum).network_ids.each do |network_id|
       # fetching latest actions
-      Market.includes(:tournament_groups).where(og_image_url: nil).each do |market|
+      Market.includes(:tournament_groups).where(network_id: network_id).each do |market|
         next if market.og_theme.blank? || !market.published? || market.resolved?
 
         # updating og image
