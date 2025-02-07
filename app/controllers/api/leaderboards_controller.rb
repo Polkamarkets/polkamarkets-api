@@ -87,6 +87,9 @@ module Api
     end
 
     def get_user_leaderboard(network_id, username)
+      # no need for pagination in user leaderboard requests
+      params[:paginate] = false
+
       leaderboard = get_leaderboard(params[:network_id])
 
       user_leaderboard = leaderboard.find { |l| l[:user].downcase == username.downcase }
