@@ -130,6 +130,16 @@ namespace :markets do
     Market.all.each { |m| m.refresh_cache!(queue: 'low') if m.should_refresh_cache? }
   end
 
+  desc "refreshes eth cache of markets of a given land"
+  task :refresh_cache_by_land, [:land_id] => :environment do |task, args|
+    tournament_group = TournamentGroup.find_by(slug: args[:land_id])
+    next if tournament_group.blank?
+
+    tournament_group.markets.each do |market|
+      market.refresh_cache!(queue: 'default') if market.should_refresh_cache?
+    end
+  end
+
   desc "refreshes serializer cache of markets"
   task :refresh_serializer_cache, [:symbol] => :environment do |task, args|
     Market.all.each { |m| m.refresh_serializer_cache!(queue: 'low') if m.published? }
