@@ -108,11 +108,16 @@ namespace :markets do
   end
 
   desc "updates markets og images"
-  task :update_og_images, [:symbol] => :environment do |task, args|
+  task :update_og_images, [:og_theme] => :environment do |task, args|
     Rails.application.config_for(:ethereum).network_ids.each do |network_id|
+      og_theme = args[:og_theme]
+
       # fetching latest actions
       Market.includes(:tournament_groups).where(network_id: network_id).each do |market|
-        next if market.og_theme.blank? || !market.published? || market.resolved?
+        next if market.og_theme.blank? ||
+          (og_theme.present? && market.og_theme != og_theme) ||
+          !market.published? ||
+          market.resolved?
 
         # updating og image
         market.update_og_image
@@ -123,6 +128,16 @@ namespace :markets do
   desc "refreshes eth cache of markets"
   task :refresh_cache, [:symbol] => :environment do |task, args|
     Market.all.each { |m| m.refresh_cache!(queue: 'low') if m.should_refresh_cache? }
+  end
+
+  desc "refreshes eth cache of markets of a given land"
+  task :refresh_cache_by_land, [:land_id] => :environment do |task, args|
+    tournament_group = TournamentGroup.find_by(slug: args[:land_id])
+    next if tournament_group.blank?
+
+    tournament_group.markets.each do |market|
+      market.refresh_cache!(queue: 'default') if market.should_refresh_cache?
+    end
   end
 
   desc "refreshes serializer cache of markets"

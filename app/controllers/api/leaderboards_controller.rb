@@ -26,17 +26,16 @@ module Api
 
     def leaderboard_record
       @leaderboard_record ||= tournament_leaderboard? ?
-        Tournament.find(params[:tournament_id]) :
-        TournamentGroup.find(params[:land_id] || params[:tournament_group_id])
+        Tournament.friendly.find(params[:tournament_id]) :
+        TournamentGroup.friendly.find(params[:land_id] || params[:tournament_group_id])
     end
 
     def get_leaderboard(network_id, user = nil)
-      leaderboard = tournament_leaderboard? ?
-        LeaderboardService.new.get_tournament_leaderboard(network_id, params[:tournament_id]) :
-        LeaderboardService.new.get_tournament_group_leaderboard(network_id, params[:land_id] || params[:tournament_group_id])
-
-      # sorting leaderboard, when tournament param is present
       raise "tournament network does not match" if leaderboard_record.network_id.to_i != network_id.to_i
+
+      leaderboard = tournament_leaderboard? ?
+        LeaderboardService.new.get_tournament_leaderboard(network_id, leaderboard_record.id) :
+        LeaderboardService.new.get_tournament_group_leaderboard(network_id, leaderboard_record.id)
 
       # sorting params are comma separated
       rank_by = leaderboard_record.rank_by
@@ -52,7 +51,7 @@ module Api
         # removing blacklisted users from the leaderboard
         blacklist = Rails.application.config_for(:ethereum).dig(
           :tournament_blacklists,
-          params[:tournament_id].to_s.to_sym,
+          leaderboard_record.id.to_s.to_sym,
           sort_params.first.to_sym,
         ) || []
 
@@ -87,6 +86,9 @@ module Api
     end
 
     def get_user_leaderboard(network_id, username)
+      # no need for pagination in user leaderboard requests
+      params[:paginate] = false
+
       leaderboard = get_leaderboard(params[:network_id])
 
       user_leaderboard = leaderboard.find { |l| l[:user].downcase == username.downcase }

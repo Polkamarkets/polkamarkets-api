@@ -29,7 +29,7 @@ module Api
         markets = markets.where(network_id: params[:network_id])
       end
 
-      markets = markets.select { |market| market.state == params[:state] } if params[:state]
+      markets = markets.select { |market| market.state == params[:state] } if params[:state].present? && params[:state] != 'all'
 
       if params[:token].present?
         markets = markets.select do |market|

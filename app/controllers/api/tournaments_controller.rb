@@ -68,7 +68,7 @@ module Api
         markets = markets.published
       end
 
-      markets = markets.select { |market| market.state == params[:state] } if params[:state]
+      markets = markets.select { |market| market.state == params[:state] } if params[:state].present? && params[:state] != 'all'
 
       render json: markets,
         simplified_price_charts: !!params[:show_price_charts],

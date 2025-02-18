@@ -82,7 +82,8 @@ module Bepro
           from: event['returnValues']['from'],
           to: event['returnValues']['to'],
           value: from_big_number_to_float(event['returnValues']['value'], decimals),
-          block_number: event['blockNumber']
+          block_number: event['blockNumber'],
+          transaction_hash: event['transactionHash']
         }
       end
     end

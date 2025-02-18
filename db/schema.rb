@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2024_12_30_173031) do
+ActiveRecord::Schema.define(version: 2025_02_18_015202) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -79,9 +79,18 @@ ActiveRecord::Schema.define(version: 2024_12_30_173031) do
     t.index ["address"], name: "index_activities_on_address"
     t.index ["market_id", "network_id"], name: "index_activities_on_market_id_and_network_id"
     t.index ["market_id"], name: "index_activities_on_market_id"
+    t.index ["network_id", "market_id", "action", "address"], name: "index_activities_on_network_market_action_address"
+    t.index ["network_id", "market_id", "action", "timestamp", "address"], name: "index_activities_on_network_market_action_timestamp_address"
+    t.index ["network_id", "market_id", "action", "timestamp"], name: "index_activities_on_network_market_action_timestamp"
+    t.index ["network_id", "market_id", "action"], name: "index_activities_on_network_id_and_market_id_and_action"
+    t.index ["network_id", "market_id", "address", "timestamp"], name: "index_activities_on_network_market_address_timestamp"
+    t.index ["network_id", "market_id", "address"], name: "index_activities_on_network_id_and_market_id_and_address"
+    t.index ["network_id", "market_id", "timestamp"], name: "index_activities_on_network_id_and_market_id_and_timestamp"
     t.index ["network_id", "tx_id", "log_index"], name: "index_activities_on_network_id_and_tx_id_and_log_index"
+    t.index ["network_id"], name: "index_activities_on_network_id"
     t.index ["timestamp", "network_id"], name: "index_activities_on_timestamp_and_network_id"
     t.index ["timestamp"], name: "index_activities_on_timestamp"
+    t.index ["tx_id", "network_id"], name: "index_activities_on_tx_id_and_network_id"
   end
 
   create_table "comments", force: :cascade do |t|
