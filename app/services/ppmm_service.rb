@@ -7,10 +7,11 @@ class PpmmService
   end
 
   # Create a new market
-  def create_market(market_id, outcomes, k: 1.0, w: 0.5, fee: 0.02)
+  def create_market(market_id, outcomes, k: 1.0, w: 0.5, r: 1.5, fee: 0.02)
     @markets[market_id] = {
       k: k,
       w: w,
+      r: r,
       fee: fee,
       outcomes: outcomes.map { |id| { id: id, amount: 0, shares: 0 } },
       users: []
@@ -18,18 +19,21 @@ class PpmmService
   end
 
   # Buy shares
-  def buy(user_id, market_id, outcome_id, value, min_shares_to_buy)
+  def buy(user_id, market_id, outcome_id, value, min_shares_to_buy, pm_action: nil)
     market = @markets[market_id]
     outcome = find_outcome(market, outcome_id)
     user = find_or_create_user(market, user_id)
 
     # Calculate shares to buy
     shares_to_buy = calculate_buy_amount(market_id, outcome_id, value)
-    raise "Minimum shares not met" if shares_to_buy < min_shares_to_buy
+    raise "Minimum shares not met: #{shares_to_buy} < #{min_shares_to_buy}" if shares_to_buy < min_shares_to_buy
 
-    probability_before = calculate_probability(market, outcome)
-    probability_after = calculate_probability_after_buy(market, outcome, value)
+    probability_before = calculate_probability(market, outcome, market[:r])
+    probability_after = calculate_probability_after_buy(market, outcome, value, market[:r])
     weighted_probability = calculate_weighted_probability(probability_before, probability_after, market[:w])
+
+    # Calculate shares
+    weight = calculate_weight(weighted_probability, market[:k])
 
     # Update market, outcome, and user
     outcome[:amount] += value
@@ -40,13 +44,15 @@ class PpmmService
     user[:total_bought_shares][outcome_id] = user[:total_bought_shares].fetch(outcome_id, 0) + shares_to_buy
     user[:actions][outcome_id] ||= []
     user[:actions][outcome_id] << { type: :buy, amount: value, shares: shares_to_buy, probability: weighted_probability }
-    puts "User #{user_id} bought #{shares_to_buy.round(2)} shares of outcome #{outcome_id} for $#{value.round(2)} at P=#{weighted_probability.round(2)}"
+    user[:pm_actions][outcome_id] ||= []
+    user[:pm_actions][outcome_id] << pm_action if pm_action.present?
+    puts "User #{user_id} bought #{shares_to_buy.round(2)} shares of outcome #{outcome_id} for $#{value.round(2)} at P=#{weighted_probability.round(5)} and weight=#{weight.round(5)}#{", OP=#{(pm_action['value'] / pm_action['shares']).round(5)} at #{Time.at(pm_action['timestamp']).to_s}" if pm_action.present?}"
 
     shares_to_buy
   end
 
   # Sell shares
-  def sell(user_id, market_id, outcome_id, value, max_shares_to_sell)
+  def sell(user_id, market_id, outcome_id, value, max_shares_to_sell, pm_action: nil)
     market = @markets[market_id]
     outcome = find_outcome(market, outcome_id)
     user = find_user(market, user_id)
@@ -58,9 +64,12 @@ class PpmmService
     # Ensure user has sufficient shares
     raise "User has insufficient shares" if user[:shares][outcome_id].to_f < shares_to_sell
 
-    probability_before = calculate_probability(market, outcome)
-    probability_after = calculate_probability_after_sell(market, outcome, value)
+    probability_before = calculate_probability(market, outcome, market[:r])
+    probability_after = calculate_probability_after_sell(market, outcome, value, market[:r])
     weighted_probability = calculate_weighted_probability(probability_before, probability_after, market[:w])
+
+    # Calculate shares
+    weight = calculate_weight(weighted_probability, market[:k])
 
     # Update market, outcome, and user
     outcome[:amount] -= value
@@ -71,12 +80,14 @@ class PpmmService
     user[:total_sold_shares][outcome_id] = user[:total_sold_shares].fetch(outcome_id, 0) + shares_to_sell
     user[:actions][outcome_id] ||= []
     user[:actions][outcome_id] << { type: :sell, amount: value, shares: shares_to_sell, probability: weighted_probability }
-    puts "User #{user_id} sold #{shares_to_sell.round(2)} shares of outcome #{outcome_id} for $#{value.round(2)} at P=#{weighted_probability.round(2)}"
+    user[:pm_actions][outcome_id] ||= []
+    user[:pm_actions][outcome_id] << pm_action if pm_action.present?
+    puts "User #{user_id} sold #{shares_to_sell.round(2)} shares of outcome #{outcome_id} for $#{value.round(2)} at P=#{weighted_probability.round(5)} and weight=#{weight.round(5)}#{", OP=#{(pm_action['value'] / pm_action['shares']).round(5)} at #{Time.at(pm_action['timestamp']).to_s}" if pm_action.present?}"
 
     shares_to_sell
   end
 
-  def sell_shares(user_id, market_id, outcome_id, shares_to_sell)
+  def sell_shares(user_id, market_id, outcome_id, shares_to_sell, pm_action: nil)
     market = @markets[market_id]
     outcome = find_outcome(market, outcome_id)
     user = find_user(market, user_id)
@@ -87,8 +98,8 @@ class PpmmService
     # Ensure user has sufficient shares
     raise "User has insufficient shares" if user[:shares][outcome_id].to_f < shares_to_sell
 
-    probability_before = calculate_probability(market, outcome)
-    probability_after = calculate_probability_after_sell(market, outcome, proceeds)
+    probability_before = calculate_probability(market, outcome, market[:r])
+    probability_after = calculate_probability_after_sell(market, outcome, proceeds, market[:r])
     weighted_probability = calculate_weighted_probability(probability_before, probability_after, market[:w])
 
     # Update market, outcome, and user
@@ -100,12 +111,14 @@ class PpmmService
     user[:total_sold_shares][outcome_id] = user[:total_sold_shares].fetch(outcome_id, 0) + shares_to_sell
     user[:actions][outcome_id] ||= []
     user[:actions][outcome_id] << { type: :sell, amount: proceeds, shares: shares_to_sell, probability: weighted_probability }
-    puts "User #{user_id} sold #{shares_to_sell.round(2)} shares of outcome #{outcome_id} for $#{proceeds.round(2)} at P=#{weighted_probability.round(2)}"
+    user[:pm_actions][outcome_id] ||= []
+    user[:pm_actions][outcome_id] << pm_action if pm_action.present?
+    puts "User #{user_id} sold #{shares_to_sell.round(2)} shares of outcome #{outcome_id} for $#{proceeds.round(2)} at P=#{weighted_probability.round(5)}#{", OP=#{(pm_action['value'] / pm_action['shares']).round(5)} at #{Time.at(pm_action['timestamp']).to_s}" if pm_action.present?}"
 
     proceeds
   end
 
-  def sell_shares_percentage(user_id, market_id, outcome_id, percentage_to_sell)
+  def sell_shares_percentage(user_id, market_id, outcome_id, percentage_to_sell, pm_action: nil)
     market = @markets[market_id]
     outcome = find_outcome(market, outcome_id)
     user = find_user(market, user_id)
@@ -120,7 +133,7 @@ class PpmmService
     raise "User has insufficient shares" if shares_to_sell > (user[:shares][outcome_id] || 0)
 
     # Use the sell_shares method to handle the selling process
-    sell_shares(user_id, market_id, outcome_id, shares_to_sell)
+    sell_shares(user_id, market_id, outcome_id, shares_to_sell, pm_action: pm_action)
   end
 
   # Calculate buy amount (number of shares for a given value)
@@ -129,8 +142,8 @@ class PpmmService
     outcome = find_outcome(market, outcome_id)
 
     # Calculate weighted probability
-    probability_before = calculate_probability(market, outcome)
-    probability_after = calculate_probability_after_buy(market, outcome, value)
+    probability_before = calculate_probability(market, outcome, market[:r])
+    probability_after = calculate_probability_after_buy(market, outcome, value, market[:r])
     weighted_probability = calculate_weighted_probability(probability_before, probability_after, market[:w])
 
     # Calculate shares
@@ -144,8 +157,8 @@ class PpmmService
     outcome = find_outcome(market, outcome_id)
 
     # Calculate weighted probability
-    probability_before = calculate_probability(market, outcome)
-    probability_after = calculate_probability_after_sell(market, outcome, value)
+    probability_before = calculate_probability(market, outcome, market[:r])
+    probability_after = calculate_probability_after_sell(market, outcome, value, market[:r])
     weighted_probability = calculate_weighted_probability(probability_before, probability_after, market[:w])
 
     # Calculate shares
@@ -186,28 +199,30 @@ class PpmmService
   end
 
   # Calculate the probability of an outcome based on current pool amounts
-  def calculate_probability(market, outcome)
-    total_amount = market[:outcomes].sum { |o| o[:amount] }
+  def calculate_probability(market, outcome, r)
+    total_amount = market[:outcomes].sum { |o| o[:amount] ** r }
     return 1.0 / market[:outcomes].length if total_amount.zero?
 
-    outcome[:amount] / total_amount
+    outcome[:amount] ** r / total_amount
   end
 
   # Calculate the probability after buying
-  def calculate_probability_after_buy(market, outcome, value)
-    total_amount = market[:outcomes].sum { |o| o[:amount] } + value
-    (outcome[:amount] + value) / total_amount
+  def calculate_probability_after_buy(market, outcome, value, r)
+    total_amount = market[:outcomes].sum { |o| (o == outcome ? o[:amount] + value : o[:amount]) ** r }
+    (outcome[:amount] + value) ** r / total_amount
   end
 
   # Calculate the probability after selling
-  def calculate_probability_after_sell(market, outcome, value)
-    total_amount = market[:outcomes].sum { |o| o[:amount] } - value
-    (outcome[:amount] - value) / total_amount
+  def calculate_probability_after_sell(market, outcome, value, r)
+    total_amount = market[:outcomes].sum { |o| (o == outcome ? o[:amount] - value : o[:amount]) ** r }
+    (outcome[:amount] - value) ** r / total_amount
   end
 
   # Calculate the tailored weight for probabilities
   def calculate_weight(probability, k)
-    0.5 + (probability - 0.5) / (1 + k * (probability - 0.5)**2)
+    probability = probability == 1 ? 0.9999 : probability
+    weight = 0.5 + (probability - 0.5) / (1 + k * (probability - 0.5)**2)
+    weight *= 1 / ((1 -  probability ** 4) ** 2)
   end
 
   # Calculate the weighted probability (blend of before and after)
@@ -233,7 +248,8 @@ class PpmmService
         total_bought_shares: {},
         total_sell_amount: {},
         total_sold_shares: {},
-        actions: {}
+        actions: {},
+        pm_actions: {}
       }
       market[:users] << user
     end
@@ -257,9 +273,10 @@ class PpmmService
       puts "Breakdown for Outcome #{outcome_id}"
       # Header with aligned column widths
       puts format(
-        "%-8s | %-8s | %-8s | %-8s | %-10s | %-10s | %-14s | %-14s | %-8s | %-8s | %-8s | %-8s ",
+        "%-8s | %-8s | %-8s | %-8s | %-10s | %-10s | %-14s | %-14s | %-8s | %-8s | %-8s | %-8s | %-8s | %-8s | %-8s ",
         "User ID", "Amount", "Shares", "Share %",
-        "Avg Buy P", "Avg Sell P", "Total Buy Amt", "Total Sell Amt", "Payout", "Received", "Profit", "PnL (%)"
+        "Avg Buy P", "Avg Sell P", "Total Buy Amt", "Total Sell Amt", "Payout", "Received", "Profit", "PnL (%)",
+        "PM Sold", "PM PnL", "PM ABP"
       )
       puts "-" * 150
 
@@ -317,11 +334,25 @@ class PpmmService
         profit = total_received - user_amount
         pnl = total_buy_amount.zero? ? 0 : (profit / total_buy_amount.to_f) * 100
 
+        pm_avg_buy_prob = 0
+        pm_pnl = 0
+        pm_has_sold = false
+
+        if user[:pm_actions][outcome_id].present?
+          pm_total_buy_amount = user[:pm_actions][outcome_id].select { |a| a['action'] == 'buy' }.sum { |a| a['value'] }
+          pm_total_shares = user[:pm_actions][outcome_id].select { |a| a['action'] == 'buy' }.sum { |a| a['shares'] }
+
+          pm_avg_buy_prob = pm_total_buy_amount / pm_total_shares.to_f
+          pm_pnl = (pm_total_shares - pm_total_buy_amount) / pm_total_buy_amount.to_f * 100
+          pm_has_sold = user[:pm_actions][outcome_id].any? { |a| a['action'] == 'sell' }
+        end
+
         # Print user breakdown with aligned formatting
         puts format(
-          "%-8d | %-8.2f | %-8.2f | %-8.2f | %-10.2f | %-10.2f | %-14.2f | %-14.2f | %-8.2f | %-8.2f | %-8.2f | %-8.2f ",
-          user[:id], user_amount, user_shares, share_percentage,
-          avg_buy_prob, avg_sell_prob, total_buy_amount, total_sell_amount, payout_from_pool, total_received, profit, pnl
+          "%-8s | %-8.2f | %-8.2f | %-8.2f | %-10.4f | %-10.4f | %-14.2f | %-14.2f | %-8.2f | %-8.2f | %-8.2f | %-8.2f | %-8s | %-8.2f | %-10.4f",
+          user[:id].to_s.first(8), user_amount, user_shares, share_percentage,
+          avg_buy_prob, avg_sell_prob, total_buy_amount, total_sell_amount, payout_from_pool, total_received, profit, pnl,
+          pm_has_sold ? "X" : "", pm_pnl, pm_avg_buy_prob
         )
 
         # Add to totals for summary
