@@ -242,7 +242,9 @@ module Api
     end
 
     def feed
-      render json: @market.feed, status: :ok
+      market_feed = params[:paginate] ? paginate_array(@market.feed) : @market.feed.first(250)
+
+      render json: market_feed, status: :ok
     end
 
     def accuracy_report

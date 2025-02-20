@@ -20,7 +20,7 @@ module Api
 
       events = allowed_network? ? portfolio.feed_events : []
 
-      render json: events, status: :ok
+      render json: params[:paginate] ? paginate_array(events) : events, status: :ok
     end
 
     def reload
