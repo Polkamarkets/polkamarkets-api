@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2025_02_24_182514) do
+ActiveRecord::Schema.define(version: 2025_02_24_193326) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -373,7 +373,9 @@ ActiveRecord::Schema.define(version: 2025_02_24_182514) do
     t.string "idp"
     t.string "idp_uid"
     t.string "aliases", default: [], array: true
+    t.index ["created_at"], name: "index_users_on_created_at"
     t.index ["slug"], name: "index_users_on_slug", unique: true
+    t.index ["wallet_address"], name: "index_users_on_wallet_address"
   end
 
   create_table "versions", force: :cascade do |t|
