@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2025_02_24_202436) do
+ActiveRecord::Schema.define(version: 2025_02_24_210918) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -76,12 +76,10 @@ ActiveRecord::Schema.define(version: 2025_02_24_202436) do
     t.string "token_address"
     t.integer "log_index"
     t.index ["action", "created_at", "address"], name: "index_activities_on_action_and_created_at_and_address"
-    t.index ["action"], name: "index_activities_on_action"
-    t.index ["address"], name: "index_activities_on_address"
-    t.index ["created_at"], name: "index_activities_on_created_at"
+    t.index ["action", "timestamp", "address"], name: "index_activities_on_action_and_timestamp_and_address"
     t.index ["market_id", "network_id"], name: "index_activities_on_market_id_and_network_id"
-    t.index ["market_id"], name: "index_activities_on_market_id"
-    t.index ["network_id", "market_id", "action"], name: "index_activities_on_network_id_and_market_id_and_action"
+    t.index ["network_id", "token_address", "created_at", "address"], name: "index_activities_on_network_token_created_address"
+    t.index ["network_id", "token_address", "timestamp", "address"], name: "index_activities_on_network_token_timestamp_address"
     t.index ["network_id", "tx_id", "log_index"], name: "index_activities_on_network_id_and_tx_id_and_log_index"
     t.index ["network_id"], name: "index_activities_on_network_id"
     t.index ["timestamp", "network_id"], name: "index_activities_on_timestamp_and_network_id"
