@@ -9,7 +9,7 @@ class FeedService
     'claim_winnings'
   ].freeze
 
-  LIMIT = 250
+  LIMIT = 10000
 
   def initialize(network_id:, address: nil, market_id: nil)
     raise 'cannot initialize FeedService with address + market_id' if address.present? && market_id.present?
