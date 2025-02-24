@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2025_02_24_193326) do
+ActiveRecord::Schema.define(version: 2025_02_24_202436) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -86,6 +86,7 @@ ActiveRecord::Schema.define(version: 2025_02_24_193326) do
     t.index ["network_id"], name: "index_activities_on_network_id"
     t.index ["timestamp", "network_id"], name: "index_activities_on_timestamp_and_network_id"
     t.index ["timestamp"], name: "index_activities_on_timestamp"
+    t.index ["token_address"], name: "index_activities_on_token_address"
     t.index ["tx_id", "network_id"], name: "index_activities_on_tx_id_and_network_id"
   end
 
