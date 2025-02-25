@@ -382,6 +382,7 @@ class Market < ApplicationRecord
       actions = actions.uniq.sort_by { |action| action[:block_number] }
 
       Rails.cache.write(cache_key, actions)
+      GC.start
     end
 
     actions.select do |action|
