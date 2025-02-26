@@ -361,8 +361,15 @@ class Market < ApplicationRecord
     chart_data_service.chart_data_for(timeframe)
   end
 
-  def action_events(address: nil, refresh: false)
+  def action_events(address: nil, refresh: false, from_block: nil)
     return [] if eth_market_id.blank?
+
+    if from_block.present?
+      return Bepro::PredictionMarketContractService.new(network_id: network_id).get_action_events(
+        market_id: eth_market_id,
+        from_block: from_block
+      )
+    end
 
     cache_key = "markets:network_#{network_id}:#{eth_market_id}:actions"
 
@@ -450,9 +457,7 @@ class Market < ApplicationRecord
   def feed(refresh: false)
     return [] if eth_market_id.blank?
 
-    Rails.cache.fetch("markets:network_#{network_id}:#{eth_market_id}:feed", force: refresh) do
-      FeedService.new(market_id: eth_market_id, network_id: network_id).feed_actions
-    end
+    FeedService.new(market_id: eth_market_id, network_id: network_id).fetch_feed(refresh: refresh)
   end
 
   def should_refresh_cache?
