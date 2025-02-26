@@ -9,7 +9,7 @@ module Api
     end
 
     def show
-      user_leaderboard = get_user_leaderboard(params[:network_id], address_from_username || params[:id])
+      user_leaderboard = get_user_leaderboard(params[:network_id], params[:id])
 
       render json: user_leaderboard, status: :ok
     end
@@ -121,7 +121,7 @@ module Api
 
     def user_not_found
       {
-        user: address_from_username || params[:id],
+        user: params[:id],
         username: user_from_username&.username,
         user_image_url: user_from_username&.avatar,
         slug: user_from_username&.slug,
