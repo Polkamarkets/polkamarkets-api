@@ -13,6 +13,8 @@ class Market < ApplicationRecord
 
   after_destroy :destroy_cache!
 
+  before_save :change_featured_at_status
+
   has_many :outcomes, -> { order('eth_market_id ASC, created_at ASC') }, class_name: "MarketOutcome", dependent: :destroy, inverse_of: :market
 
   accepts_nested_attributes_for :outcomes
@@ -819,5 +821,11 @@ class Market < ApplicationRecord
 
   def og_theme
     tournament_groups.first&.og_theme
+  end
+
+  def change_featured_at_status
+    return unless featured_changed?
+
+    self.featured_at = featured? ? DateTime.now : nil
   end
 end
