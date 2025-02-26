@@ -69,6 +69,8 @@ module Api
       end
 
       markets = markets.select { |market| market.state == params[:state] } if params[:state].present? && params[:state] != 'all'
+      # showing featured first
+      markets = markets.sort_by { |m| m.featured ? -1 * m.featured_at.to_i : 1 }
 
       render json: markets,
         simplified_price_charts: !!params[:show_price_charts],

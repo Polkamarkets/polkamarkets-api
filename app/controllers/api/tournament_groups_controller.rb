@@ -67,6 +67,8 @@ module Api
       end
 
       markets = markets.select { |market| market.state == params[:state] } if params[:state].present? && params[:state] != 'all'
+      # showing featured first
+      markets = markets.sort_by { |m| m.featured ? -1 * m.featured_at.to_i : 1 }
 
       # base request not cached, enqueue worker
       Cache::BaseRequestWorker.perform_async('TournamentGroup', tournament_group.id) if base_request?
