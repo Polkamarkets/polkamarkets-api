@@ -80,10 +80,6 @@ ActiveRecord::Schema.define(version: 2025_02_24_220419) do
     t.index ["network_id", "token_address", "timestamp", "address"], name: "index_activities_on_network_token_timestamp_address"
     t.index ["network_id", "tx_id", "log_index"], name: "index_activities_on_network_id_and_tx_id_and_log_index"
     t.index ["network_id"], name: "index_activities_on_network_id"
-    t.index ["timestamp", "network_id"], name: "index_activities_on_timestamp_and_network_id"
-    t.index ["timestamp"], name: "index_activities_on_timestamp"
-    t.index ["token_address"], name: "index_activities_on_token_address"
-    t.index ["tx_id", "network_id"], name: "index_activities_on_tx_id_and_network_id"
   end
 
   create_table "comments", force: :cascade do |t|
