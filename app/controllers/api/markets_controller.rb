@@ -29,6 +29,12 @@ module Api
         markets = markets.where(network_id: params[:network_id])
       end
 
+      if params[:land_ids]
+        land_ids = params[:land_ids].split(',')
+        market_ids = land_ids.map { |land_id| TournamentGroup.friendly.find(land_id).market_ids }.flatten.uniq
+        markets = markets.where(id: market_ids)
+      end
+
       markets = markets.select { |market| market.state == params[:state] } if params[:state].present? && params[:state] != 'all'
 
       if params[:token].present?
