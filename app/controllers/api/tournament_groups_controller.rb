@@ -66,7 +66,13 @@ module Api
         markets = markets.published
       end
 
-      markets = markets.select { |market| market.state == params[:state] } if params[:state].present? && params[:state] != 'all'
+      if params[:state].present? && params[:state] != 'all'
+        if params[:state] == 'featured'
+          markets = markets.select(&:featured)
+        else
+          markets = markets.select { |market| market.state == params[:state] }
+        end
+      end
       # showing featured first
       markets = markets.sort_by { |m| m.featured ? -1 * m.featured_at.to_i : 1 }
 

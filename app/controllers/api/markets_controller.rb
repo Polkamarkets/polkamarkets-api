@@ -35,7 +35,13 @@ module Api
         markets = markets.where(id: market_ids)
       end
 
-      markets = markets.select { |market| market.state == params[:state] } if params[:state].present? && params[:state] != 'all'
+      if params[:state].present? && params[:state] != 'all'
+        if params[:state] == 'featured'
+          markets = markets.select(&:featured)
+        else
+          markets = markets.select { |market| market.state == params[:state] }
+        end
+      end
 
       if params[:token].present?
         markets = markets.select do |market|
