@@ -78,9 +78,7 @@ module Api
         data[index + from_record] = l
       end
 
-      return paginate_array(data) if params[:paginate]
-
-      leaderboard
+      paginate_array(data)
     end
 
     def get_user_leaderboard(network_id, user)

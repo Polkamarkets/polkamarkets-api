@@ -289,7 +289,7 @@ module Api
     def pagination_params
       {
         page: [params[:page].to_i, 1].max,
-        items: [[params[:items].to_i || 50, 150].min, 1].max
+        items: [[(params[:items].presence || Pagy::DEFAULT[:items]).to_i, Pagy::DEFAULT[:max_items]].min, 1].max
       }
     end
   end
