@@ -152,6 +152,19 @@ class LeaderboardService
     leaderboard.sort_by { |user, data| -data[:earnings] }
   end
 
+  def calculate_network_leaderboard(network_id)
+    market_ids = Market.where(network_id: network_id).pluck(:eth_market_id).compact
+
+    market_leaderboards = market_ids.map do |market_id|
+      calculate_market_leaderboard(network_id, market_id)
+    end
+
+    leaderboard = merge_market_leaderboards(market_leaderboards)
+
+    # sorting by holdings
+    leaderboard.sort_by { |user, data| -data[:earnings] }
+  end
+
   def merge_market_leaderboards(market_leaderboards)
     leaderboard = market_leaderboards.reduce({}) do |acc, market_leaderboard|
       market_leaderboard.each do |user, data|
