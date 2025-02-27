@@ -29,13 +29,28 @@ module Api
         markets = markets.where(network_id: params[:network_id])
       end
 
-      markets = markets.select { |market| market.state == params[:state] } if params[:state].present? && params[:state] != 'all'
+      if params[:land_ids]
+        land_ids = params[:land_ids].split(',')
+        market_ids = land_ids.map { |land_id| TournamentGroup.friendly.find(land_id).market_ids }.flatten.uniq
+        markets = markets.where(id: market_ids)
+      end
+
+      if params[:state].present? && params[:state] != 'all'
+        if params[:state] == 'featured'
+          markets = markets.select(&:featured)
+        else
+          markets = markets.select { |market| market.state == params[:state] }
+        end
+      end
 
       if params[:token].present?
         markets = markets.select do |market|
           market.token.present? && market.token[:symbol].downcase == params[:token].downcase
         end
       end
+
+      # showing featured first
+      markets = markets.sort_by { |m| m.featured ? -1 * m.featured_at.to_i : 1 }
 
       render json: markets,
         simplified_price_charts: !!params[:show_price_charts],

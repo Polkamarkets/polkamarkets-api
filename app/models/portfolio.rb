@@ -37,8 +37,22 @@ class Portfolio < ApplicationRecord
     end
   end
 
-  def action_events(refresh: false)
+  def action_events(refresh: false, from_block: nil)
     return @market_actions if @market_actions.present? && !refresh
+
+    if from_block.present?
+      actions = []
+
+      addresses = [eth_address] + aliases
+      addresses.each do |address|
+        actions += Bepro::PredictionMarketContractService.new(network_id: network_id).get_action_events(
+          address: address,
+          from_block: from_block
+        )
+      end
+
+      return actions.sort_by { |action| action[:block_number] }
+    end
 
     cache_key = "portfolios:network_#{network_id}:#{eth_address}:actions"
 
@@ -84,9 +98,7 @@ class Portfolio < ApplicationRecord
   end
 
   def feed_events(refresh: false)
-    Rails.cache.fetch("portfolios:network_#{network_id}:#{eth_address}:feed", force: refresh) do
-      FeedService.new(address: eth_address, network_id: network_id).feed_actions
-    end
+    FeedService.new(address: eth_address, network_id: network_id).fetch_feed(refresh: refresh)
   end
 
   def portfolio_market_ids

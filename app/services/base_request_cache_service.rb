@@ -14,8 +14,8 @@ class BaseRequestCacheService
 
   def refresh_markets
     markets = model.markets.includes(:outcomes).includes(:tournaments).published.to_a
-    # sorting by publish date
-    markets.sort_by! { |market| market.published_at.to_i }
+    # sorting by featured + publish date
+    markets.sort_by! { |market| market.featured ? -1 * market.featured_at.to_i : market.published_at.to_i }
 
     states = [nil, 'open', 'closed', 'resolved', 'featured']
     states.each do |state|

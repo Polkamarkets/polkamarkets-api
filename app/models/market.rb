@@ -13,6 +13,8 @@ class Market < ApplicationRecord
 
   after_destroy :destroy_cache!
 
+  before_save :change_featured_at_status
+
   has_many :outcomes, -> { order('eth_market_id ASC, created_at ASC') }, class_name: "MarketOutcome", dependent: :destroy, inverse_of: :market
 
   accepts_nested_attributes_for :outcomes
@@ -361,8 +363,15 @@ class Market < ApplicationRecord
     chart_data_service.chart_data_for(timeframe)
   end
 
-  def action_events(address: nil, refresh: false)
+  def action_events(address: nil, refresh: false, from_block: nil)
     return [] if eth_market_id.blank?
+
+    if from_block.present?
+      return Bepro::PredictionMarketContractService.new(network_id: network_id).get_action_events(
+        market_id: eth_market_id,
+        from_block: from_block
+      )
+    end
 
     cache_key = "markets:network_#{network_id}:#{eth_market_id}:actions"
 
@@ -382,6 +391,7 @@ class Market < ApplicationRecord
       actions = actions.uniq.sort_by { |action| action[:block_number] }
 
       Rails.cache.write(cache_key, actions)
+      GC.start
     end
 
     actions.select do |action|
@@ -449,9 +459,7 @@ class Market < ApplicationRecord
   def feed(refresh: false)
     return [] if eth_market_id.blank?
 
-    Rails.cache.fetch("markets:network_#{network_id}:#{eth_market_id}:feed", force: refresh) do
-      FeedService.new(market_id: eth_market_id, network_id: network_id).feed_actions
-    end
+    FeedService.new(market_id: eth_market_id, network_id: network_id).fetch_feed(refresh: refresh)
   end
 
   def should_refresh_cache?
@@ -813,5 +821,11 @@ class Market < ApplicationRecord
 
   def og_theme
     tournament_groups.first&.og_theme
+  end
+
+  def change_featured_at_status
+    return unless featured_changed?
+
+    self.featured_at = featured? ? DateTime.now : nil
   end
 end

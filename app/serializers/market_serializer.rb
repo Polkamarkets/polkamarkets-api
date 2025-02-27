@@ -42,6 +42,7 @@ class MarketSerializer < BaseSerializer
     :likes,
     :comments,
     :featured,
+    :featured_at,
     :publish_status,
     :image_ipfs_hash,
     :edit_history,

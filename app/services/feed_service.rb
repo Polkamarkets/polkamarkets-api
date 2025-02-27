@@ -20,11 +20,31 @@ class FeedService
     @network_id = network_id
   end
 
+  def feed_key
+    market_feed? ? "feed:markets:#{network_id}:#{market.eth_market_id}" : "feed:users:#{network_id}:#{address}"
+  end
+
+  def fetch_cached_feed
+    @cached_feed ||= Rails.cache.read(feed_key) || []
+  end
+
+  def from_block
+    fetch_cached_feed.map { |a| a[:block_number] }.max
+  end
+
+  def fetch_feed(refresh: false)
+    Rails.cache.fetch(feed_key, force: refresh) do
+      current_feed = fetch_cached_feed
+
+      (current_feed + latest_feed_actions).sort_by { |a| -a[:timestamp] }.first(LIMIT).uniq
+    end
+  end
+
   def fetch_actions
-    if market.present?
-      market.action_events(refresh: true)
+    if market_feed?
+      market.action_events(refresh: true, from_block: from_block)
     else
-      portfolio.action_events(refresh: true)
+      portfolio.action_events(refresh: true, from_block: from_block)
     end
   end
 
@@ -75,7 +95,7 @@ class FeedService
     @_actions_users ||= User.where('lower(wallet_address) IN (?)', actions.map { |a| a[:address].downcase }.uniq)
   end
 
-  def feed_actions
+  def latest_feed_actions
     (serialized_actions + serialized_vote_actions).sort_by { |a| -a[:timestamp] }
   end
 
@@ -120,6 +140,7 @@ class FeedService
         shares: action[:shares],
         value: action[:value],
         timestamp: action[:timestamp],
+        block_number: action[:block_number],
         ticker: action_market.token[:symbol]
       }
     end.compact
