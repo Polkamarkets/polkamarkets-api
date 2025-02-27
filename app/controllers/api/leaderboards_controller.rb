@@ -100,10 +100,7 @@ module Api
 
       # adding the rank per parameter to the user leaderboard
       rank = {
-        markets_created: leaderboard.sort_by { |user| -user[:markets_created] }.index(user_leaderboard) + 1,
         volume_eur: leaderboard.sort_by { |user| -user[:volume_eur] }.index(user_leaderboard) + 1,
-        tvl_volume_eur: leaderboard.sort_by { |user| -user[:tvl_volume_eur] }.index(user_leaderboard) + 1,
-        tvl_liquidity_eur: leaderboard.sort_by { |user| -user[:tvl_liquidity_eur] }.index(user_leaderboard) + 1,
         earnings_eur: leaderboard.sort_by { |user| -user[:earnings_eur] }.index(user_leaderboard) + 1,
         claim_winnings_count: leaderboard.sort_by { |user| -user[:claim_winnings_count] }.index(user_leaderboard) + 1,
       }
@@ -125,29 +122,14 @@ module Api
         username: user_from_username&.username,
         user_image_url: user_from_username&.avatar,
         slug: user_from_username&.slug,
-        ens: nil,
-        markets_created: 0,
-        verified_markets_created: 0,
         volume_eur: 0,
-        tvl_volume_eur: 0,
         earnings_eur: 0,
         earnings_open_eur: 0,
         earnings_closed_eur: 0,
-        liquidity_eur: 0,
-        tvl_liquidity_eur: 0,
         claim_winnings_count: 0,
         transactions: 0,
-        upvotes: 0,
-        downvotes: 0,
-        malicious: false,
-        bankrupt: false,
-        needs_rescue: false,
-        achievements: [ ],
         rank: {
-          markets_created: 0,
           volume_eur: 0,
-          tvl_volume_eur: 0,
-          tvl_liquidity_eur: 0,
           earnings_eur: 0,
           claim_winnings_count: 0,
         }
