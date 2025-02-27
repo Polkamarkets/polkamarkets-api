@@ -342,7 +342,13 @@ class LeaderboardService
     $redis_store.zadd("#{cache_key}:earnings", earnings)
 
     # ranking by won predictions
-    won_predictions = leaderboard.map { |l| [l[:claim_winnings_count], l[:user]] }
+    won_predictions = leaderboard.map do |l|
+      [
+        # adding earnings as a decimal as a tie breaker
+        l[:claim_winnings_count] + l[:earnings_eur] * 1e-12,
+        l[:user]
+      ]
+    end
     $redis_store.zadd("#{cache_key}:won_predictions", won_predictions)
 
     # writing leaderboard to set
