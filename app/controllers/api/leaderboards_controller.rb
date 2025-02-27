@@ -85,27 +85,20 @@ module Api
       leaderboard
     end
 
-    def get_user_leaderboard(network_id, username)
-      # no need for pagination in user leaderboard requests
-      params[:paginate] = false
-
-      leaderboard = get_leaderboard(params[:network_id])
-
-      user_leaderboard = leaderboard.find { |l| l[:user].downcase == username.downcase }
+    def get_user_leaderboard(network_id, user)
+      user_leaderboard = tournament_leaderboard? ?
+        LeaderboardService.new.get_tournament_leaderboard_user_entry(network_id, leaderboard_record.id, user) :
+        LeaderboardService.new.get_tournament_group_leaderboard_user_entry(network_id, leaderboard_record.id, user)
 
       return user_not_found if user_leaderboard.blank?
 
-      # filtering leaderboard by users with same origin
-      # leaderboard.select! { |user| user[:origin] == user_leaderboard[:origin] }
+      # sorting params are comma separated
+      sort_params = leaderboard_record.rank_by.split(',').map(&:to_sym)
+      rank_by = params[:rank_by].present? && sort_params.include?(params[:rank_by].to_sym) ?
+        params[:rank_by].to_sym :
+        sort_params.first
 
-      # adding the rank per parameter to the user leaderboard
-      rank = {
-        volume_eur: leaderboard.sort_by { |user| -user[:volume_eur] }.index(user_leaderboard) + 1,
-        earnings_eur: leaderboard.sort_by { |user| -user[:earnings_eur] }.index(user_leaderboard) + 1,
-        claim_winnings_count: leaderboard.sort_by { |user| -user[:claim_winnings_count] }.index(user_leaderboard) + 1,
-      }
-
-      user_leaderboard[:rank] = rank
+      user_leaderboard[:ranking] = user_leaderboard[:rank][rank_by]
 
       user_leaderboard
     end

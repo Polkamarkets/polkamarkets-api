@@ -1,5 +1,21 @@
 class LeaderboardService
-  def calculate_market_leaderboard(network_id, market_id, refresh: false)
+  # keys sizes are minified for optimization purposes
+  REDIS_MAPPINGS = {
+    volume_eur: 'v',
+    earnings_eur: 'e',
+    earnings_open_eur: 'eo',
+    earnings_closed_eur: 'ec',
+    claim_winnings_count: 'wp',
+    lost_winnings_count: 'lp',
+    transactions: 't',
+    buys: 'b',
+    username: 'u',
+    user_image_url: 'ui',
+    slug: 's',
+    origin: 'o'
+  }.freeze
+
+  def calculate_market_leaderboard(network_id, market_id, refresh: true)
     market = Market.find_by(eth_market_id: market_id, network_id: network_id)
     return {} if market.blank? || market.eth_market_id.blank?
 
@@ -211,8 +227,13 @@ class LeaderboardService
     end
 
     leaderboard = calculate_tournament_leaderboard(network_id, tournament_id)
+    # TODO: add custom blacklist for tournaments
     leaderboard_legacy = format_in_legacy_format(network_id, leaderboard)
 
+    cache_key = "leaderboard:tournament:#{network_id}:#{tournament_id}"
+
+    write_leaderboard_to_redis(leaderboard_legacy, cache_key)
+    # keeping past leaderboard for legacy reasons
     Rails.cache.write("leaderboard:tournament:#{network_id}:#{tournament_id}", leaderboard_legacy)
 
     leaderboard_legacy
@@ -226,6 +247,10 @@ class LeaderboardService
     leaderboard = calculate_tournament_group_leaderboard(network_id, tournament_group_id)
     leaderboard_legacy = format_in_legacy_format(network_id, leaderboard)
 
+    cache_key = "leaderboard:tournament_group:#{network_id}:#{tournament_group_id}"
+
+    write_leaderboard_to_redis(leaderboard_legacy, cache_key)
+    # keeping past leaderboard for legacy reasons
     Rails.cache.write("leaderboard:tournament_group:#{network_id}:#{tournament_group_id}", leaderboard_legacy)
 
     leaderboard_legacy
@@ -242,6 +267,34 @@ class LeaderboardService
     Rails.cache.write("leaderboard:network:#{network_id}", leaderboard_legacy)
 
     leaderboard_legacy
+  end
+
+  def get_tournament_leaderboard_user_entry(network_id, tournament_id, user)
+    cache_key = "leaderboard:tournament:#{network_id}:#{tournament_id}"
+    get_user_leaderboard_entry(user, cache_key)
+  end
+
+  def get_tournament_group_leaderboard_user_entry(network_id, tournament_group_id, user)
+    cache_key = "leaderboard:tournament_group:#{network_id}:#{tournament_group_id}"
+    get_user_leaderboard_entry(user, cache_key)
+  end
+
+  def get_user_leaderboard_entry(user, cache_key)
+    leaderboard_entry = $redis_store.get("#{cache_key}:data:#{user}")
+    return nil if leaderboard_entry.blank?
+
+    entry = map_redis_entry_to_leaderboard(leaderboard_entry, user)
+
+    # fetching rankings
+    earnings_rank = $redis_store.zrevrank("#{cache_key}:earnings", user)
+    won_predictions_rank = $redis_store.zrevrank("#{cache_key}:won_predictions", user)
+
+    entry[:rank] = {
+      earnings_eur: earnings_rank + 1,
+      claim_winnings_count: won_predictions_rank + 1
+    }
+
+    entry
   end
 
   def format_in_legacy_format(network_id, leaderboard)
@@ -265,10 +318,10 @@ class LeaderboardService
 
       {
         user: address,
-        volume_eur: data[:volume],
-        earnings_eur: data[:earnings],
-        earnings_open_eur: data[:holdings_value] - data[:holdings_cost],
-        earnings_closed_eur: data[:winnings],
+        volume_eur: data[:volume].round(2),
+        earnings_eur: data[:earnings].round(2),
+        earnings_open_eur: (data[:holdings_value] - data[:holdings_cost]).round(2),
+        earnings_closed_eur: data[:winnings].round(2),
         claim_winnings_count: data[:won_predictions],
         lost_winnings_count: data[:lost_predictions],
         transactions: data[:transactions],
@@ -279,5 +332,36 @@ class LeaderboardService
         origin: user ? user[4] : nil
       }
     end.compact
+  end
+
+  def write_leaderboard_to_redis(leaderboard, cache_key)
+    # ranking by earnings
+    earnings = leaderboard.map { |l| [l[:earnings_eur], l[:user]] }
+    $redis_store.zadd("#{cache_key}:earnings", earnings)
+
+    # ranking by won predictions
+    won_predictions = leaderboard.map { |l| [l[:claim_winnings_count], l[:user]] }
+    $redis_store.zadd("#{cache_key}:won_predictions", won_predictions)
+
+    # writing leaderboard to set
+    data = leaderboard.map { |l| ["#{cache_key}:data:#{l[:user]}", map_leaderboard_entry_to_redis(l)] }.flatten
+    $redis_store.mset(*data)
+  end
+
+  def map_leaderboard_entry_to_redis(entry)
+    entry.map do |key, value|
+      next unless REDIS_MAPPINGS[key].present?
+
+      [REDIS_MAPPINGS[key], value]
+    end.compact.to_h.to_json
+  end
+
+  def map_redis_entry_to_leaderboard(entry, user)
+    entry = JSON.parse(entry).map do |key, value|
+      [REDIS_MAPPINGS.key(key), value]
+    end.compact.to_h
+
+    entry[:user] = user
+    entry
   end
 end
