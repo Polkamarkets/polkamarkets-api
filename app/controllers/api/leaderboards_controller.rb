@@ -30,57 +30,55 @@ module Api
         TournamentGroup.friendly.find(params[:land_id] || params[:tournament_group_id])
     end
 
-    def get_leaderboard(network_id, user = nil)
-      raise "tournament network does not match" if leaderboard_record.network_id.to_i != network_id.to_i
-
-      leaderboard = tournament_leaderboard? ?
-        LeaderboardService.new.get_tournament_leaderboard(network_id, leaderboard_record.id) :
-        LeaderboardService.new.get_tournament_group_leaderboard(network_id, leaderboard_record.id)
+    def leaderboard_rank_by
+      return @leaderboard_rank_by if @leaderboard_rank_by.present?
 
       # sorting params are comma separated
-      rank_by = leaderboard_record.rank_by
-      sort_params = rank_by.split(',').map(&:to_sym)
+      sort_params = leaderboard_record.rank_by.split(',').map(&:to_sym)
+      @leaderboard_rank_by =
+        params[:rank_by].present? && sort_params.include?(params[:rank_by].to_sym) ?
+          params[:rank_by].to_sym :
+          sort_params.first
+    end
 
-      if params[:rank_by].present? && sort_params.include?(params[:rank_by].to_sym)
-        # moving the rank_by param to the first position
-        sort_params.delete(params[:rank_by].to_sym)
-        sort_params.unshift(params[:rank_by].to_sym)
+    def get_leaderboard(network_id)
+      raise "tournament network does not match" if leaderboard_record.network_id.to_i != network_id.to_i
+
+      from_record = (pagination_params[:page] - 1) * pagination_params[:items]
+      to_record = from_record + pagination_params[:items] - 1
+      rank_by = (params[:rank_by] || leaderboard_rank_by).to_sym == :earnings_eur ? 'earnings' : 'won_predictions'
+      sort = params[:sort] == 'asc' ? 'asc' : 'desc'
+
+      leaderboard = tournament_leaderboard? ?
+        LeaderboardService.new.get_tournament_leaderboard(
+          network_id,
+          leaderboard_record.id,
+          from: from_record,
+          to: to_record,
+          rank_by: rank_by,
+          sort: sort
+        ) :
+        LeaderboardService.new.get_tournament_group_leaderboard(
+          network_id,
+          leaderboard_record.id,
+          from: from_record,
+          to: to_record,
+          rank_by: rank_by,
+          sort: sort
+        )
+
+      # adding a ranking field to the user leaderboard
+      leaderboard[:data].each_with_index do |l, index|
+        l[:ranking] = l[:rank][leaderboard_rank_by]
       end
 
-      if tournament_leaderboard?
-        # removing blacklisted users from the leaderboard
-        blacklist = Rails.application.config_for(:ethereum).dig(
-          :tournament_blacklists,
-          leaderboard_record.id.to_s.to_sym,
-          sort_params.first.to_sym,
-        ) || []
-
-        leaderboard.select! { |user| !blacklist.include?(user[:user]) }
+      # artificially creating an array with empty elements to paginate
+      data = Array.new(leaderboard[:count])
+      leaderboard[:data].each_with_index do |l, index|
+        data[index + from_record] = l
       end
 
-      leaderboard.sort_by! do |user|
-        sort_params.map { |param| -user[param] }
-      end
-
-        # adding a rank field to the user leaderboard
-      leaderboard.each_with_index do |user, index|
-        user[:ranking] = index + 1
-      end
-
-      if params[:rank_by].present? && params[:rank_by] != rank_by
-        sort_params = params[:rank_by].split(',').map(&:to_sym)
-
-        leaderboard.sort_by! do |user|
-          sort_params.map { |param| -user[param] }
-        end
-      end
-
-      if params[:sort] == 'asc'
-        leaderboard.reverse!
-      end
-
-      # TODO: remove - making it optional for legacy reasons
-      return paginate_array(leaderboard) if params[:paginate]
+      return paginate_array(data) if params[:paginate]
 
       leaderboard
     end
@@ -92,14 +90,7 @@ module Api
 
       return user_not_found if user_leaderboard.blank?
 
-      # sorting params are comma separated
-      sort_params = leaderboard_record.rank_by.split(',').map(&:to_sym)
-      rank_by = params[:rank_by].present? && sort_params.include?(params[:rank_by].to_sym) ?
-        params[:rank_by].to_sym :
-        sort_params.first
-
-      user_leaderboard[:ranking] = user_leaderboard[:rank][rank_by]
-
+      user_leaderboard[:ranking] = user_leaderboard[:rank][leaderboard_rank_by]
       user_leaderboard
     end
 

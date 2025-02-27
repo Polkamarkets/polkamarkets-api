@@ -285,5 +285,12 @@ module Api
         pagination: pagy_metadata(pagy).extract!(:count, :page, :last, :next_url, :prev_url)
       }
     end
+
+    def pagination_params
+      {
+        page: [params[:page].to_i, 1].max,
+        items: [[params[:items].to_i || 50, 150].min, 1].max
+      }
+    end
   end
 end
