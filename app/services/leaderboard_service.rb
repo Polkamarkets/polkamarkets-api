@@ -337,11 +337,11 @@ class LeaderboardService
   def write_leaderboard_to_redis(leaderboard, cache_key)
     # ranking by earnings
     earnings = leaderboard.map { |l| [l[:earnings_eur], l[:user]] }
-    $redis_store.zadd("#{cache_key}:earnings", earnings)
+    $redis_store.zadd("#{cache_key}:earnings", earnings) if earnings.present?
 
     # ranking by won predictions
     won_predictions = leaderboard.map { |l| [l[:claim_winnings_count], l[:user]] }
-    $redis_store.zadd("#{cache_key}:won_predictions", won_predictions)
+    $redis_store.zadd("#{cache_key}:won_predictions", won_predictions) if won_predictions.present?
 
     # writing leaderboard to set
     data = leaderboard.map { |l| ["#{cache_key}:data:#{l[:user]}", map_leaderboard_entry_to_redis(l)] }.flatten
