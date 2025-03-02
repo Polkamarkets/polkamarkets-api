@@ -254,13 +254,9 @@ module Api
     end
 
     def user_from_username
-      @_user_from_username ||=
-        User.where(
-          'lower(slug) = ? OR lower(username) = ? OR lower(wallet_address) = ?',
-          params[:id].to_s.downcase,
-          params[:id].to_s.downcase,
-          params[:id].to_s.downcase
-        ).first
+      @_user_from_username ||= User.where('slug = ?', params[:id].to_s).first
+      @_user_from_username ||= User.where('username = ?', params[:id].to_s).first
+      @_user_from_username ||= User.where('wallet_address = ?', params[:id].to_s).first
     end
 
     def address_from_username
