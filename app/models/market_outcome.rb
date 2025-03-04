@@ -27,14 +27,9 @@ class MarketOutcome < ApplicationRecord
     timeframes = simplified ? [ChartDataService::DEFAULT_TIMEFRAME] : ChartDataService::TIMEFRAMES.keys
 
     timeframes.map do |timeframe|
-      expires_at = ChartDataService.next_datetime_for(timeframe)
-      # caching chart until next candlestick
-      expires_in = market.should_refresh_cache? && expires_at > DateTime.now ? (expires_at.to_i - DateTime.now.to_i).seconds : nil
-
       price_chart =
         Rails.cache.fetch(
           "markets:network_#{market.network_id}:#{market.eth_market_id}:outcomes:#{eth_market_id}:chart:#{timeframe}",
-          expires_in: expires_in,
           force: refresh
         ) do
           outcome_prices = market.outcome_prices(timeframe, end_at_resolved_at: true)
@@ -42,17 +37,40 @@ class MarketOutcome < ApplicationRecord
           outcome_prices[eth_market_id] || []
         end
 
-      # changing value of last item for current price
+        # changing value of last item for current price
       if price_chart.present?
         # calculating next timestamp for current timeframe
         next_timestamp = ChartDataService.next_datetime_for(timeframe, market.resolved? ? market.resolved_at : nil).to_i
         # setting to now if next timestamp is in the future
         next_timestamp = DateTime.now.to_i if next_timestamp > DateTime.now.to_i
 
-        price_chart.last[:value] = price
-        price_chart.last[:timestamp] = next_timestamp
-        price_chart.last[:date] = Time.at(next_timestamp)
+        # backfilling missing values, if any
+        missing_timestamps = ChartDataService.timestamps_for(
+          timeframe,
+          price_chart.last[:timestamp],
+          next_timestamp
+        ).select { |timestamp| timestamp > price_chart.last[:timestamp] }.reverse.uniq
+
+        if missing_timestamps.present?
+          # removing last item to avoid duplication
+          price_chart.pop
+
+          missing_timestamps.each do |timestamp|
+            price_chart << {
+              value: price,
+              timestamp: timestamp,
+              date: Time.at(timestamp)
+            }
+          end
+        else
+          price_chart.last[:value] = price
+          price_chart.last[:timestamp] = next_timestamp
+          price_chart.last[:date] = Time.at(next_timestamp)
+        end
+
         change_percent = (price - price_chart.first[:value]) / price_chart.first[:value]
+        # returning last candles
+        price_chart = price_chart.last(ChartDataService.candles_for(timeframe))
       else
         price_chart = [{
           value: price,

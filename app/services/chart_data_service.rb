@@ -95,6 +95,21 @@ class ChartDataService
     end
   end
 
+  def self.candles_for(timeframe)
+    case timeframe
+    when '24h'
+      24.hours / step_for(timeframe)
+    when '7d'
+      7.days / step_for(timeframe)
+    when '30d'
+      30.days / step_for(timeframe)
+    when 'all'
+      730 # 2 years
+    else
+      raise "ChartDataService :: Timeframe #{timeframe} not supported"
+    end
+  end
+
   def self.previous_datetime_for(timeframe, timestamp = nil)
     datetime = Time.at(timestamp || DateTime.now.to_i)
 

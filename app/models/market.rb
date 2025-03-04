@@ -37,6 +37,12 @@ class Market < ApplicationRecord
     published: 2,
   }
 
+  enum state: {
+    open: 0,
+    closed: 1,
+    resolved: 2,
+  }
+
   has_paper_trail
 
   scope :published, -> { where('published_at < ?', DateTime.now).where.not(eth_market_id: nil) }
@@ -156,6 +162,12 @@ class Market < ApplicationRecord
 
     Rails.cache.fetch("markets:network_#{network_id}:#{eth_market_id}:data", force: refresh) do
       @eth_data = Bepro::PredictionMarketContractService.new(network_id: network_id).get_market(eth_market_id)
+
+      # updating state
+      eth_data_state = @eth_data[:state] == 'open' && closed? ? 'closed' : @eth_data[:state]
+      update(state: eth_data_state) if eth_data_state && self[:state] != eth_data_state
+
+      @eth_data
     end
   end
 
@@ -170,17 +182,11 @@ class Market < ApplicationRecord
   def closed?
     return false if eth_data.blank?
 
-    eth_data[:state] == 'resolved' || eth_data[:expires_at] < DateTime.now
+    resolved? || expires_at < DateTime.now
   end
 
   def resolved?
-    closed? && eth_data[:state] == 'resolved'
-  end
-
-  def expires_at
-    return self["expires_at"] if eth_data.blank?
-
-    eth_data[:expires_at]
+    state == 'resolved'
   end
 
   def created_at
@@ -214,14 +220,12 @@ class Market < ApplicationRecord
   end
 
   def state
-    return nil if eth_data.blank?
-
-    state = eth_data[:state]
+    return nil if eth_market_id.blank?
 
     # market already closed, manually sending closed
-    return 'closed' if eth_data[:state] == 'open' && closed?
+    return 'closed' if self[:state] == 'open' && expires_at < DateTime.now
 
-    state
+    self[:state]
   end
 
   def resolved_outcome_id
