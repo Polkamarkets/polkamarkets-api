@@ -755,36 +755,20 @@ class Market < ApplicationRecord
     reload
   end
 
-  def edit_history
+  def edit_history(refresh: false)
     return [] unless published?
 
     edits = []
 
-    # only considering changes after market was published
-    versions.where('created_at > ?', published_at).each do |version|
-      version.changeset.each do |field, values|
-        next unless EDITABLE_FIELDS.include?(field.to_sym)
-        next if values[0].blank? || values[1].blank?
-
-        edits << {
-          field: field,
-          old_value: values[0],
-          new_value: values[1],
-          edited_at: version.created_at,
-          edited_by: User.find_by(id: version.whodunnit).try(:username)
-        }
-      end
-    end
-
-    # also checking outcomes
-    outcomes.each_with_index do |outcome, i|
-      outcome.versions.where('created_at > ?', published_at).map do |version|
+    Rails.cache.fetch("markets:network_#{network_id}:#{eth_market_id}:edit_history", force: refresh) do
+      # only considering changes after market was published
+      versions.where('created_at > ?', published_at).each do |version|
         version.changeset.each do |field, values|
-          next unless field == 'title'
+          next unless EDITABLE_FIELDS.include?(field.to_sym)
           next if values[0].blank? || values[1].blank?
 
           edits << {
-            field: "answer #{i + 1}",
+            field: field,
             old_value: values[0],
             new_value: values[1],
             edited_at: version.created_at,
@@ -792,9 +776,27 @@ class Market < ApplicationRecord
           }
         end
       end
-    end
 
-    edits.sort_by { |edit| edit[:edited_at] }.reverse
+      # also checking outcomes
+      outcomes.each_with_index do |outcome, i|
+        outcome.versions.where('created_at > ?', published_at).map do |version|
+          version.changeset.each do |field, values|
+            next unless field == 'title'
+            next if values[0].blank? || values[1].blank?
+
+            edits << {
+              field: "answer #{i + 1}",
+              old_value: values[0],
+              new_value: values[1],
+              edited_at: version.created_at,
+              edited_by: User.find_by(id: version.whodunnit).try(:username)
+            }
+          end
+        end
+      end
+
+      edits.sort_by { |edit| edit[:edited_at] }.reverse
+    end
   end
 
   def accuracy_report
