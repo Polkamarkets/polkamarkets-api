@@ -30,6 +30,8 @@ class LeaderboardService
     market_is_resolved = market.resolved?
     market_resolved_outcome_id = market.resolved_outcome_id
     market_outcome_current_prices = market.outcome_current_prices
+    market_should_refund_voided_markets = market.refund_voided_markets?
+    market_delta_leaderboard = get_market_delta_leaderboard(network_id, market_id)
 
     actions.each_with_index do |action, index|
       address = action[:address]
@@ -83,8 +85,16 @@ class LeaderboardService
         end.first.first
       end
 
+      # losses are refunded on voided markets with refund_voided_markets flag enabled
+      data[:earnings] = 0 if market_is_voided && market_should_refund_voided_markets && data[:earnings] < 0
+
+      if market_delta_leaderboard.present?
+        address = users.keys[index]
+        data[:earnings] += market_delta_leaderboard[address] if market_delta_leaderboard[address].present?
+      end
+
       result = {
-        earnings: data[:earnings] + holdings_value,
+        earnings: data[:earnings] + (market_is_voided && market_should_refund_voided_markets ? 0 : holdings_value),
         volume: data[:volume],
         transactions: data[:transactions],
         buys: data[:buys],
@@ -219,6 +229,10 @@ class LeaderboardService
 
       acc
     end
+  end
+
+  def get_market_delta_leaderboard(network_id, market_id)
+    Rails.cache.read("leaderboard:market:#{network_id}:#{market_id}:delta")
   end
 
   def get_tournament_leaderboard(

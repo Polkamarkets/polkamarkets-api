@@ -658,6 +658,10 @@ class Market < ApplicationRecord
     end
   end
 
+  def tournament_group
+    @_tournament_group ||= tournament_groups.first
+  end
+
   def admins
     return [] if tournaments.blank?
 
@@ -690,8 +694,6 @@ class Market < ApplicationRecord
         :"network_#{network_id}",
         :arbitration_proxy_contract_address
       ).to_s.downcase.presence || '0x000000000000000000000000000000000000dead'
-
-    tournament_group = tournament_groups.first
 
     raise "Market has no active tournament group" if tournament_group.blank? || tournament_group.token.blank?
 
@@ -737,8 +739,6 @@ class Market < ApplicationRecord
     args = prepare_draft_for_market_creation_args
 
     prediction_market_contract_service = Bepro::PredictionMarketContractService.new(network_id: network_id)
-
-    tournament_group = tournament_groups.first
 
     tx = tournament_group.whitelabel? ?
       prediction_market_contract_service.create_market(args) :
@@ -826,12 +826,18 @@ class Market < ApplicationRecord
   end
 
   def og_theme
-    tournament_groups.first&.og_theme
+    tournament_group&.og_theme
   end
 
   def change_featured_at_status
     return unless featured_changed?
 
     self.featured_at = featured? ? DateTime.now : nil
+  end
+
+  def refund_voided_markets?
+    return false if tournament_group.blank?
+
+    tournament_group&.refund_voided_markets
   end
 end
