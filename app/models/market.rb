@@ -468,7 +468,7 @@ class Market < ApplicationRecord
 
   def should_refresh_cache?
     # TODO: figure out caching system from closed (and unresolved) markets
-    published? && !(resolved? && resolved_at < 1.day.ago.to_i)
+    published? && !(resolved? && resolved_at < 1.day.ago.to_i && resolved_at > 0)
   end
 
   def destroy_cache!
