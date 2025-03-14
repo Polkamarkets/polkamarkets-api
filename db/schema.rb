@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2025_03_10_211631) do
+ActiveRecord::Schema.define(version: 2025_03_13_154219) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -316,6 +316,7 @@ ActiveRecord::Schema.define(version: 2025_03_10_211631) do
     t.string "og_image_url"
     t.string "avatar_url"
     t.string "og_image_url"
+    t.string "rank_by_priority"
     t.index ["slug"], name: "index_tournaments_on_slug", unique: true
     t.index ["tournament_group_id"], name: "index_tournaments_on_tournament_group_id"
   end

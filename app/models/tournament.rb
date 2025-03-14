@@ -46,6 +46,10 @@ class Tournament < ApplicationRecord
     rank_by.split(',').each do |rank_criteria|
       errors.add(:rank_by, "#{rank_criteria} is not a valid rank criteria") unless RANK_CRITERIA.include?(rank_criteria.to_sym)
     end
+
+    if rank_by_priority.present?
+      errors.add(:rank_by_priority, "#{rank_by_priority} is not a valid rank criteria") unless RANK_CRITERIA.include?(rank_criteria.to_sym)
+    end
   end
 
   def rewards_validation
@@ -73,6 +77,18 @@ class Tournament < ApplicationRecord
 
   def single_ranking?
     rank_by.split(',').size <= 1
+  end
+
+  def rank_by_priority
+    return nil if single_ranking?
+
+    self[:rank_by_priority]
+  end
+
+  def rank_by_priority_places
+    return 0 if rank_by_priority.blank?
+
+    rewards.select { |reward| reward['rank_by'] == rank_by_priority.to_s }.map { |reward| reward['to'] }.max || 0
   end
 
   def expires_at
