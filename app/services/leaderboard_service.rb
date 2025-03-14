@@ -248,14 +248,31 @@ class LeaderboardService
 
     if refresh
       leaderboard = calculate_tournament_leaderboard(network_id, tournament_id)
-      # TODO: add custom blacklist for tournaments
+      leaderboard_blacklist = get_tournament_leaderboard_blacklist(tournament_id, leaderboard)
       leaderboard_legacy = format_in_legacy_format(network_id, leaderboard)
 
-      write_leaderboard_to_redis(leaderboard_legacy, cache_key)
+      write_leaderboard_to_redis(leaderboard_legacy, cache_key, leaderboard_blacklist)
     end
 
     leaderboard_legacy = get_leaderboard(cache_key, from: from, to: to, rank_by: rank_by, sort: sort)
     leaderboard_legacy
+  end
+
+  def get_tournament_leaderboard_blacklist(tournament_id, leaderboard)
+    tournament = Tournament.find(tournament_id)
+    return {} unless tournament.rank_by_priority && tournament.rank_by_priority_places > 0
+
+    # TODO: add blacklist from env
+    blacklist = {}
+    blacklist_criteria = tournament.rank_by_priority == 'earnings_eur' ? :won_predictions : :earnings
+    blacklist_rank_by = tournament.rank_by_priority == 'earnings_eur' ? :earnings : :won_predictions
+
+    blacklist[blacklist_criteria] = leaderboard
+      .sort_by { |user, data| -data[blacklist_rank_by] }
+      .first(tournament.rank_by_priority_places)
+      .map { |user, data| user }
+
+    blacklist
   end
 
   def get_tournament_group_leaderboard(
@@ -318,8 +335,8 @@ class LeaderboardService
     entry = map_redis_entry_to_leaderboard(leaderboard_entry, user)
 
     # fetching rankings
-    earnings_rank = $redis_store.zrevrank("#{cache_key}:earnings", user)
-    won_predictions_rank = $redis_store.zrevrank("#{cache_key}:won_predictions", user)
+    earnings_rank = $redis_store.zrevrank("#{cache_key}:earnings", user) || -1
+    won_predictions_rank = $redis_store.zrevrank("#{cache_key}:won_predictions", user) || -1
 
     entry[:rank] = {
       earnings_eur: earnings_rank + 1,
@@ -366,12 +383,15 @@ class LeaderboardService
     end.compact
   end
 
-  def write_leaderboard_to_redis(leaderboard, cache_key)
+  def write_leaderboard_to_redis(leaderboard, cache_key, blacklist = {})
     return if leaderboard.blank?
 
     # ranking by earnings
     earnings = leaderboard.map { |l| [l[:earnings_eur], l[:user]] }
+    earnings.reject! { |e| blacklist[:earnings].include?(e[1]) } if blacklist[:earnings].present?
+
     $redis_store.zadd("#{cache_key}:earnings", earnings)
+    $redis_store.zrem("#{cache_key}:earnings", blacklist[:earnings]) if blacklist[:earnings].present?
 
     # ranking by won predictions
     won_predictions = leaderboard.map do |l|
@@ -381,7 +401,9 @@ class LeaderboardService
         l[:user]
       ]
     end
+    won_predictions.reject! { |e| blacklist[:won_predictions].include?(e[1]) } if blacklist[:won_predictions].present?
     $redis_store.zadd("#{cache_key}:won_predictions", won_predictions)
+    $redis_store.zrem("#{cache_key}:won_predictions", blacklist[:won_predictions]) if blacklist[:won_predictions].present?
 
     # writing leaderboard to set
     data = leaderboard.map { |l| ["#{cache_key}:data:#{l[:user]}", map_leaderboard_entry_to_redis(l)] }.flatten

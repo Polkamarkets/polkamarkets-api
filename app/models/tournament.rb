@@ -48,7 +48,7 @@ class Tournament < ApplicationRecord
     end
 
     if rank_by_priority.present?
-      errors.add(:rank_by_priority, "#{rank_by_priority} is not a valid rank criteria") unless RANK_CRITERIA.include?(rank_criteria.to_sym)
+      errors.add(:rank_by_priority, "#{rank_by_priority} is not a valid rank criteria") unless RANK_CRITERIA.include?(rank_by_priority.to_sym)
     end
   end
 
