@@ -29,6 +29,8 @@ class Market < ApplicationRecord
 
   validates :outcomes, length: { minimum: 2 } # currently supporting only binary markets
 
+  validate :sponsorship_validation
+
   accepts_nested_attributes_for :outcomes
 
   enum publish_status: {
@@ -153,6 +155,16 @@ class Market < ApplicationRecord
 
     errors.add(:scheduled_at, 'cannot be in the past') if scheduled_at < DateTime.now
     errors.add(:scheduled_at, 'cannot be after market expiration') if scheduled_at > expires_at
+  end
+
+  def sponsorship_validation
+    return if sponsorship.blank?
+
+    errors.add(:sponsorship, 'sponsorship is not valid') unless sponsorship.is_a?(Hash)
+    errors.add(:sponsorship, 'sponsorship url is required') if sponsorship['url'].blank?
+    errors.add(:sponsorship, 'sponsorship title is required') if sponsorship['title'].blank?
+    errors.add(:sponsorship, 'sponsorship image is required') if sponsorship['image_url'].blank?
+    errors.add(:sponsorship, 'sponsorship image_href is required') if sponsorship['image_href'].blank?
   end
 
   def eth_data(refresh: false)

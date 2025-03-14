@@ -46,6 +46,7 @@ class MarketSerializer < BaseSerializer
     :publish_status,
     :image_ipfs_hash,
     :edit_history,
+    :sponsorship,
     # relationships as attributes, due to serializer caching optimizations
     :tournaments
   )
@@ -56,6 +57,12 @@ class MarketSerializer < BaseSerializer
 
   def question
     object.question_data
+  end
+
+  def sponsorship
+    return nil if object.sponsorship.blank?
+
+    object.sponsorship
   end
 
   def show_related_markets?
