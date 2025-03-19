@@ -264,13 +264,48 @@ class LeaderboardService
 
     # TODO: add blacklist from env
     blacklist = {}
-    blacklist_criteria = tournament.rank_by_priority == 'earnings_eur' ? :won_predictions : :earnings
-    blacklist_rank_by = tournament.rank_by_priority == 'earnings_eur' ? :earnings : :won_predictions
+    if tournament.rank_by_priority == 'highest_ranking'
+      rewards_size = tournament.ranking_rewards_places('earnings_eur')
+      earnings_leaderboard = leaderboard
+        .sort_by { |user, data| -data[:earnings] }
+        .first(rewards_size * 2)
+        .map { |user, data| user }
+      winnings_leaderboard = leaderboard
+        .sort_by { |user, data| -data[:won_predictions] }
+        .first(rewards_size * 2)
+        .map { |user, data| user }
 
-    blacklist[blacklist_criteria] = leaderboard
-      .sort_by { |user, data| -data[blacklist_rank_by] }
-      .first(tournament.rank_by_priority_places)
-      .map { |user, data| user }
+      blacklist[:earnings] = []
+      blacklist[:won_predictions] = []
+      # excluding users on both leaderboards from the other leaderboard, based on the top ranking
+      0..rewards_size.times do |i|
+        earnings_user = earnings_leaderboard[i]
+        # finding user ranking on won_predictions leaderboard
+        earnings_user_won_predictions_ranking = won_predictions_leaderboard.find_index(earnings_user)
+        # removing user from won_predictions leaderboard
+        if earnings_user_won_predictions_ranking.present?
+          won_predictions_leaderboard.delete(earnings_user)
+          blacklist[:won_predictions] << earnings_user
+        end
+
+        won_predictions_user = won_predictions_leaderboard[i]
+        # finding user ranking on earnings leaderboard
+        won_predictions_user_earnings_ranking = earnings_leaderboard.find_index(won_predictions_user)
+        # removing user from earnings leaderboard
+        if won_predictions_user_earnings_ranking.present?
+          earnings_leaderboard.delete(won_predictions_user)
+          blacklist[:earnings] << won_predictions_user
+        end
+      end
+    else
+      blacklist_criteria = tournament.rank_by_priority == 'earnings_eur' ? :won_predictions : :earnings
+      blacklist_rank_by = tournament.rank_by_priority == 'earnings_eur' ? :earnings : :won_predictions
+
+      blacklist[blacklist_criteria] = leaderboard
+        .sort_by { |user, data| -data[blacklist_rank_by] }
+        .first(tournament.rank_by_priority_places)
+        .map { |user, data| user }
+    end
 
     blacklist
   end

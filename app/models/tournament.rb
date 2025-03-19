@@ -48,7 +48,12 @@ class Tournament < ApplicationRecord
     end
 
     if rank_by_priority.present?
-      errors.add(:rank_by_priority, "#{rank_by_priority} is not a valid rank criteria") unless RANK_CRITERIA.include?(rank_by_priority.to_sym)
+      if rank_by_priority.to_sym == :highest_ranking
+        # checking both rankings have the same number of rewards
+        errors.add(:rank_by_priority, 'rank_by_priority highest_ranking should have the same number of rewards for both rankings') unless ranking_rewards_places('earnings_eur') == ranking_rewards_places('claim_winnings_count')
+      else
+        errors.add(:rank_by_priority, "#{rank_by_priority} is not a valid rank criteria") unless RANK_CRITERIA.include?(rank_by_priority.to_sym)
+      end
     end
   end
 
@@ -85,10 +90,17 @@ class Tournament < ApplicationRecord
     self[:rank_by_priority]
   end
 
+  def ranking_rewards_places(rank_by)
+    rewards
+      .select { |reward| reward['rank_by'] == rank_by }
+      .map { |reward| reward['to'] }
+      .max || 0
+  end
+
   def rank_by_priority_places
     return 0 if rank_by_priority.blank?
 
-    rewards.select { |reward| reward['rank_by'] == rank_by_priority.to_s }.map { |reward| reward['to'] }.max || 0
+    ranking_rewards_places(rank_by_priority.to_s)
   end
 
   def expires_at
