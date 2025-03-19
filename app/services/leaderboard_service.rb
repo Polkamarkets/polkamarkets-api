@@ -260,7 +260,7 @@ class LeaderboardService
 
   def get_tournament_leaderboard_blacklist(tournament_id, leaderboard)
     tournament = Tournament.find(tournament_id)
-    return {} unless tournament.rank_by_priority && tournament.rank_by_priority_places > 0
+    return {} unless tournament.rank_by_priority && (tournament.rank_by_priority_places > 0 || tournament.rank_by_priority == 'highest_ranking')
 
     # TODO: add blacklist from env
     blacklist = {}
