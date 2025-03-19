@@ -270,7 +270,7 @@ class LeaderboardService
         .sort_by { |user, data| -data[:earnings] }
         .first(rewards_size * 2)
         .map { |user, data| user }
-      winnings_leaderboard = leaderboard
+      won_predictions_leaderboard = leaderboard
         .sort_by { |user, data| -data[:won_predictions] }
         .first(rewards_size * 2)
         .map { |user, data| user }
