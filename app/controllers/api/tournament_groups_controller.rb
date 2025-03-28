@@ -170,13 +170,6 @@ module Api
 
     private
 
-    def base_request?
-      serializable_scope.blank? &&
-        !params[:show_price_charts] &&
-        params[:publish_status].blank? &&
-        (params[:state].blank? || ['all', 'open', 'closed', 'resolved', 'featured'].include?(params[:state]))
-    end
-
     def tournament_group_params
       params.require(:land).permit(
         :id,
