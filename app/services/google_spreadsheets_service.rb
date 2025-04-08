@@ -34,6 +34,6 @@ class GoogleSpreadsheetsService
   def write_spreadsheet(spreadsheet_id, spreadsheet_tab, range, values)
     range = "#{spreadsheet_tab}!#{range}"
     value_range = Google::Apis::SheetsV4::ValueRange.new(values: values)
-    service.update_spreadsheet_value(spreadsheet_id, range, value_range, value_input_option: "RAW")
+    service.update_spreadsheet_value(spreadsheet_id, range, value_range, value_input_option: "USER_ENTERED")
   end
 end
