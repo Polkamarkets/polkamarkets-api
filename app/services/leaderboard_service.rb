@@ -265,7 +265,7 @@ class LeaderboardService
     # TODO: add blacklist from env
     blacklist = {}
     if tournament.rank_by_priority == 'highest_ranking'
-      rewards_size = tournament.ranking_rewards_places('earnings_eur')
+      rewards_size = [tournament.ranking_rewards_places('earnings_eur'), tournament.ranking_rewards_places('claim_winnings_count')].min
       earnings_leaderboard = leaderboard
         .sort_by { |user, data| -data[:earnings] }
         .first(rewards_size * 2)

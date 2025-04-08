@@ -49,8 +49,9 @@ class Tournament < ApplicationRecord
 
     if rank_by_priority.present?
       if rank_by_priority.to_sym == :highest_ranking
+        # disabling this at the moment
         # checking both rankings have the same number of rewards
-        errors.add(:rank_by_priority, 'rank_by_priority highest_ranking should have the same number of rewards for both rankings') unless ranking_rewards_places('earnings_eur') == ranking_rewards_places('claim_winnings_count')
+        # errors.add(:rank_by_priority, 'rank_by_priority highest_ranking should have the same number of rewards for both rankings') unless ranking_rewards_places('earnings_eur') == ranking_rewards_places('claim_winnings_count')
       else
         errors.add(:rank_by_priority, "#{rank_by_priority} is not a valid rank criteria") unless RANK_CRITERIA.include?(rank_by_priority.to_sym)
       end
