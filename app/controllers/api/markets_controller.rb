@@ -233,6 +233,11 @@ module Api
       if market_params[:tournament_id].present? && market.tournament_ids != [market_params[:tournament_id]]
         tournament = Tournament.find_by!(id: market_params[:tournament_id])
         market.tournament_ids = [tournament.id]
+        # resetting liquidity params
+        update_params["draft_fee"] = 0
+        update_params["draft_treasury_fee"] = 0
+        update_params["draft_treasury"] = nil
+
         # triggering cache update
         market.touch
         tournament.touch
