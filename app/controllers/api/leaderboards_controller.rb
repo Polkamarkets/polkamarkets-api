@@ -101,9 +101,9 @@ module Api
     def user_not_found
       {
         user: params[:id],
-        username: user_from_username&.username,
-        user_image_url: user_from_username&.avatar,
-        slug: user_from_username&.slug,
+        username: nil,
+        user_image_url: nil,
+        slug: nil,
         volume_eur: 0,
         earnings_eur: 0,
         earnings_open_eur: 0,
