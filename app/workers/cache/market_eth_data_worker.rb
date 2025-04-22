@@ -7,5 +7,6 @@ class Cache::MarketEthDataWorker
 
     market.eth_data(refresh: true)
     market.resolved_at(refresh: true)
+    market.edit_history(refresh: true)
   end
 end

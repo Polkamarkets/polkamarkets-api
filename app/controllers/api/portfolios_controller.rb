@@ -18,7 +18,7 @@ module Api
 
       portfolio = Portfolio.find_or_create_by!(eth_address: address, network_id: params[:network_id])
 
-      events = allowed_network? ? portfolio.feed_events : []
+      events = allowed_network? ? portfolio.feed_events(refresh: true) : []
 
       render json: params[:paginate] ? paginate_array(events) : events, status: :ok
     end

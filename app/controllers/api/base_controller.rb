@@ -273,6 +273,13 @@ module Api
       Rails.application.config_for(:ethereum).network_ids.include?(params[:network_id].to_s)
     end
 
+    def base_request?
+      serializable_scope.blank? &&
+        !params[:show_price_charts] &&
+        params[:publish_status].blank? &&
+        (params[:state].blank? || ['all', 'open', 'closed', 'resolved', 'featured'].include?(params[:state]))
+    end
+
     def paginate_array(data)
       pagy, items = pagy_array(data)
 

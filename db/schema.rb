@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2025_02_26_193126) do
+ActiveRecord::Schema.define(version: 2025_03_14_111700) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -221,6 +221,8 @@ ActiveRecord::Schema.define(version: 2025_02_26_193126) do
     t.integer "schedule_tries", default: 0
     t.string "og_image_url"
     t.datetime "featured_at"
+    t.integer "state"
+    t.jsonb "sponsorship", default: {}
     t.index ["eth_market_id", "network_id"], name: "index_markets_on_eth_market_id_and_network_id", unique: true
     t.index ["slug"], name: "index_markets_on_slug", unique: true
   end
@@ -281,6 +283,7 @@ ActiveRecord::Schema.define(version: 2025_02_26_193126) do
     t.jsonb "admins", default: []
     t.string "og_image_url"
     t.string "og_theme"
+    t.boolean "refund_voided_markets", default: false
     t.index ["slug"], name: "index_tournament_groups_on_slug", unique: true
     t.index ["title"], name: "index_tournament_groups_on_title"
   end
@@ -314,6 +317,7 @@ ActiveRecord::Schema.define(version: 2025_02_26_193126) do
     t.string "og_image_url"
     t.string "avatar_url"
     t.string "og_image_url"
+    t.string "rank_by_priority"
     t.index ["slug"], name: "index_tournaments_on_slug", unique: true
     t.index ["tournament_group_id"], name: "index_tournaments_on_tournament_group_id"
   end

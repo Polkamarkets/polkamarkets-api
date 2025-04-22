@@ -6,6 +6,10 @@ class BaseRequestCacheService
     @model_type = model.class.to_s.tableize
   end
 
+  def self.join_multiple_base_requests(data)
+    "[" + data.select { |d| d.present? && d != '[]' }.map { |d| d[1..-2] }.join(",") + "]"
+  end
+
   def get_markets(state: nil)
     data = Rails.cache.read(cache_key(state))
 

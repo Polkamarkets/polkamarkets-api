@@ -6,6 +6,6 @@ class OgImageWorker
     return if resource.blank?
 
     resource.update_og_image
-    resource.refresh_serializer_cache_sync!
+    resource.refresh_serializer_cache_sync! if resource.respond_to?(:refresh_serializer_cache_sync!)
   end
 end

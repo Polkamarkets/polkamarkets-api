@@ -30,6 +30,23 @@ module Api
       end
 
       if params[:land_ids]
+        if base_request?
+          # merging cache base requests, if available
+          cached_responses = params[:land_ids].split(',').map do |land_id|
+            BaseRequestCacheService.new(TournamentGroup.friendly.find(land_id)).get_markets(state: params[:state])
+          end
+          if cached_responses.all?
+            return render json: BaseRequestCacheService.join_multiple_base_requests(cached_responses), status: :ok
+          else
+            # triggering cache update if any of the requests is missing
+            cached_responses.each_with_index do |cached_response, index|
+              next if cached_response.present?
+              tournament_group = TournamentGroup.friendly.find(params[:land_ids].split(',')[index])
+              Cache::BaseRequestWorker.perform_async('TournamentGroup', tournament_group.id)
+            end
+          end
+        end
+
         land_ids = params[:land_ids].split(',')
         market_ids = land_ids.map { |land_id| TournamentGroup.friendly.find(land_id).market_ids }.flatten.uniq
         markets = markets.where(id: market_ids)
@@ -216,6 +233,11 @@ module Api
       if market_params[:tournament_id].present? && market.tournament_ids != [market_params[:tournament_id]]
         tournament = Tournament.find_by!(id: market_params[:tournament_id])
         market.tournament_ids = [tournament.id]
+        # resetting liquidity params
+        update_params["draft_fee"] = 0
+        update_params["draft_treasury_fee"] = 0
+        update_params["draft_treasury"] = nil
+
         # triggering cache update
         market.touch
         tournament.touch

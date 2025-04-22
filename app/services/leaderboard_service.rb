@@ -30,6 +30,8 @@ class LeaderboardService
     market_is_resolved = market.resolved?
     market_resolved_outcome_id = market.resolved_outcome_id
     market_outcome_current_prices = market.outcome_current_prices
+    market_should_refund_voided_markets = market.refund_voided_markets?
+    market_delta_leaderboard = get_market_delta_leaderboard(network_id, market_id)
 
     actions.each_with_index do |action, index|
       address = action[:address]
@@ -83,8 +85,16 @@ class LeaderboardService
         end.first.first
       end
 
+      # losses are refunded on voided markets with refund_voided_markets flag enabled
+      data[:earnings] = 0 if market_is_voided && market_should_refund_voided_markets && data[:earnings] < 0
+
+      if market_delta_leaderboard.present?
+        address = users.keys[index]
+        data[:earnings] += market_delta_leaderboard[address] if market_delta_leaderboard[address].present?
+      end
+
       result = {
-        earnings: data[:earnings] + holdings_value,
+        earnings: data[:earnings] + (market_is_voided && market_should_refund_voided_markets ? 0 : holdings_value),
         volume: data[:volume],
         transactions: data[:transactions],
         buys: data[:buys],
@@ -221,6 +231,10 @@ class LeaderboardService
     end
   end
 
+  def get_market_delta_leaderboard(network_id, market_id)
+    Rails.cache.read("leaderboard:market:#{network_id}:#{market_id}:delta")
+  end
+
   def get_tournament_leaderboard(
     network_id,
     tournament_id,
@@ -234,14 +248,66 @@ class LeaderboardService
 
     if refresh
       leaderboard = calculate_tournament_leaderboard(network_id, tournament_id)
-      # TODO: add custom blacklist for tournaments
+      leaderboard_blacklist = get_tournament_leaderboard_blacklist(tournament_id, leaderboard)
       leaderboard_legacy = format_in_legacy_format(network_id, leaderboard)
 
-      write_leaderboard_to_redis(leaderboard_legacy, cache_key)
+      write_leaderboard_to_redis(leaderboard_legacy, cache_key, leaderboard_blacklist)
     end
 
     leaderboard_legacy = get_leaderboard(cache_key, from: from, to: to, rank_by: rank_by, sort: sort)
     leaderboard_legacy
+  end
+
+  def get_tournament_leaderboard_blacklist(tournament_id, leaderboard)
+    tournament = Tournament.find(tournament_id)
+    return {} unless tournament.rank_by_priority && (tournament.rank_by_priority_places > 0 || tournament.rank_by_priority == 'highest_ranking')
+
+    # TODO: add blacklist from env
+    blacklist = {}
+    if tournament.rank_by_priority == 'highest_ranking'
+      rewards_size = [tournament.ranking_rewards_places('earnings_eur'), tournament.ranking_rewards_places('claim_winnings_count')].min
+      earnings_leaderboard = leaderboard
+        .sort_by { |user, data| -data[:earnings] }
+        .first(rewards_size * 2)
+        .map { |user, data| user }
+      won_predictions_leaderboard = leaderboard
+        .sort_by { |user, data| -data[:won_predictions] }
+        .first(rewards_size * 2)
+        .map { |user, data| user }
+
+      blacklist[:earnings] = []
+      blacklist[:won_predictions] = []
+      # excluding users on both leaderboards from the other leaderboard, based on the top ranking
+      0..rewards_size.times do |i|
+        earnings_user = earnings_leaderboard[i]
+        # finding user ranking on won_predictions leaderboard
+        earnings_user_won_predictions_ranking = won_predictions_leaderboard.find_index(earnings_user)
+        # removing user from won_predictions leaderboard
+        if earnings_user_won_predictions_ranking.present?
+          won_predictions_leaderboard.delete(earnings_user)
+          blacklist[:won_predictions] << earnings_user
+        end
+
+        won_predictions_user = won_predictions_leaderboard[i]
+        # finding user ranking on earnings leaderboard
+        won_predictions_user_earnings_ranking = earnings_leaderboard.find_index(won_predictions_user)
+        # removing user from earnings leaderboard
+        if won_predictions_user_earnings_ranking.present?
+          earnings_leaderboard.delete(won_predictions_user)
+          blacklist[:earnings] << won_predictions_user
+        end
+      end
+    else
+      blacklist_criteria = tournament.rank_by_priority == 'earnings_eur' ? :won_predictions : :earnings
+      blacklist_rank_by = tournament.rank_by_priority == 'earnings_eur' ? :earnings : :won_predictions
+
+      blacklist[blacklist_criteria] = leaderboard
+        .sort_by { |user, data| -data[blacklist_rank_by] }
+        .first(tournament.rank_by_priority_places)
+        .map { |user, data| user }
+    end
+
+    blacklist
   end
 
   def get_tournament_group_leaderboard(
@@ -304,8 +370,8 @@ class LeaderboardService
     entry = map_redis_entry_to_leaderboard(leaderboard_entry, user)
 
     # fetching rankings
-    earnings_rank = $redis_store.zrevrank("#{cache_key}:earnings", user)
-    won_predictions_rank = $redis_store.zrevrank("#{cache_key}:won_predictions", user)
+    earnings_rank = $redis_store.zrevrank("#{cache_key}:earnings", user) || -1
+    won_predictions_rank = $redis_store.zrevrank("#{cache_key}:won_predictions", user) || -1
 
     entry[:rank] = {
       earnings_eur: earnings_rank + 1,
@@ -352,12 +418,15 @@ class LeaderboardService
     end.compact
   end
 
-  def write_leaderboard_to_redis(leaderboard, cache_key)
+  def write_leaderboard_to_redis(leaderboard, cache_key, blacklist = {})
     return if leaderboard.blank?
 
     # ranking by earnings
     earnings = leaderboard.map { |l| [l[:earnings_eur], l[:user]] }
+    earnings.reject! { |e| blacklist[:earnings].include?(e[1]) } if blacklist[:earnings].present?
+
     $redis_store.zadd("#{cache_key}:earnings", earnings)
+    $redis_store.zrem("#{cache_key}:earnings", blacklist[:earnings]) if blacklist[:earnings].present?
 
     # ranking by won predictions
     won_predictions = leaderboard.map do |l|
@@ -367,7 +436,9 @@ class LeaderboardService
         l[:user]
       ]
     end
+    won_predictions.reject! { |e| blacklist[:won_predictions].include?(e[1]) } if blacklist[:won_predictions].present?
     $redis_store.zadd("#{cache_key}:won_predictions", won_predictions)
+    $redis_store.zrem("#{cache_key}:won_predictions", blacklist[:won_predictions]) if blacklist[:won_predictions].present?
 
     # writing leaderboard to set
     data = leaderboard.map { |l| ["#{cache_key}:data:#{l[:user]}", map_leaderboard_entry_to_redis(l)] }.flatten

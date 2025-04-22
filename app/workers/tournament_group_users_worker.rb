@@ -5,8 +5,8 @@ class TournamentGroupUsersWorker
     tournament_group = TournamentGroup.find_by(id: tournament_group_id)
     return if tournament_group.blank? || tournament_group.token.blank? || tournament_group.whitelabel?
 
-    # fetching minimum block number from the last 12 hours
-    from_block = Activity.where(network_id: tournament_group.network_id).where("timestamp > ?", DateTime.now - 12.hours).minimum(:block_number)
+    # fetching minimum block number from the last 4 hours
+    from_block = Activity.where(network_id: tournament_group.network_id).where("timestamp > ?", DateTime.now - 4.hours).minimum(:block_number)
     # fallback to latest activity - range
     from_block ||= Activity.max_block_number_by_network_id(tournament_group.network_id) - (
       Rails.application.config_for(:ethereum).dig(:"network_#{tournament_group.network_id}", :block_range) || 1000

@@ -29,12 +29,20 @@ class Market < ApplicationRecord
 
   validates :outcomes, length: { minimum: 2 } # currently supporting only binary markets
 
+  validate :sponsorship_validation
+
   accepts_nested_attributes_for :outcomes
 
   enum publish_status: {
     draft: 0,
     pending: 1,
     published: 2,
+  }
+
+  enum state: {
+    open: 0,
+    closed: 1,
+    resolved: 2,
   }
 
   has_paper_trail
@@ -149,6 +157,16 @@ class Market < ApplicationRecord
     errors.add(:scheduled_at, 'cannot be after market expiration') if scheduled_at > expires_at
   end
 
+  def sponsorship_validation
+    return if sponsorship.blank?
+
+    errors.add(:sponsorship, 'sponsorship is not valid') unless sponsorship.is_a?(Hash)
+    errors.add(:sponsorship, 'sponsorship url is required') if sponsorship['url'].blank?
+    errors.add(:sponsorship, 'sponsorship title is required') if sponsorship['title'].blank?
+    errors.add(:sponsorship, 'sponsorship image is required') if sponsorship['image_url'].blank?
+    errors.add(:sponsorship, 'sponsorship image_href is required') if sponsorship['image_href'].blank?
+  end
+
   def eth_data(refresh: false)
     return nil if eth_market_id.blank?
 
@@ -156,6 +174,12 @@ class Market < ApplicationRecord
 
     Rails.cache.fetch("markets:network_#{network_id}:#{eth_market_id}:data", force: refresh) do
       @eth_data = Bepro::PredictionMarketContractService.new(network_id: network_id).get_market(eth_market_id)
+
+      # updating state
+      eth_data_state = @eth_data[:state] == 'open' && closed? ? 'closed' : @eth_data[:state]
+      update(state: eth_data_state) if eth_data_state && self[:state] != eth_data_state
+
+      @eth_data
     end
   end
 
@@ -170,17 +194,11 @@ class Market < ApplicationRecord
   def closed?
     return false if eth_data.blank?
 
-    eth_data[:state] == 'resolved' || eth_data[:expires_at] < DateTime.now
+    resolved? || expires_at < DateTime.now
   end
 
   def resolved?
-    closed? && eth_data[:state] == 'resolved'
-  end
-
-  def expires_at
-    return self["expires_at"] if eth_data.blank?
-
-    eth_data[:expires_at]
+    state == 'resolved'
   end
 
   def created_at
@@ -214,14 +232,12 @@ class Market < ApplicationRecord
   end
 
   def state
-    return nil if eth_data.blank?
-
-    state = eth_data[:state]
+    return nil if eth_market_id.blank?
 
     # market already closed, manually sending closed
-    return 'closed' if eth_data[:state] == 'open' && closed?
+    return 'closed' if self[:state] == 'open' && expires_at < DateTime.now
 
-    state
+    self[:state]
   end
 
   def resolved_outcome_id
@@ -464,7 +480,7 @@ class Market < ApplicationRecord
 
   def should_refresh_cache?
     # TODO: figure out caching system from closed (and unresolved) markets
-    published? && !(resolved? && resolved_at < 1.day.ago.to_i)
+    published? && !(resolved? && resolved_at < 1.day.ago.to_i && resolved_at > 0)
   end
 
   def destroy_cache!
@@ -654,6 +670,10 @@ class Market < ApplicationRecord
     end
   end
 
+  def tournament_group
+    @_tournament_group ||= tournament_groups.first
+  end
+
   def admins
     return [] if tournaments.blank?
 
@@ -686,8 +706,6 @@ class Market < ApplicationRecord
         :"network_#{network_id}",
         :arbitration_proxy_contract_address
       ).to_s.downcase.presence || '0x000000000000000000000000000000000000dead'
-
-    tournament_group = tournament_groups.first
 
     raise "Market has no active tournament group" if tournament_group.blank? || tournament_group.token.blank?
 
@@ -734,8 +752,6 @@ class Market < ApplicationRecord
 
     prediction_market_contract_service = Bepro::PredictionMarketContractService.new(network_id: network_id)
 
-    tournament_group = tournament_groups.first
-
     tx = tournament_group.whitelabel? ?
       prediction_market_contract_service.create_market(args) :
       prediction_market_contract_service.mint_and_create_market(args)
@@ -751,36 +767,20 @@ class Market < ApplicationRecord
     reload
   end
 
-  def edit_history
+  def edit_history(refresh: false)
     return [] unless published?
 
     edits = []
 
-    # only considering changes after market was published
-    versions.where('created_at > ?', published_at).each do |version|
-      version.changeset.each do |field, values|
-        next unless EDITABLE_FIELDS.include?(field.to_sym)
-        next if values[0].blank? || values[1].blank?
-
-        edits << {
-          field: field,
-          old_value: values[0],
-          new_value: values[1],
-          edited_at: version.created_at,
-          edited_by: User.find_by(id: version.whodunnit).try(:username)
-        }
-      end
-    end
-
-    # also checking outcomes
-    outcomes.each_with_index do |outcome, i|
-      outcome.versions.where('created_at > ?', published_at).map do |version|
+    Rails.cache.fetch("markets:network_#{network_id}:#{eth_market_id}:edit_history", force: refresh) do
+      # only considering changes after market was published
+      versions.where('created_at > ?', published_at).each do |version|
         version.changeset.each do |field, values|
-          next unless field == 'title'
+          next unless EDITABLE_FIELDS.include?(field.to_sym)
           next if values[0].blank? || values[1].blank?
 
           edits << {
-            field: "answer #{i + 1}",
+            field: field,
             old_value: values[0],
             new_value: values[1],
             edited_at: version.created_at,
@@ -788,9 +788,27 @@ class Market < ApplicationRecord
           }
         end
       end
-    end
 
-    edits.sort_by { |edit| edit[:edited_at] }.reverse
+      # also checking outcomes
+      outcomes.each_with_index do |outcome, i|
+        outcome.versions.where('created_at > ?', published_at).map do |version|
+          version.changeset.each do |field, values|
+            next unless field == 'title'
+            next if values[0].blank? || values[1].blank?
+
+            edits << {
+              field: "answer #{i + 1}",
+              old_value: values[0],
+              new_value: values[1],
+              edited_at: version.created_at,
+              edited_by: User.find_by(id: version.whodunnit).try(:username)
+            }
+          end
+        end
+      end
+
+      edits.sort_by { |edit| edit[:edited_at] }.reverse
+    end
   end
 
   def accuracy_report
@@ -820,12 +838,18 @@ class Market < ApplicationRecord
   end
 
   def og_theme
-    tournament_groups.first&.og_theme
+    tournament_group&.og_theme
   end
 
   def change_featured_at_status
     return unless featured_changed?
 
     self.featured_at = featured? ? DateTime.now : nil
+  end
+
+  def refund_voided_markets?
+    return false if tournament_group.blank?
+
+    tournament_group&.refund_voided_markets
   end
 end
