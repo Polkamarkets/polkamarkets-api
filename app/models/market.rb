@@ -149,7 +149,7 @@ class Market < ApplicationRecord
     market
   end
 
-  def self.create_draft_from_template!(template_id, template_variables, market_variables)
+  def self.create_draft_from_template!(template_id, template_variables, market_variables, expires_at)
     market_template = MarketTemplate.find(template_id)
 
     template_variables.deep_stringify_keys!
@@ -160,18 +160,19 @@ class Market < ApplicationRecord
       raise "Template variables do not match market variables"
     end
 
-    if ['expires_at', 'network_id', 'topics'].any? { |key| market_variables[key].blank? }
-      raise "Market variables 'expires_at', 'network_id' and 'topics' cannot be blank"
+    if ['network_id', 'topics'].any? { |key| market_variables[key].blank? }
+      raise "Market variables 'network_id' and 'topics' cannot be blank"
     end
 
+    raise "Market variables 'expires_at' must be a valid date" unless expires_at.present?
+
     market = Market.new
+    market.expires_at = expires_at
     market_variables.each do |key, value|
-      if key == 'tournament_id'
-        tournament = Tournament.find(value)
-        tournament.markets << market
-      else
-        market[key] = value
-      end
+      # adding to tournament only after creation
+      next if key == 'tournament_id'
+
+      market[key] = value
     end
 
     market_template.template.each do |key, value|
@@ -186,6 +187,11 @@ class Market < ApplicationRecord
       else
         market[key] = market_template.template_field(key, template_variables)
       end
+    end
+
+    if market_variables['tournament_id'].present?
+      tournament = Tournament.find_by(id: market_variables['tournament_id'])
+      tournament.markets << market if tournament.present?
     end
 
     market.save!

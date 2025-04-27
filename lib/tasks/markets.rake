@@ -164,4 +164,32 @@ namespace :markets do
       market.update(featured: false)
     end
   end
+
+  desc "checks template-scheduled markets and creates them"
+  task :check_template_scheduled_markets, [:symbol] => :environment do |task, args|
+    MarketSchedule.all.each do |schedule|
+      next unless schedule.active?
+      next unless schedule.next_run < DateTime.now
+
+      # creating market template
+      market_template = schedule.market_template
+      raise "Schedule has no template" if market_template.blank?
+
+      # creating market
+      begin
+        market = Market.create_draft_from_template!(
+          market_template.id,
+          market_template.template_variables,
+          schedule.market_variables,
+          market_template.template_expires_at
+        )
+        # scheduling market for creation
+        market.update(scheduled_at: DateTime.now)
+        schedule.update(last_run_at: DateTime.now)
+      rescue => e
+        puts "Error creating market from template: #{e.message}"
+        # TODO: handle error
+      end
+    end
+  end
 end
