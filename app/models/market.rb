@@ -14,6 +14,7 @@ class Market < ApplicationRecord
   after_destroy :destroy_cache!
 
   before_save :change_featured_at_status
+  before_validation :prefill_category
 
   has_many :outcomes, -> { order('eth_market_id ASC, created_at ASC') }, class_name: "MarketOutcome", dependent: :destroy, inverse_of: :market
 
@@ -147,6 +148,56 @@ class Market < ApplicationRecord
 
     market
   end
+
+  def self.create_draft_from_template!(template_id, template_variables, market_variables)
+    market_template = MarketTemplate.find(template_id)
+
+    template_variables.deep_stringify_keys!
+    market_variables.deep_stringify_keys!
+
+    # checking template variables against market variables
+    if template_variables.keys.sort != market_template.variables.sort
+      raise "Template variables do not match market variables"
+    end
+
+    if ['expires_at', 'network_id', 'topics'].any? { |key| market_variables[key].blank? }
+      raise "Market variables 'expires_at', 'network_id' and 'topics' cannot be blank"
+    end
+
+    market = Market.new
+    market_variables.each do |key, value|
+      if key == 'tournament_id'
+        tournament = Tournament.find(value)
+        tournament.markets << market
+      else
+        market[key] = value
+      end
+    end
+
+    market_template.template.each do |key, value|
+      if key == 'outcomes'
+        value.each_with_index do |outcome_template, i|
+          outcome = MarketOutcome.new
+          outcome_template.each do |outcome_key, outcome_value|
+            outcome[outcome_key] = market_template.template_field([key, i, outcome_key], template_variables)
+          end
+          market.outcomes << outcome
+        end
+      else
+        market[key] = market_template.template_field(key, template_variables)
+      end
+    end
+
+    market.save!
+    market
+  end
+
+  def prefill_category
+    return if category.present?
+
+    self.category = "#{topics.join(',')};;#{resolution_source.to_s};#{resolution_title.to_s}"
+  end
+
 
   def scheduled_at_validation
     return if scheduled_at.blank?
