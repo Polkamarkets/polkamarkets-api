@@ -9,11 +9,10 @@ class MarketSchedule < ApplicationRecord
   }
 
   def next_run
-    return starts_at if last_run_at.blank?
-
     case frequency
     when 'daily'
-      last_run_at + 1.day
+      today_run_at = DateTime.now.utc.beginning_of_day + starts_at.utc.seconds_since_midnight
+      last_run_at.present? && last_run_at > today_run_at ? today_run_at + 1.day : today_run_at
     else
       raise "Unknown frequency: #{frequency}"
     end
