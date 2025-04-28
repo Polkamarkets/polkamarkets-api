@@ -56,9 +56,9 @@ class MarketTemplate < ApplicationRecord
       tomorrow = now + 1.day
 
       {
-        close_date_short: now.strftime("%B #{now.day}"),
         close_date: now.strftime("%B #{now.day}, %Y"),
         resolution_date: tomorrow.strftime("%B #{tomorrow.day}, %Y"),
+        resolution_date_short: tomorrow.strftime("%B #{tomorrow.day}"),
         target: target,
       }
     else
