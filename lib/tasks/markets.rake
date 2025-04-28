@@ -184,7 +184,7 @@ namespace :markets do
           market_template.template_expires_at
         )
         # scheduling market for creation
-        # market.update(scheduled_at: DateTime.now)
+        market.update(scheduled_at: DateTime.now)
         schedule.update(last_run_at: DateTime.now)
       rescue => e
         puts "Error creating market from template: #{e.message}"
