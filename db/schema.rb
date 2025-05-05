@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2025_04_27_214352) do
+ActiveRecord::Schema.define(version: 2025_05_05_163655) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -242,6 +242,7 @@ ActiveRecord::Schema.define(version: 2025_04_27_214352) do
     t.datetime "featured_at"
     t.integer "state"
     t.jsonb "sponsorship", default: {}
+    t.integer "offchain_resolved_outcome_id"
     t.index ["eth_market_id", "network_id"], name: "index_markets_on_eth_market_id_and_network_id", unique: true
     t.index ["slug"], name: "index_markets_on_slug", unique: true
   end

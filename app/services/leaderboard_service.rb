@@ -28,7 +28,8 @@ class LeaderboardService
 
     market_is_voided = market.voided
     market_is_resolved = market.resolved?
-    market_resolved_outcome_id = market.resolved_outcome_id
+    # privileging offchain_resolved_outcome_id over resolved_outcome_id for leaderboard computation
+    market_resolved_outcome_id = market.offchain_resolved_outcome_id || market.resolved_outcome_id
     market_outcome_current_prices = market.outcome_current_prices
     market_should_refund_voided_markets = market.refund_voided_markets?
     market_delta_leaderboard = get_market_delta_leaderboard(network_id, market_id)
