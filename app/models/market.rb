@@ -371,7 +371,10 @@ class Market < ApplicationRecord
 
   def outcome_current_prices
     eth_data[:outcomes].map do |outcome|
-      [outcome[:id], outcome[:price]]
+      [
+        outcome[:id],
+        offchain_resolved_outcome_id.present? ? (outcome[:id] == offchain_resolved_outcome_id ? 1 : 0) : outcome[:price]
+      ]
     end.to_h
   end
 

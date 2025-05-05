@@ -15,7 +15,7 @@ class LeaderboardService
     origin: 'o'
   }.freeze
 
-  def calculate_market_leaderboard(network_id, market_id, refresh: true)
+  def calculate_market_leaderboard(network_id, market_id, refresh: false)
     market = Market.find_by(eth_market_id: market_id, network_id: network_id)
     return {} if market.blank? || market.eth_market_id.blank?
 
