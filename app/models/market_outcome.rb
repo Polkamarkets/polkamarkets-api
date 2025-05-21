@@ -138,4 +138,10 @@ class MarketOutcome < ApplicationRecord
 
     eth_data[:shares_held]
   end
+
+  def holders
+    return 0 if eth_data.blank?
+
+    (market.holders[eth_market_id] || []).count
+  end
 end

@@ -7,6 +7,7 @@ class MarketOutcomeSerializer < BaseSerializer
     :title,
     :shares,
     :shares_held,
+    :holders,
     :price,
     :closing_price,
     :price_change_24h,
