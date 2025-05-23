@@ -4,6 +4,7 @@ class MarketTemplate < ApplicationRecord
 
   enum template_type: {
     fear_and_greed: 0,
+    tsa_checkpoint: 1,
   }
 
   def template_validation
@@ -61,6 +62,28 @@ class MarketTemplate < ApplicationRecord
         resolution_date_short: tomorrow.strftime("%B #{tomorrow.day}"),
         target: target,
       }
+    when "tsa_checkpoint"
+      index_history = TsaCheckpointService.new.get_history
+      # fetching latest 7 days, comparing with 7 days before and calculating ratio
+      ratio = index_history.first(7).map { |data| data[:value] }.sum.to_f / index_history[7..13].map { |data| data[:value] }.sum
+
+      now = DateTime.now.utc
+      tomorrow = now + 1.day
+      current_wday = now.wday
+
+      target = index_history.find { |data| data[:date].cwday == current_wday }[:value] * ratio
+      # rounding to nearest 0.5
+      target_rounded = (target / 1e6 * 2).round(1) / 2.0
+      target_str = "#{target_rounded}M"
+      target_number = (target_rounded * 1e6).to_i.to_s(:delimited, delimiter: ",")
+
+      {
+        close_date: tomorrow.strftime("%B #{now.day}, %Y"),
+        resolution_date: now.strftime("%B #{now.day}, %Y"),
+        resolution_date_short: now.strftime("%B #{now.day}"),
+        target: target_str,
+        target_number: target_number,
+      }
     else
       raise "Unknown template type"
     end
@@ -70,6 +93,8 @@ class MarketTemplate < ApplicationRecord
     case template_type
     when "fear_and_greed"
       DateTime.now.utc.beginning_of_day + 1.day - 1.minute
+    when "tsa_checkpoint"
+      DateTime.now.utc.beginning_of_day + 1.day + 11.hours
     else
       raise "Unknown template type"
     end
