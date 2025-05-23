@@ -78,7 +78,7 @@ class MarketTemplate < ApplicationRecord
       target_number = (target_rounded * 1e6).to_i.to_s(:delimited, delimiter: ",")
 
       {
-        close_date: tomorrow.strftime("%B #{now.day}, %Y"),
+        close_date: tomorrow.strftime("%B #{tomorrow.day}, %Y"),
         resolution_date: now.strftime("%B #{now.day}, %Y"),
         resolution_date_short: now.strftime("%B #{now.day}"),
         target: target_str,
