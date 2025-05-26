@@ -47,19 +47,14 @@ class MarketTemplate < ApplicationRecord
   end
 
   # TODO: move to separate services per template type
-  def template_variables
+  def template_variables(resolution_date)
     case template_type
     when "fear_and_greed"
       index_history = FearAndGreedService.get_index_history(3).map { |data| data[:value] }
       # fetching latest 3 days data and making a 70-20-10 average
       target = index_history.each_with_index.map { |value, index| value * (index == 0 ? 0.7 : index == 1 ? 0.2 : 0.1) }.sum.round
-      now = DateTime.now.utc
-      tomorrow = now + 1.day
 
       {
-        close_date: now.strftime("%B #{now.day}, %Y"),
-        resolution_date: tomorrow.strftime("%B #{tomorrow.day}, %Y"),
-        resolution_date_short: tomorrow.strftime("%B #{tomorrow.day}"),
         target: target,
       }
     when "tsa_checkpoint"
@@ -67,9 +62,7 @@ class MarketTemplate < ApplicationRecord
       # fetching latest 7 days, comparing with 7 days before and calculating ratio
       ratio = index_history.first(7).map { |data| data[:value] }.sum.to_f / index_history[7..13].map { |data| data[:value] }.sum
 
-      now = DateTime.now.utc
-      tomorrow = now + 1.day
-      current_wday = now.wday
+      current_wday = resolution_date.wday
 
       target = index_history.find { |data| data[:date].cwday == current_wday }[:value] * ratio
       # rounding to nearest 0.5
@@ -78,23 +71,9 @@ class MarketTemplate < ApplicationRecord
       target_number = (target_rounded * 1e6).to_i.to_s(:delimited, delimiter: ",")
 
       {
-        close_date: tomorrow.strftime("%B #{tomorrow.day}, %Y"),
-        resolution_date: now.strftime("%B #{now.day}, %Y"),
-        resolution_date_short: now.strftime("%B #{now.day}"),
         target: target_str,
         target_number: target_number,
       }
-    else
-      raise "Unknown template type"
-    end
-  end
-
-  def template_expires_at
-    case template_type
-    when "fear_and_greed"
-      DateTime.now.utc.beginning_of_day + 1.day - 1.minute
-    when "tsa_checkpoint"
-      DateTime.now.utc.beginning_of_day + 1.day + 11.hours
     else
       raise "Unknown template type"
     end

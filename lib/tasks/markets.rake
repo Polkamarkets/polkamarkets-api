@@ -175,13 +175,16 @@ namespace :markets do
       market_template = schedule.market_template
       raise "Schedule has no template" if market_template.blank?
 
+      resolution_date = schedule.next_run_resolves_at
+      template_variables = market_template.template_variables(resolution_date).merge(schedule.next_run_variables)
+
       # creating market
       begin
         market = Market.create_draft_from_template!(
           market_template.id,
-          market_template.template_variables,
+          template_variables,
           schedule.market_variables,
-          market_template.template_expires_at
+          schedule.next_run_expires_at,
         )
         # scheduling market for creation
         market.update(scheduled_at: DateTime.now) if schedule.publish_market_enabled?

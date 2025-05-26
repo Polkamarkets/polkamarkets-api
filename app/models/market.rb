@@ -156,7 +156,7 @@ class Market < ApplicationRecord
     market_variables.deep_stringify_keys!
 
     # checking template variables against market variables
-    if template_variables.keys.sort != market_template.variables.sort
+    if market_template.variables & template_variables.keys != market_template.variables
       raise "Template variables do not match market variables"
     end
 

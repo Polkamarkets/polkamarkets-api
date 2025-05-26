@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2025_05_23_013557) do
+ActiveRecord::Schema.define(version: 2025_05_26_133929) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -197,6 +197,8 @@ ActiveRecord::Schema.define(version: 2025_05_23_013557) do
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
     t.boolean "publish_market_enabled", default: false
+    t.datetime "expires_at"
+    t.datetime "resolves_at"
     t.index ["market_template_id"], name: "index_market_schedules_on_market_template_id"
   end
 

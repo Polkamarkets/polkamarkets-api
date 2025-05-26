@@ -1,5 +1,5 @@
 class MarketSchedule < ApplicationRecord
-  validates_presence_of :frequency, :starts_at
+  validates_presence_of :frequency, :starts_at, :expires_at, :resolves_at
 
   belongs_to :market_template
 
@@ -20,5 +20,28 @@ class MarketSchedule < ApplicationRecord
     else
       raise "Unknown frequency: #{frequency}"
     end
+  end
+
+  def next_run_expires_at
+    return nil if expires_at.blank?
+
+    (next_run + (expires_at - starts_at)).in_time_zone(expires_at.time_zone)
+  end
+
+  def next_run_resolves_at
+    return nil if resolves_at.blank?
+
+    (next_run + (resolves_at - starts_at)).in_time_zone(resolves_at.time_zone)
+  end
+
+  def next_run_variables
+    {
+      close_date: next_run_expires_at&.strftime("%B %-d, %Y"),
+      close_date_short: next_run_expires_at&.strftime("%B %-d"),
+      close_date_full: next_run_expires_at&.strftime("%B %-d, %Y, at %-I:%M%P"),
+      resolution_date: next_run_resolves_at&.strftime("%B %-d, %Y"),
+      resolution_date_short: next_run_resolves_at&.strftime("%B %-d"),
+      resolution_date_full: next_run_resolves_at&.strftime("%B %-d, %Y, at %-I:%M%P"),
+    }
   end
 end
