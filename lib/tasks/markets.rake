@@ -167,24 +167,19 @@ namespace :markets do
 
   desc "checks template-scheduled markets and creates them"
   task :check_template_scheduled_markets, [:symbol] => :environment do |task, args|
-    MarketSchedule.all.each do |schedule|
-      next unless schedule.active?
-      next unless schedule.next_run < DateTime.now
+    MarketSchedule.all.each do |market_schedule|
+      next unless market_schedule.active?
+      next unless market_schedule.next_run < DateTime.now
 
       # creating market template
-      market_template = schedule.market_template
+      market_template = market_schedule.market_template
       raise "Schedule has no template" if market_template.blank?
-
-      resolution_date = schedule.next_run_resolves_at
-      template_variables = market_template.template_variables(resolution_date).merge(schedule.next_run_variables)
 
       # creating market
       begin
         market = Market.create_draft_from_template!(
           market_template.id,
-          template_variables,
-          schedule.market_variables,
-          schedule.next_run_expires_at,
+          market_schedule.id
         )
         # scheduling market for creation
         market.update(scheduled_at: DateTime.now) if schedule.publish_market_enabled?

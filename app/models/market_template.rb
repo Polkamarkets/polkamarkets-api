@@ -5,6 +5,7 @@ class MarketTemplate < ApplicationRecord
   enum template_type: {
     fear_and_greed: 0,
     tsa_checkpoint: 1,
+    binance_price: 2,
   }
 
   def template_validation
@@ -47,7 +48,12 @@ class MarketTemplate < ApplicationRecord
   end
 
   # TODO: move to separate services per template type
-  def template_variables(resolution_date)
+  def template_variables(schedule_id)
+    market_schedule = MarketSchedule.find(schedule_id)
+
+    resolution_date = market_schedule.next_run_resolves_at || DateTime.now
+    schedule_template_variables = market_schedule.template_variables
+
     case template_type
     when "fear_and_greed"
       index_history = FearAndGreedService.get_index_history(3).map { |data| data[:value] }
@@ -73,6 +79,26 @@ class MarketTemplate < ApplicationRecord
       {
         target: target_str,
         target_number: target_number,
+      }
+    when "binance_price"
+      raise "symbol is required for binance prices template" if schedule_template_variables['symbol'].blank?
+      raise "token is required for binance prices template" if schedule_template_variables['token'].blank?
+      raise "decimals is required for binance prices template" if schedule_template_variables['decimals'].blank?
+
+      price_events = BinanceApiService.get_price_events(schedule_template_variables['symbol'], '6h', 5)
+      # fetching latest 5 data points and making a 50-20-10-10-10 average
+      weights = [0.5, 0.2, 0.1, 0.1, 0.1].reverse
+      target = price_events.each_with_index.map do |data, index|
+        data[:close] * weights[index]
+      end.sum
+
+      decimals = (10 ** schedule_template_variables['decimals']).to_f
+
+      target_rounded = (target / decimals * 2).round(1) / 2.0
+      target_number = (target_rounded * decimals).to_i.to_s(:delimited, delimiter: ",")
+
+      {
+        target: target_number,
       }
     else
       raise "Unknown template type"

@@ -149,8 +149,13 @@ class Market < ApplicationRecord
     market
   end
 
-  def self.create_draft_from_template!(template_id, template_variables, market_variables, expires_at)
+  def self.create_draft_from_template!(template_id, schedule_id)
     market_template = MarketTemplate.find(template_id)
+    market_schedule = MarketSchedule.find(schedule_id)
+    expires_at = market_schedule.next_run_expires_at
+
+    template_variables = market_template.template_variables(schedule_id).merge(market_schedule.next_run_variables)
+    market_variables = market_schedule.market_variables
 
     template_variables.deep_stringify_keys!
     market_variables.deep_stringify_keys!

@@ -44,4 +44,8 @@ class MarketSchedule < ApplicationRecord
       resolution_date_full: next_run_resolves_at&.strftime("%B %-d, %Y, at %-I:%M%P"),
     }
   end
+
+  def template_variables
+    (self['template_variables'] || {}).merge(next_run_variables)
+  end
 end
