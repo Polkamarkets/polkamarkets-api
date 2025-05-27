@@ -6,6 +6,7 @@ class MarketTemplate < ApplicationRecord
     fear_and_greed: 0,
     tsa_checkpoint: 1,
     binance_price: 2,
+    general: 3,
   }
 
   def template_validation
@@ -100,6 +101,8 @@ class MarketTemplate < ApplicationRecord
       {
         target: target_number,
       }
+    when "general"
+      {}
     else
       raise "Unknown template type"
     end
