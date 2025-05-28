@@ -182,8 +182,8 @@ namespace :markets do
           market_schedule.id
         )
         # scheduling market for creation
-        market.update(scheduled_at: DateTime.now) if schedule.publish_market_enabled?
-        schedule.update(last_run_at: DateTime.now)
+        market.update(scheduled_at: DateTime.now) if market_schedule.publish_market_enabled?
+        market_schedule.update(last_run_at: DateTime.now)
       rescue => e
         puts "Error creating market from template: #{e.message}"
         # TODO: handle error
