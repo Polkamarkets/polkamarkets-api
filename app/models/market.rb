@@ -14,6 +14,7 @@ class Market < ApplicationRecord
   after_destroy :destroy_cache!
 
   before_save :change_featured_at_status
+  before_validation :prefill_category
 
   has_many :outcomes, -> { order('eth_market_id ASC, created_at ASC') }, class_name: "MarketOutcome", dependent: :destroy, inverse_of: :market
 
@@ -147,6 +148,67 @@ class Market < ApplicationRecord
 
     market
   end
+
+  def self.create_draft_from_template!(template_id, schedule_id)
+    market_template = MarketTemplate.find(template_id)
+    market_schedule = MarketSchedule.find(schedule_id)
+    expires_at = market_schedule.next_run_expires_at
+
+    template_variables = market_template.template_variables(schedule_id).merge(market_schedule.next_run_variables)
+    market_variables = market_schedule.market_variables
+
+    template_variables.deep_stringify_keys!
+    market_variables.deep_stringify_keys!
+
+    # checking template variables against market variables
+    if market_template.variables & template_variables.keys != market_template.variables
+      raise "Template variables do not match market variables"
+    end
+
+    if ['network_id', 'topics'].any? { |key| market_variables[key].blank? }
+      raise "Market variables 'network_id' and 'topics' cannot be blank"
+    end
+
+    raise "Market variables 'expires_at' must be a valid date" unless expires_at.present?
+
+    market = Market.new
+    market.expires_at = expires_at
+    market_variables.each do |key, value|
+      # adding to tournament only after creation
+      next if key == 'tournament_id'
+
+      market[key] = value
+    end
+
+    market_template.template.each do |key, value|
+      if key == 'outcomes'
+        value.each_with_index do |outcome_template, i|
+          outcome = MarketOutcome.new
+          outcome_template.each do |outcome_key, outcome_value|
+            outcome[outcome_key] = market_template.template_field([key, i, outcome_key], template_variables)
+          end
+          market.outcomes << outcome
+        end
+      else
+        market[key] = market_template.template_field(key, template_variables)
+      end
+    end
+
+    if market_variables['tournament_id'].present?
+      tournament = Tournament.find_by(id: market_variables['tournament_id'])
+      tournament.markets << market if tournament.present?
+    end
+
+    market.save!
+    market
+  end
+
+  def prefill_category
+    return if category.present?
+
+    self.category = "#{topics.join(',')};;#{resolution_source.to_s};#{resolution_title.to_s}"
+  end
+
 
   def scheduled_at_validation
     return if scheduled_at.blank?
@@ -314,7 +376,10 @@ class Market < ApplicationRecord
 
   def outcome_current_prices
     eth_data[:outcomes].map do |outcome|
-      [outcome[:id], outcome[:price]]
+      [
+        outcome[:id],
+        offchain_resolved_outcome_id.present? ? (outcome[:id] == offchain_resolved_outcome_id ? 1 : 0) : outcome[:price]
+      ]
     end.to_h
   end
 

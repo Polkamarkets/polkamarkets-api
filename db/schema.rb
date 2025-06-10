@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2025_03_14_111700) do
+ActiveRecord::Schema.define(version: 2025_05_27_110609) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -187,6 +187,29 @@ ActiveRecord::Schema.define(version: 2025_03_14_111700) do
     t.index ["market_id"], name: "index_market_outcomes_on_market_id"
   end
 
+  create_table "market_schedules", force: :cascade do |t|
+    t.bigint "market_template_id", null: false
+    t.jsonb "market_variables", default: {}
+    t.integer "frequency", null: false
+    t.datetime "starts_at", null: false
+    t.datetime "last_run_at"
+    t.boolean "active", default: true
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.boolean "publish_market_enabled", default: false
+    t.datetime "expires_at"
+    t.datetime "resolves_at"
+    t.jsonb "template_variables", default: {}
+    t.index ["market_template_id"], name: "index_market_schedules_on_market_template_id"
+  end
+
+  create_table "market_templates", force: :cascade do |t|
+    t.jsonb "template", null: false
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.integer "template_type"
+  end
+
   create_table "markets", force: :cascade do |t|
     t.string "title", null: false
     t.string "description"
@@ -223,6 +246,7 @@ ActiveRecord::Schema.define(version: 2025_03_14_111700) do
     t.datetime "featured_at"
     t.integer "state"
     t.jsonb "sponsorship", default: {}
+    t.integer "offchain_resolved_outcome_id"
     t.index ["eth_market_id", "network_id"], name: "index_markets_on_eth_market_id_and_network_id", unique: true
     t.index ["slug"], name: "index_markets_on_slug", unique: true
   end
@@ -394,6 +418,7 @@ ActiveRecord::Schema.define(version: 2025_03_14_111700) do
   add_foreign_key "comments", "users"
   add_foreign_key "likes", "users"
   add_foreign_key "market_outcomes", "markets"
+  add_foreign_key "market_schedules", "market_templates"
   add_foreign_key "reports", "users"
   add_foreign_key "tournaments", "tournament_groups"
   add_foreign_key "user_idps", "users"
