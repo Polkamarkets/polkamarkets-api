@@ -4,6 +4,7 @@ default: &default
       bepro_api_url: <%= ENV["ETHEREUM_NETWORK_#{network_id}_BEPRO_API_URL"] %>
       bepro_api_public_key: "<%= ENV["ETHEREUM_NETWORK_#{network_id}_BEPRO_API_PUBLIC_KEY"] %>"
       admin_private_key: "<%= ENV["ETHEREUM_NETWORK_#{network_id}_ADMIN_PRIVATE_KEY"].to_s %>"
+      prediction_market_contract_version: "<%= ENV["ETHEREUM_NETWORK_#{network_id}_PREDICTION_MARKET_CONTRACT_VERSION"].to_s %>"
       prediction_market_contract_address: "<%= ENV["ETHEREUM_NETWORK_#{network_id}_PREDICTION_MARKET_CONTRACT_ADDRESS"].to_s %>"
       prediction_market_manager_contract_address: "<%= ENV["ETHEREUM_NETWORK_#{network_id}_PREDICTION_MARKET_MANAGER_CONTRACT_ADDRESS"].to_s %>"
       prediction_market_controller_contract_address: "<%= ENV["ETHEREUM_NETWORK_#{network_id}_PREDICTION_MARKET_CONTROLLER_CONTRACT_ADDRESS"].to_s %>"

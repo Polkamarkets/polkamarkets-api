@@ -25,11 +25,19 @@ module Bepro
     DELIMITER = "\u241f"
 
     def initialize(network_id: nil, api_url: nil, contract_address: nil)
-      @version = Rails.application.config_for(:ethereum).dig(:prediction_market_contract_version) || 2
+      @version = Rails.application.config_for(:ethereum).dig(:"network_#{network_id}", :prediction_market_contract_version).presence
+      @version ||= Rails.application.config_for(:ethereum).dig(:prediction_market_contract_version) || 2
+      version_str = @version
+
+      if @version.is_a?(String)
+        # replacing . with _ for compatibility with contract names
+        version_str = @version.gsub('.', '_')
+        @version = @version.to_f
+      end
 
       super(
         network_id: network_id,
-        contract_name: version > 1 ? "predictionMarketV#{@version}" : 'predictionMarket',
+        contract_name: version > 1 ? "predictionMarketV#{version_str}" : 'predictionMarket',
         contract_address:
           contract_address ||
             Rails.application.config_for(:ethereum).dig(:"network_#{network_id}", :prediction_market_contract_address) ||
