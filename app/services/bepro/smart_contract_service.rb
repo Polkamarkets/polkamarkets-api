@@ -4,6 +4,7 @@ module Bepro
       'predictionMarket',
       'predictionMarketV2',
       'predictionMarketV3',
+      'predictionMarketV3_2',
       'predictionMarketV3Manager',
       'predictionMarketV3Controller',
       'erc20',
