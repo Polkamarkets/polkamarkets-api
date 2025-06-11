@@ -13,6 +13,7 @@ class MarketSerializer < BaseSerializer
     :fee,
     :treasury_fee,
     :treasury,
+    :fees,
     :state,
     :verified,
     :category,

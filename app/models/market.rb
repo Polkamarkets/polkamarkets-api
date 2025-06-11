@@ -366,6 +366,31 @@ class Market < ApplicationRecord
     prices[:liquidity_price]
   end
 
+  def fees(refresh: false)
+    if eth_market_id.blank?
+      # TODO: fetch updated data from draft
+      return {
+        treasury: treasury_fee,
+        distributor: "0x0000000000000000000000000000000000000000",
+        buy: {
+          fee: fee,
+          treasury_fee: treasury_fee,
+          distributor_fee: 0.0
+        },
+        sell: {
+          fee: fee,
+          treasury_fee: treasury_fee,
+          distributor_fee: 0.0
+        }
+      }
+    end
+
+    Rails.cache.fetch("markets:network_#{network_id}:#{eth_market_id}:fees", force: refresh) do
+      Bepro::PredictionMarketContractService.new(network_id: network_id).get_market_fees(eth_market_id)
+    end
+  end
+
+
   def resolved_at(refresh: false)
     return -1 if eth_market_id.blank? || !resolved?
 

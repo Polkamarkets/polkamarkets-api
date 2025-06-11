@@ -137,8 +137,6 @@ module Bepro
     end
 
     def get_market_outcomes(market_id)
-      # currently only binary
-
       outcome_ids = call(method: 'getMarketOutcomeIds', args: market_id)
       outcome_ids.map do |outcome_id|
         outcome_data = call(method: 'getMarketOutcomeData', args: [market_id, outcome_id])
@@ -153,6 +151,43 @@ module Bepro
           shares_held: shares_total - shares
         }
       end
+    end
+
+    def get_market_fees(market_id)
+      if version <= 3
+        market_alt_data = call(method: 'getMarketAltData', args: market_id)
+        return {
+          treasury: market_alt_data[5],
+          distributor: "0x0000000000000000000000000000000000000000",
+          buy: {
+            fee: from_big_number_to_float(market_alt_data[0]),
+            treasury_fee: from_big_number_to_float(market_alt_data[4]),
+            distributor_fee: 0.0
+          },
+          sell: {
+            fee: from_big_number_to_float(market_alt_data[0]),
+            treasury_fee: from_big_number_to_float(market_alt_data[4]),
+            distributor_fee: 0.0
+          }
+        }
+      end
+
+      fees = call(method: 'getMarketFees', args: market_id)
+
+      {
+        treasury: fees[2],
+        distributor: fees[3],
+        buy: {
+          fee: from_big_number_to_float(fees[0][0]),
+          treasury_fee: from_big_number_to_float(fees[0][1]),
+          distributor_fee: from_big_number_to_float(fees[0][2]),
+        },
+        sell: {
+          fee: from_big_number_to_float(fees[1][0]),
+          treasury_fee: from_big_number_to_float(fees[1][1]),
+          distributor_fee: from_big_number_to_float(fees[1][2]),
+        }
+      }
     end
 
     def get_market_prices(market_id)
