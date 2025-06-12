@@ -511,6 +511,14 @@ class Market < ApplicationRecord
       .sum { |a| a[:value] }
   end
 
+  def volume_24h
+    timestamp_24h_ago = 24.hours.ago.to_i
+
+    action_events
+      .select { |a| ['buy', 'sell'].include?(a[:action]) && a[:timestamp] >= timestamp_24h_ago }
+      .sum { |a| a[:value] }
+  end
+
   def volume_eur
     # no need to fetch token value if volume is 0
     return 0 if volume == 0
@@ -741,6 +749,21 @@ class Market < ApplicationRecord
 
       holders
     end
+  end
+
+  def top_holders(limit = 3)
+    holders = self.holders
+    user_shares = {}
+    # merging hashes and summing, if user has shares in multiple outcomes
+    holders.each do |outcome_id, outcome_holders|
+      outcome_holders.each do |address, amount|
+        user_shares[address] ||= 0
+        user_shares[address] += amount
+      end
+    end
+
+    # sorting by shares and returning top 10
+    user_shares.sort_by { |address, amount| -amount }.first(limit).map { |address, amount| address }
   end
 
   def update_comments_counter
