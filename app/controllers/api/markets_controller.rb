@@ -237,6 +237,8 @@ module Api
         update_params["draft_fee"] = 0
         update_params["draft_treasury_fee"] = 0
         update_params["draft_treasury"] = nil
+        update_params["draft_distributor_fee"] = 0
+        update_params["draft_distributor"] = nil
 
         # triggering cache update
         market.touch
@@ -343,7 +345,9 @@ module Api
         :timeout,
         :fee,
         :treasury_fee,
-        :treasury
+        :treasury,
+        :distributor_fee,
+        :distributor
       )
     end
   end

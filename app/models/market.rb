@@ -326,10 +326,22 @@ class Market < ApplicationRecord
     eth_data[:treasury_fee]
   end
 
+  def distributor_fee
+    return self[:draft_distributor_fee] if eth_data.blank?
+
+    eth_data[:distributor_fee]
+  end
+
   def treasury
     return self[:draft_treasury] if eth_data.blank?
 
     eth_data[:treasury]
+  end
+
+  def distributor
+    return self[:draft_distributor] if eth_data.blank?
+
+    eth_data[:distributor]
   end
 
   def resolved_outcome
@@ -370,17 +382,17 @@ class Market < ApplicationRecord
     if eth_market_id.blank?
       # TODO: fetch updated data from draft
       return {
-        treasury: treasury_fee,
-        distributor: "0x0000000000000000000000000000000000000000",
+        treasury: treasury,
+        distributor: distributor,
         buy: {
           fee: fee,
           treasury_fee: treasury_fee,
-          distributor_fee: 0.0
+          distributor_fee: distributor_fee
         },
         sell: {
-          fee: fee,
-          treasury_fee: treasury_fee,
-          distributor_fee: 0.0
+          fee: 0,
+          treasury_fee: 0,
+          distributor_fee: 0
         }
       }
     end
