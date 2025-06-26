@@ -22,10 +22,19 @@ class BaseRequestCacheService
     markets.sort_by! { |market| market.featured ? -1 * market.featured_at.to_i : market.published_at.to_i }
 
     states = [nil, 'open', 'closed', 'resolved', 'featured']
+
+    all_serialized_markets = ActiveModelSerializers::SerializableResource.new(markets).as_json
+
     states.each do |state|
-      serialized_markets = ActiveModelSerializers::SerializableResource.new(
-        state ? markets.select { |m| state == 'featured' ? m.featured : m.state == state } : markets,
-      ).as_json
+      serialized_markets = all_serialized_markets.select do |market|
+        next true if state.blank?
+
+        if state == 'featured'
+          market[:featured]
+        else
+          market[:state] == state
+        end
+      end
       Rails.cache.write(cache_key(state), compress_data(serialized_markets), expires_in: cache_ttl)
     end
   end
