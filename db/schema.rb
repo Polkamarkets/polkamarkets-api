@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2025_06_17_154225) do
+ActiveRecord::Schema.define(version: 2025_06_26_145017) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -322,6 +322,28 @@ ActiveRecord::Schema.define(version: 2025_06_17_154225) do
     t.index ["tournament_group_id", "user_id"], name: "index_tg_users_on_tg_id_and_user_id", unique: true
   end
 
+  create_table "tournament_schedules", force: :cascade do |t|
+    t.bigint "tournament_template_id", null: false
+    t.jsonb "tournament_variables", default: {}
+    t.integer "frequency", null: false
+    t.datetime "starts_at", null: false
+    t.datetime "last_run_at"
+    t.boolean "active", default: true
+    t.datetime "expires_at"
+    t.datetime "resolves_at"
+    t.jsonb "template_variables", default: {}
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["tournament_template_id"], name: "index_tournament_schedules_on_tournament_template_id"
+  end
+
+  create_table "tournament_templates", force: :cascade do |t|
+    t.jsonb "template", null: false
+    t.integer "template_type"
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+  end
+
   create_table "tournaments", force: :cascade do |t|
     t.string "title", null: false
     t.string "description", null: false
@@ -422,6 +444,7 @@ ActiveRecord::Schema.define(version: 2025_06_17_154225) do
   add_foreign_key "market_outcomes", "markets"
   add_foreign_key "market_schedules", "market_templates"
   add_foreign_key "reports", "users"
+  add_foreign_key "tournament_schedules", "tournament_templates"
   add_foreign_key "tournaments", "tournament_groups"
   add_foreign_key "user_idps", "users"
 end
