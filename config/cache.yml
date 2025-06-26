@@ -1,6 +1,6 @@
 default: &default
   base_requests:
-    tournament_groups: <%= ENV['CACHE_BASE_REQUESTS_TOURNAMENT_GROUPS'] %>
+    tournament_groups: <%= ENV['CACHE_BASE_REQUESTS_TOURNAMENT_GROUPS_TTL'] %>
 
 production:
   <<: *default
