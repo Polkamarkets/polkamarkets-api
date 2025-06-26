@@ -35,7 +35,11 @@ module OgImageable
         self.save!
 
         # delete previous image for storage optimization
-        cloudflare_service.delete_image_from_url(current_og_image_url) if current_og_image_url.present?
+        begin
+          cloudflare_service.delete_image_from_url(current_og_image_url) if current_og_image_url.present?
+        rescue => e
+          # should be non-blocking
+        end
       ensure
         File.delete(file_path) if File.exist?(file_path)
       end
