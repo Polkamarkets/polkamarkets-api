@@ -173,6 +173,10 @@ class Market < ApplicationRecord
 
     market = Market.new
     market.expires_at = expires_at
+    market.template_created = true
+    market.market_template_id = template_id
+    market.market_schedule_id = schedule_id
+
     market_variables.each do |key, value|
       # adding to tournament only after creation
       next if key == 'tournament_id'

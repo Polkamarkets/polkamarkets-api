@@ -29,6 +29,46 @@ class Tournament < ApplicationRecord
   OG_IMAGEABLE_PATH = 'contests'
   OG_IMAGEABLE_FIELDS = %i[title image_url].freeze
 
+  def self.create_draft_from_template!(template_id, schedule_id)
+    tournament_template = TournamentTemplate.find(template_id)
+    tournament_schedule = TournamentSchedule.find(schedule_id)
+
+    expires_at = tournament_schedule.next_run_expires_at
+
+    template_variables = tournament_template.template_variables(schedule_id).merge(tournament_schedule.next_run_variables)
+    tournament_variables = tournament_schedule.tournament_variables
+
+    template_variables.deep_stringify_keys!
+    tournament_variables.deep_stringify_keys!
+
+    # checking template variables against tournament variables
+    if tournament_template.variables & template_variables.keys != tournament_template.variables
+      raise "Template variables do not match tournament variables"
+    end
+
+    if ['network_id', 'tournament_group_id'].any? { |key| tournament_variables[key].blank? }
+      raise "Tournament variables 'network_id' and 'tournament_group_id' cannot be blank"
+    end
+
+    raise "Tournament variables 'expires_at' must be a valid date" unless expires_at.present?
+
+    tournament = Tournament.new
+    tournament.expires_at = expires_at
+    tournament_variables.each do |key, value|
+      tournament[key] = value
+    end
+
+    binding.pry
+
+    tournament_template.template.each do |key, value|
+      puts "key: #{key}, value: #{value}"
+      tournament[key] = tournament_template.template_field(key, template_variables)
+    end
+
+    tournament.save!
+    tournament
+  end
+
   def markets_network_id_validation
     markets.each do |market|
       errors.add(:markets, 'network id is not valid') unless market.network_id == network_id
