@@ -190,4 +190,14 @@ namespace :markets do
       end
     end
   end
+
+  desc "Checks for pending market resolutions and resolves them"
+  task :auto_resolve_markets, [:symbol] => :environment do |task, args|
+    MarketResolution.where(resolved: false).each do |market_resolution|
+      market = market_resolution.market
+      next if market.open?
+
+      MarketResolutionWorker.perform_async(market_resolution.id)
+    end
+  end
 end

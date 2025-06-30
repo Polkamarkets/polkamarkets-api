@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2025_06_26_152155) do
+ActiveRecord::Schema.define(version: 2025_06_29_161531) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -187,6 +187,19 @@ ActiveRecord::Schema.define(version: 2025_06_26_152155) do
     t.index ["market_id"], name: "index_market_outcomes_on_market_id"
   end
 
+  create_table "market_resolutions", force: :cascade do |t|
+    t.bigint "market_id", null: false
+    t.bigint "market_template_id", null: false
+    t.bigint "market_schedule_id", null: false
+    t.jsonb "resolution_variables", default: {}
+    t.boolean "resolved", default: false
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["market_id"], name: "index_market_resolutions_on_market_id"
+    t.index ["market_schedule_id"], name: "index_market_resolutions_on_market_schedule_id"
+    t.index ["market_template_id"], name: "index_market_resolutions_on_market_template_id"
+  end
+
   create_table "market_schedules", force: :cascade do |t|
     t.bigint "market_template_id", null: false
     t.jsonb "market_variables", default: {}
@@ -200,6 +213,7 @@ ActiveRecord::Schema.define(version: 2025_06_26_152155) do
     t.datetime "expires_at"
     t.datetime "resolves_at"
     t.jsonb "template_variables", default: {}
+    t.boolean "auto_resolve_enabled", default: false
     t.index ["market_template_id"], name: "index_market_schedules_on_market_template_id"
   end
 
@@ -450,6 +464,9 @@ ActiveRecord::Schema.define(version: 2025_06_26_152155) do
   add_foreign_key "comments", "users"
   add_foreign_key "likes", "users"
   add_foreign_key "market_outcomes", "markets"
+  add_foreign_key "market_resolutions", "market_schedules"
+  add_foreign_key "market_resolutions", "market_templates"
+  add_foreign_key "market_resolutions", "markets"
   add_foreign_key "market_schedules", "market_templates"
   add_foreign_key "reports", "users"
   add_foreign_key "tournament_schedules", "tournament_templates"

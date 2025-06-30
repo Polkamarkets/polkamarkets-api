@@ -59,6 +59,8 @@ class Market < ApplicationRecord
   OG_IMAGEABLE_PATH = 'questions'
   OG_IMAGEABLE_FIELDS = %i[title].freeze
 
+  has_many :market_resolutions, dependent: :destroy
+
   def self.all_voided_market_ids
     Rails.cache.fetch('markets:voided', expires_in: 5.minutes) do
       Market.all.group_by(&:network_id).map do |network_id, markets|
@@ -173,9 +175,6 @@ class Market < ApplicationRecord
 
     market = Market.new
     market.expires_at = expires_at
-    market.template_created = true
-    market.market_template_id = template_id
-    market.market_schedule_id = schedule_id
 
     market_variables.each do |key, value|
       # adding to tournament only after creation
@@ -204,6 +203,16 @@ class Market < ApplicationRecord
     end
 
     market.save!
+
+    if market_schedule.auto_resolve_enabled?
+      market_resolution = MarketResolution.new
+      market_resolution.market = market
+      market_resolution.market_template = market_template
+      market_resolution.market_schedule = market_schedule
+      market_resolution.resolution_variables = template_variables
+      market_resolution.save!
+    end
+
     market
   end
 
