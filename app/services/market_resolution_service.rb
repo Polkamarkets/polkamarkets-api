@@ -25,8 +25,7 @@ class MarketResolutionService
 
   def should_resolve?(market)
     return false unless market.published?
-    return false if market.resolved?
-    return false unless market.expires_at < DateTime.now
+    return false unless market.open?
     return false if @market_resolution.resolved?
 
     true

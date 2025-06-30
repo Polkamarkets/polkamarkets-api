@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2025_06_29_161531) do
+ActiveRecord::Schema.define(version: 2025_06_30_110114) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -388,6 +388,11 @@ ActiveRecord::Schema.define(version: 2025_06_29_161531) do
     t.string "avatar_url"
     t.string "og_image_url"
     t.string "rank_by_priority"
+    t.boolean "auto_distribute_rewards", default: false
+    t.string "rewards_token_address"
+    t.boolean "rewards_distributed", default: false
+    t.jsonb "rewards_distribution", default: {}
+    t.string "rewards_distribution_tx_id"
     t.index ["slug"], name: "index_tournaments_on_slug", unique: true
     t.index ["tournament_group_id"], name: "index_tournaments_on_tournament_group_id"
   end

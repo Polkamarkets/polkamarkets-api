@@ -177,4 +177,8 @@ class Tournament < ApplicationRecord
   def og_theme
     tournament_group&.og_theme
   end
+
+  def resolved?
+    markets.all?(&:resolved?)
+  end
 end

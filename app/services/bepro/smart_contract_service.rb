@@ -35,6 +35,7 @@ module Bepro
       end
 
       uri = api_url + "/call?contract=#{contract_name}&address=#{contract_address}&method=#{method}"
+      puts uri
       uri << "&args=#{args}" if args.present?
 
       Sentry.with_scope do |scope|

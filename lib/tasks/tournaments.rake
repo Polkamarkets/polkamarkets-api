@@ -33,4 +33,14 @@ namespace :tournaments do
       end
     end
   end
+
+  desc "distributes rewards for eligible tournaments"
+  task :distribute_rewards, [:tournament_id] => :environment do |task, args|
+    tournaments = Tournament.where(auto_distribute_rewards: true).each do |tournament|
+      next unless tournament.resolved?
+      next if tournament.rewards_distributed?
+
+      TournamentRewardsWorker.perform_async(tournament.id)
+    end
+  end
 end
