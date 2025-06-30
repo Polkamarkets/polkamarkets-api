@@ -174,13 +174,11 @@ class MarketResolutionService
         outcome_id
       )
 
+      market.refresh_cache!
+
       # Mark the resolution as completed
       @market_resolution.update!(resolved: true)
-
-      Rails.logger.info "Successfully resolved market #{market.id} to outcome #{outcome_id}"
     rescue => e
-      Rails.logger.error "Failed to resolve market #{market.id}: #{e.message}"
-      Sentry.capture_exception(e) if defined?(Sentry)
       raise e
     end
   end

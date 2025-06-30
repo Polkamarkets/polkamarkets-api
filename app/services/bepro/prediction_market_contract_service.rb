@@ -544,7 +544,7 @@ module Bepro
 
     def admin_resolve_market(market_id, outcome_id)
       execute(
-        method: 'adminResolveMarket',
+        method: 'adminResolveMarketOutcome',
         args: [
           market_id,
           outcome_id

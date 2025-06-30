@@ -58,8 +58,6 @@ class Tournament < ApplicationRecord
       tournament[key] = value
     end
 
-    binding.pry
-
     tournament_template.template.each do |key, value|
       puts "key: #{key}, value: #{value}"
       tournament[key] = tournament_template.template_field(key, template_variables)

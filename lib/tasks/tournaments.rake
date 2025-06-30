@@ -21,6 +21,7 @@ namespace :tournaments do
             market_schedule.market_template.id,
             market_schedule.id
           )
+          market.tournaments << tournament
           # scheduling market for creation
           market.update(scheduled_at: DateTime.now) if market_schedule.publish_market_enabled?
         end
