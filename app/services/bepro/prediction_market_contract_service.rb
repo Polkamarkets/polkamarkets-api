@@ -84,7 +84,7 @@ module Bepro
       events.select! { |event| event['returnValues']['marketId'] == market_id.to_s }
 
       raise "Market #{market_id}: MarketCreated event not found" if events.blank?
-      raise "Market #{market_id}: MarketCreated event count: #{events.count} != 1" if events.count != 1
+      # raise "Market #{market_id}: MarketCreated event count: #{events.count} != 1" if events.count != 1
 
       # decoding question from event. format from realitio
       # https://reality.eth.link/app/docs/html/contracts.html#how-questions-are-structured
