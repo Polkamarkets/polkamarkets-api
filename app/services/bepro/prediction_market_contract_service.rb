@@ -101,9 +101,11 @@ module Bepro
       resolution_source = question[-1].split(';')[2]
       resolution_title = question[-1].split(';')[3]
       draft_slug = question[-1].split(';')[4]
-      outcomes_parsed = question[-2].split(',').map do |outcome|
-        "#{outcome.starts_with?('"') ? '' : '"'}#{outcome}#{outcome.ends_with?('"') ? '' : '"'}"
-      end
+      outcomes_parsed = question[-2].present? ?
+        question[-2].split(',').map do |outcome|
+          "#{outcome.starts_with?('"') ? '' : '"'}#{outcome}#{outcome.ends_with?('"') ? '' : '"'}"
+        end :
+        [outcomes.map { |outcome| outcome[:id] }.join(',')]
       outcome_titles = JSON.parse("[#{outcomes_parsed.join(',')}]")
       outcomes.each_with_index { |outcome, i| outcome[:title] = outcome_titles[i] }
       image_hash = events[0]['returnValues']['image'].split(DELIMITER)[0]
