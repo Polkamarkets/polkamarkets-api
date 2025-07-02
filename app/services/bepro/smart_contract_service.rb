@@ -7,6 +7,7 @@ module Bepro
       'predictionMarketV3_2',
       'predictionMarketV3Manager',
       'predictionMarketV3Controller',
+      'predictionMarketV3Querier',
       'erc20',
       'realitio',
       'achievements',
