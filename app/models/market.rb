@@ -31,6 +31,7 @@ class Market < ApplicationRecord
   validates :outcomes, length: { minimum: 2 } # currently supporting only binary markets
 
   validate :sponsorship_validation
+  validate :aliases_validation
 
   accepts_nested_attributes_for :outcomes
 
@@ -227,6 +228,15 @@ class Market < ApplicationRecord
     errors.add(:sponsorship, 'sponsorship title is required') if sponsorship['title'].blank?
     errors.add(:sponsorship, 'sponsorship image is required') if sponsorship['image_url'].blank?
     errors.add(:sponsorship, 'sponsorship image_href is required') if sponsorship['image_href'].blank?
+  end
+
+  def aliases_validation
+    return if aliases.blank?
+
+    errors.add(:aliases, 'aliases must be an array') unless aliases.is_a?(Array)
+    errors.add(:aliases, 'aliases must be an array of market_id + network_id objects') unless aliases.all? do |a|
+      a.is_a?(Hash) && a.keys.sort == ['market_id', 'network_id']
+    end
   end
 
   def eth_data(refresh: false)
@@ -481,7 +491,24 @@ class Market < ApplicationRecord
     chart_data_service.chart_data_for(timeframe)
   end
 
-  def action_events(address: nil, refresh: false, from_block: nil)
+  def action_event_with_aliases(address: nil, refresh: false, from_block: nil)
+    # fetching self action events
+    self_actions = action_events(address: address, refresh: refresh, from_block: from_block, with_aliases: false)
+
+    # fetching data from every alias and merging them
+    aliases_actions = aliases_markets.map do |alias_market|
+      alias_market.action_events(address: address, refresh: refresh, from_block: from_block, with_aliases: false)
+    end.flatten
+
+    # merging self actions with aliases actions
+    (self_actions + aliases_actions).sort_by { |action| action[:block_number] }
+  end
+
+  def action_events(address: nil, refresh: false, from_block: nil, with_aliases: true)
+    if with_aliases && aliases.present?
+      return action_event_with_aliases(address: address, refresh: refresh, from_block: from_block)
+    end
+
     return [] if eth_market_id.blank?
 
     if from_block.present?
@@ -982,5 +1009,13 @@ class Market < ApplicationRecord
     return false if eth_data.blank? || eth_data[:paused].blank?
 
     eth_data[:paused]
+  end
+
+  def aliases_markets
+    return [] if aliases.blank?
+
+    aliases.map do |a|
+      Market.find_by(eth_market_id: a['market_id'], network_id: a['network_id'])
+    end.compact
   end
 end
