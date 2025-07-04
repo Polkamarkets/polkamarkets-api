@@ -72,6 +72,7 @@ module Bepro
       market_data = call(method: 'getMarketData', args: market_id)
       market_alt_data = call(method: 'getMarketAltData', args: market_id)
       is_market_voided = call(method: 'isMarketVoided', args: market_id)
+      is_market_paused = get_market_paused(market_id)
 
       # formatting question_id
       question_id = market_alt_data[1]
@@ -137,7 +138,8 @@ module Bepro
         outcomes: outcomes,
         outcomes_image_hashes: outcomes_image_hashes,
         token_address: token_address,
-        draft_slug: draft_slug
+        draft_slug: draft_slug,
+        paused: is_market_paused
       }
     end
 
@@ -431,6 +433,12 @@ module Bepro
       return -1 if events.count != 1
 
       events[0]['returnValues']['timestamp'].to_i
+    end
+
+    def get_market_paused(market_id)
+      return false if version <= 3
+
+      call(method: 'getMarketPaused', args: market_id)
     end
 
     def stats(market_id: nil)

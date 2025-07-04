@@ -977,4 +977,10 @@ class Market < ApplicationRecord
 
     tournament_group&.refund_voided_markets
   end
+
+  def paused?
+    return false if eth_data.blank? || eth_data[:paused].blank?
+
+    eth_data[:paused]
+  end
 end
