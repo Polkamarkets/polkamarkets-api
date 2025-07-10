@@ -33,6 +33,7 @@ class MarketSerializer < BaseSerializer
     :question_id,
     :resolved_outcome_id,
     :voided,
+    :paused,
     :trading_view_symbol,
     :question,
     :banner_url,

@@ -72,6 +72,7 @@ module Bepro
       market_data = call(method: 'getMarketData', args: market_id)
       market_alt_data = call(method: 'getMarketAltData', args: market_id)
       is_market_voided = call(method: 'isMarketVoided', args: market_id)
+      is_market_paused = get_market_paused(market_id)
 
       # formatting question_id
       question_id = market_alt_data[1]
@@ -84,7 +85,7 @@ module Bepro
       events.select! { |event| event['returnValues']['marketId'] == market_id.to_s }
 
       raise "Market #{market_id}: MarketCreated event not found" if events.blank?
-      raise "Market #{market_id}: MarketCreated event count: #{events.count} != 1" if events.count != 1
+      # raise "Market #{market_id}: MarketCreated event count: #{events.count} != 1" if events.count != 1
 
       # decoding question from event. format from realitio
       # https://reality.eth.link/app/docs/html/contracts.html#how-questions-are-structured
@@ -101,9 +102,11 @@ module Bepro
       resolution_source = question[-1].split(';')[2]
       resolution_title = question[-1].split(';')[3]
       draft_slug = question[-1].split(';')[4]
-      outcomes_parsed = question[-2].split(',').map do |outcome|
-        "#{outcome.starts_with?('"') ? '' : '"'}#{outcome}#{outcome.ends_with?('"') ? '' : '"'}"
-      end
+      outcomes_parsed = question[-2].present? ?
+        question[-2].split(',').map do |outcome|
+          "#{outcome.starts_with?('"') ? '' : '"'}#{outcome}#{outcome.ends_with?('"') ? '' : '"'}"
+        end :
+        [outcomes.map { |outcome| outcome[:id] }.join(',')]
       outcome_titles = JSON.parse("[#{outcomes_parsed.join(',')}]")
       outcomes.each_with_index { |outcome, i| outcome[:title] = outcome_titles[i] }
       image_hash = events[0]['returnValues']['image'].split(DELIMITER)[0]
@@ -135,7 +138,8 @@ module Bepro
         outcomes: outcomes,
         outcomes_image_hashes: outcomes_image_hashes,
         token_address: token_address,
-        draft_slug: draft_slug
+        draft_slug: draft_slug,
+        paused: is_market_paused
       }
     end
 
@@ -429,6 +433,12 @@ module Bepro
       return -1 if events.count != 1
 
       events[0]['returnValues']['timestamp'].to_i
+    end
+
+    def get_market_paused(market_id)
+      return false if version <= 3
+
+      call(method: 'getMarketPaused', args: market_id)
     end
 
     def stats(market_id: nil)

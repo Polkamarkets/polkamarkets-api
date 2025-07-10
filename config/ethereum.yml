@@ -7,6 +7,7 @@ default: &default
       prediction_market_contract_version: "<%= ENV["ETHEREUM_NETWORK_#{network_id}_PREDICTION_MARKET_CONTRACT_VERSION"].to_s %>"
       prediction_market_contract_address: "<%= ENV["ETHEREUM_NETWORK_#{network_id}_PREDICTION_MARKET_CONTRACT_ADDRESS"].to_s %>"
       prediction_market_manager_contract_address: "<%= ENV["ETHEREUM_NETWORK_#{network_id}_PREDICTION_MARKET_MANAGER_CONTRACT_ADDRESS"].to_s %>"
+      prediction_market_querier_contract_address: "<%= ENV["ETHEREUM_NETWORK_#{network_id}_PREDICTION_MARKET_QUERIER_CONTRACT_ADDRESS"].to_s %>"
       prediction_market_controller_contract_address: "<%= ENV["ETHEREUM_NETWORK_#{network_id}_PREDICTION_MARKET_CONTROLLER_CONTRACT_ADDRESS"].to_s %>"
       realitio_contract_address: "<%= ENV["ETHEREUM_NETWORK_#{network_id}_REALITIO_ERC20_CONTRACT_ADDRESS"].to_s %>"
       achievements_contract_address: "<%= ENV["ETHEREUM_NETWORK_#{network_id}_ACHIEVEMENTS_CONTRACT_ADDRESS"].to_s %>"
