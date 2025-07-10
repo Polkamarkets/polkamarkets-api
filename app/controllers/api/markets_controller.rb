@@ -275,7 +275,8 @@ module Api
     end
 
     def reload_prices
-      @market.refresh_prices!(queue: 'critical')
+      # disabling for now
+      # @market.refresh_prices!(queue: 'critical')
 
       render json: { status: 'ok' }, status: :ok
     end
