@@ -157,7 +157,9 @@ class Market < ApplicationRecord
     market_schedule = MarketSchedule.find(schedule_id)
     expires_at = market_schedule.next_run_expires_at
 
-    template_variables = market_template.template_variables(schedule_id).merge(market_schedule.next_run_variables)
+    template_variables = market_template.template_variables(schedule_id)
+      .merge(market_schedule.next_run_variables)
+      .merge(market_schedule.template_variables)
     market_variables = market_schedule.market_variables
 
     template_variables.deep_stringify_keys!

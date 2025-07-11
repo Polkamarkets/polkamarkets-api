@@ -1,12 +1,19 @@
 class MarketResolutionService
+  attr_accessor :market_resolution
+
   def initialize(market_resolution_id)
     @market_resolution = MarketResolution.find(market_resolution_id)
   end
 
   def resolve_market
-    market = @market_resolution.market
-    market_template = @market_resolution.market_template
-    market_schedule = @market_resolution.market_schedule
+    market = market_resolution.market
+    market_template = market_resolution.market_template
+    market_schedule = market_resolution.market_schedule
+
+    if market.resolved?
+      market_resolution.update(resolved: true) if !market_resolution.resolved?
+      return
+    end
 
     # Check if market is eligible for resolution
     return unless should_resolve?(market)
@@ -26,14 +33,14 @@ class MarketResolutionService
   def should_resolve?(market)
     return false unless market.published?
     return false unless market.open?
-    return false if @market_resolution.resolved?
+    return false if market_resolution.resolved?
 
     true
   end
 
   def fear_and_greed_resolution
-    market = @market_resolution.market
-    resolution_variables = @market_resolution.resolution_variables
+    market = market_resolution.market
+    resolution_variables = market_resolution.resolution_variables
 
     # Validate required variables
     target_index = resolution_variables['target']
@@ -60,9 +67,9 @@ class MarketResolutionService
   end
 
   def binance_price_resolution
-    market = @market_resolution.market
-    resolution_variables = @market_resolution.resolution_variables
-    schedule_template_variables = @market_resolution.market_schedule.template_variables
+    market = market_resolution.market
+    resolution_variables = market_resolution.resolution_variables
+    schedule_template_variables = market_resolution.market_schedule.template_variables
 
     # Validate required variables
     target_price = resolution_variables['target']
@@ -176,7 +183,7 @@ class MarketResolutionService
       market.refresh_cache!
 
       # Mark the resolution as completed
-      @market_resolution.update!(resolved: true)
+      market_resolution.update!(resolved: true)
     rescue => e
       raise e
     end
