@@ -24,30 +24,10 @@ module Api
       if request.headers['Authorization'].present?
         authenticate_or_request_with_http_token do |token|
           jwt_payload = nil
-          is_message_signature = false
-
-          begin
-            jwt_payload = JWT.decode(
-              token,
-              nil,
-              true, # Verify the signature of this token
-              algorithms: ["ES256"],
-              jwks: fetch_jwks(Rails.application.config_for(:privy).jwks_url),
-            )
-          rescue JWT::ExpiredSignature, JWT::VerificationError, JWT::DecodeError
-            # validate if token is hexadecimal
-            unless token.match?(/\A0x[0-9a-fA-F]+\z/)
-              return
-            end
-
-            is_message_signature = true
-          end
+          is_message_signature = is_message_signature?(signature_message, token)
 
           if is_message_signature
-            # write me a nice login message to show on metamask on a comment below
-            message = "Hello, you are being prompted to sign this message to login."
-
-            signature_pubkey = Eth::Signature.personal_recover(message, token)
+            signature_pubkey = Eth::Signature.personal_recover(signature_message, token)
             signature_address = Eth::Util.public_key_to_address(signature_pubkey)
             user_address = signature_address.to_s
 
@@ -75,6 +55,21 @@ module Api
               end
             end
           else
+            begin
+              jwt_payload = JWT.decode(
+                token,
+                nil,
+                true, # Verify the signature of this token
+                algorithms: ["ES256"],
+                jwks: fetch_jwks(Rails.application.config_for(:privy).jwks_url),
+              )
+            rescue JWT::ExpiredSignature, JWT::VerificationError, JWT::DecodeError
+              # validate if token is hexadecimal
+              unless token.match?(/\A0x[0-9a-fA-F]+\z/)
+                return
+              end
+            end
+
             privy_user_id = jwt_payload[0]['sub']
             privy_user_data = PrivyService.new.get_user_data(user_id: privy_user_id)
 
@@ -242,6 +237,18 @@ module Api
         end
     end
 
+    def is_message_signature?(message, token)
+      begin
+        Eth::Signature.personal_recover(message, token)
+        true
+      rescue => e
+        false
+      end
+    end
+
+    def signature_message
+      "Hello, you are being prompted to sign this message to login."
+    end
 
     def current_user
       if @current_user_id
