@@ -105,7 +105,7 @@ class LeaderboardService
         holdings_cost: data[:holdings].sum do |outcome_id, holdings|
           !market_is_resolved ? holdings_cost : 0
         end,
-        winnings: data[:earnings] + (market_is_resolved ? holdings_value : 0) + (!market_is_resolved ? holdings_cost : 0)
+        winnings: data[:earnings] + (market_is_resolved && !(market_is_voided && market_should_refund_voided_markets) ? holdings_value : 0) + (!market_is_resolved ? holdings_cost : 0)
       }
 
       if market_is_resolved &&
