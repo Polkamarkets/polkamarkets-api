@@ -32,24 +32,23 @@ module Api
             user_address = signature_address.to_s
 
             username = "User #{user_address[0..4]}...#{user_address[-3..-1]}"
+            user = User.find_by(wallet_address: user_address)
 
-            user_idp = UserIdp.where("uid ilike '%#{user_address}%'").first
+            if user.blank?
+              user_idp = UserIdp.where("uid ilike '%#{user_address}%'").first
 
-            if user_idp.present?
-              user = user_idp.user
+              if user_idp.present?
+                user = user_idp.user
 
-              # updating new wallet address and setting old one as alias
-              if user.wallet_address != user_address
-                user.update(
-                  wallet_address: user_address,
-                  login_type: 'native',
-                  aliases: user.aliases + [user.wallet_address]
-                )
-              end
-            else
-              user = User.find_by(wallet_address: user_address)
-
-              if user.nil?
+                # updating new wallet address and setting old one as alias
+                if user.wallet_address != user_address
+                  user.update(
+                    wallet_address: user_address,
+                    login_type: 'native',
+                    aliases: user.aliases + [user.wallet_address]
+                    )
+                end
+              else
                 user = User.new(wallet_address: user_address, username: username, login_type: 'native', email: "#{user_address}@login_type.com")
                 user.save!
               end
