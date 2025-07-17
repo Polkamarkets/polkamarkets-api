@@ -113,7 +113,7 @@ class MarketOutcome < ApplicationRecord
         price[:outcome_id] == eth_market_id && price[:timestamp] < market.expires_at.to_i
       end
 
-      outcome_prices.blank? ? nil : outcome_prices.last[:price]
+      outcome_prices.blank? ? 1.0 / market.outcomes.count : outcome_prices.last[:price]
     end
   end
 
